@@ -58,6 +58,7 @@ proto/dental/v1/        API definitions (shared with the desktop app)
 gen/                    generated code — do not edit
 internal/config/        settings from environment / .env
 internal/database/      PostgreSQL connection + migrations
+internal/languages/     downloadable interface languages for the app (see its README)
 internal/service/       RPC implementations
 internal/statuspage/    HTML status page at / (server + database health)
 main.go                 server setup, interceptors, graceful shutdown

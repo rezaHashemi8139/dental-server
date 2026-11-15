@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+
+// Interface languages the desktop app can download, besides the ones built into it.
+// The files live in internal/languages/files/. No session needed, and works
+// while the database is down (the login screen offers them).
+service LanguageService {
+  // The languages on offer. The app compares `version` with what it has installed.
+  rpc ListLanguages(ListLanguagesRequest) returns (ListLanguagesResponse) {}
+
+  // One language with its file. Fails with NOT_FOUND "language_not_found".
+  rpc GetLanguage(GetLanguageRequest) returns (GetLanguageResponse) {}
+}
+
+// From the `_meta` section of the language file.
+message Language {
+  // e.g. "de", "pt-BR".
+  string code = 1;
+  // Name in the language itself, e.g. "Deutsch".
+  string name = 2;
+  // Short label, e.g. "DE".
+  string abbr = 3;
+  // "ltr" or "rtl".
+  string dir = 4;
+  // Goes up whenever the file changes.
+  uint32 version = 5;
+}
+
+message ListLanguagesRequest {}
+
+message ListLanguagesResponse {
+  repeated Language languages = 1;
+}
+
+message GetLanguageRequest {
+  string code = 1 [(buf.validate.field).string.pattern = "^[A-Za-z][A-Za-z0-9-]{1,15}$"];
+}
+
+message GetLanguageResponse {
+  Language language = 1;
+  // The language file: UTF-8 JSON, same format as the desktop app's src/locales/*.json.
+  bytes content = 2;
+}

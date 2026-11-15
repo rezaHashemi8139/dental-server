@@ -42,16 +42,25 @@ const (
 	reasonCannotRemoveOwner   = "cannot_remove_owner"
 	reasonOwnerAlwaysAdmin    = "owner_always_admin"
 	reasonRotationMismatch    = "rotation_mismatch"
+	reasonLanguageNotFound    = "language_not_found"
 	reasonInternal            = "internal"
 	reasonUnavailable         = "unavailable"
 )
 
+// noDatabaseProcedures work while the database is down.
+var noDatabaseProcedures = map[string]bool{
+	dentalv1connect.HealthServiceCheckProcedure:           true,
+	dentalv1connect.LanguageServiceListLanguagesProcedure: true,
+	dentalv1connect.LanguageServiceGetLanguageProcedure:   true,
+}
+
 // ReadyInterceptor rejects calls with Unavailable while the database is not ready
-// (notReady returns non-nil). HealthService.Check still answers, reporting database_ok = false.
+// (notReady returns non-nil). HealthService.Check still answers, reporting database_ok = false,
+// and so does LanguageService, which needs no database.
 func ReadyInterceptor(notReady func() error) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			if req.Spec().Procedure != dentalv1connect.HealthServiceCheckProcedure && notReady() != nil {
+			if !noDatabaseProcedures[req.Spec().Procedure] && notReady() != nil {
 				return nil, fail(connect.CodeUnavailable, reasonUnavailable)
 			}
 			return next(ctx, req)

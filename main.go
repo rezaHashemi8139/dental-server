@@ -1,4 +1,5 @@
-// Dental server: accounts, installations and database keys for the desktop app.
+// Dental server: accounts, installations, database keys and downloadable
+// interface languages for the desktop app.
 // RPCs are defined in proto/ and served with ConnectRPC, which speaks the gRPC,
 // gRPC-Web and Connect protocols over plain net/http.
 package main
@@ -18,6 +19,7 @@ import (
 	"dental-server/gen/dental/v1/dentalv1connect"
 	"dental-server/internal/config"
 	"dental-server/internal/database"
+	"dental-server/internal/languages"
 	"dental-server/internal/secure"
 	"dental-server/internal/service"
 	"dental-server/internal/statuspage"
@@ -59,6 +61,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// Checked at startup: a broken language file must not ship.
+	langs, err := languages.Load()
+	if err != nil {
+		return err
+	}
+
 	deps := &service.Deps{DB: db.Pool, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
 
 	// Outermost first: log everything, reject invalid input (before any database work),
@@ -75,6 +83,7 @@ func run() error {
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(service.NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(service.NewAuthService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(service.NewMemberService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewLanguageServiceHandler(service.NewLanguageService(langs), interceptors))
 	// Status page for people and uptime monitors. Raw errors only without TLS (development).
 	mux.Handle("GET /{$}", &statuspage.Handler{DB: db.Pool, NotReady: db.NotReady, Version: version, Started: started, ShowErrors: !cfg.TLS()})
 

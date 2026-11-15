@@ -1,0 +1,124 @@
+{
+  "_meta": {
+    "code": "en",
+    "name": "English",
+    "abbr": "EN",
+    "dir": "ltr",
+    "version": 2
+  },
+  "app": {
+    "title": "Smart Management Base",
+    "subtitle": "Clinic management"
+  },
+  "auth": {
+    "tabs": {
+      "login": "Log in",
+      "register": "Create account"
+    },
+    "login": {
+      "title": "Log in",
+      "description": "Log in with your username and password.",
+      "submit": "Log in",
+      "working": "Logging in..."
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Create an account on the server. An internet connection is needed.",
+      "submit": "Create account",
+      "working": "Creating account..."
+    },
+    "fields": {
+      "fullName": "Full name",
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Repeat password"
+    },
+    "hints": {
+      "username": "3–32 characters: English letters, digits, dot, dash or underscore.",
+      "password": "At least 8 characters, with a digit, a lowercase and an uppercase letter."
+    },
+    "validation": {
+      "required": "Please fill in this field.",
+      "usernameFormat": "Use 3–32 English letters, digits, dot, dash or underscore.",
+      "passwordLength": "The password must be at least 8 characters.",
+      "passwordDigit": "The password must contain at least one digit.",
+      "passwordLower": "The password must contain at least one lowercase letter (a-z).",
+      "passwordUpper": "The password must contain at least one uppercase letter (A-Z).",
+      "passwordMismatch": "The passwords do not match."
+    },
+    "signUpSuccess": "Your account was created. You can log in now.",
+    "connection": {
+      "checking": "Connecting to the server...",
+      "offline": "The server cannot be reached. You can log in with an account that has logged in on this computer before. Creating an account needs the server.",
+      "unavailableTitle": "No connection",
+      "unavailable": "The server cannot be reached, and nobody has logged in on this computer yet. Check the internet connection and try again.",
+      "retry": "Try again"
+    },
+    "errors": {
+      "invalidInput": "Some of the information entered is not valid.",
+      "invalidInstallation": "This installation is not recognised by the server.",
+      "installationRevoked": "This computer has been blocked. Contact support.",
+      "invalidCredentials": "Wrong username or password.",
+      "userDisabled": "This account has been disabled.",
+      "notAMember": "This account has no access to this clinic. Ask the clinic's administrator to add you.",
+      "usernameTaken": "This username is already taken.",
+      "weakPassword": "The password must be at least 8 characters, with a digit, a lowercase and an uppercase letter.",
+      "server": "The server returned an error. ({{details}})",
+      "serverUnreachable": "Could not connect to the server. Check your internet connection.",
+      "setupNeedsInternet": "The first start needs an internet connection.",
+      "invalidGrant": "The saved login information is not valid. Log in once with an internet connection.",
+      "clockTampered": "The computer's date and time are wrong. Correct them and try again.",
+      "offlineExpired": "Offline access has expired. Connect to the internet to log in.",
+      "offlineNotAvailable": "The server cannot be reached, and this user has not logged in on this computer with an internet connection before.",
+      "databaseUnavailable": "The clinic database could not be opened. Log in once with an internet connection."
+    }
+  },
+  "home": {
+    "welcome": "Welcome, {{name}}",
+    "role": "Role",
+    "admin": "Administrator",
+    "online": "Online",
+    "offline": "Offline",
+    "offlineUntil": "Offline access until {{date}}",
+    "logout": "Log out"
+  },
+  "roles": {
+    "manager": "Manager",
+    "staff": "Staff"
+  },
+  "language": {
+    "label": "Language",
+    "manage": "Manage languages..."
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "languageManager": {
+    "title": "Languages",
+    "description": "Download more languages or remove the ones you don't need.",
+    "installed": "Installed",
+    "available": "Available to download",
+    "builtIn": "Built-in",
+    "active": "Active",
+    "install": "Download",
+    "update": "Update",
+    "remove": "Remove",
+    "activeCannotBeRemoved": "The language in use cannot be removed. Switch to another language first.",
+    "builtInCannotBeRemoved": "Built-in languages cannot be removed.",
+    "loading": "Loading the language list...",
+    "noneAvailable": "No other languages are available right now.",
+    "retry": "Try again"
+  },
+  "errors": {
+    "unknown": "Something went wrong: {{details}}",
+    "network": "Could not connect to the server. Check your internet connection. ({{details}})",
+    "languageServer": "The server returned an error. ({{details}})",
+    "languageNotFound": "This language is no longer offered by the server.",
+    "invalidLanguageFile": "The downloaded language file is not valid. ({{details}})",
+    "invalidLanguageCode": "\"{{code}}\" is not a valid language code.",
+    "fileSystem": "Could not read or save the file. ({{details}})"
+  }
+}
