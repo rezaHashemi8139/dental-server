@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"dental-server/gen/dental/v1/dentalv1connect"
 	"dental-server/internal/secure"
 )
 
@@ -40,7 +42,21 @@ const (
 	reasonOwnerAlwaysAdmin    = "owner_always_admin"
 	reasonRotationMismatch    = "rotation_mismatch"
 	reasonInternal            = "internal"
+	reasonUnavailable         = "unavailable"
 )
+
+// ReadyInterceptor rejects calls with Unavailable while the database is not ready
+// (notReady returns non-nil). HealthService.Check still answers, reporting database_ok = false.
+func ReadyInterceptor(notReady func() error) connect.UnaryInterceptorFunc {
+	return func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			if req.Spec().Procedure != dentalv1connect.HealthServiceCheckProcedure && notReady() != nil {
+				return nil, fail(connect.CodeUnavailable, reasonUnavailable)
+			}
+			return next(ctx, req)
+		}
+	}
+}
 
 func fail(code connect.Code, reason string) error {
 	return connect.NewError(code, errors.New(reason))

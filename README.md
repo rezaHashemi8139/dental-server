@@ -20,11 +20,15 @@ Or by hand: copy `.env.example` to `.env`, generate `KEY_ENCRYPTION_KEY` and `SI
 with the command noted there, set `DATABASE_URL`, then `go run .`.
 
 Migrations in `internal/database/migrations/` are applied automatically on startup.
+If PostgreSQL is unreachable the server still starts, retries in the background and
+answers RPCs with `Unavailable` until the database is ready. Open http://localhost:8080/
+for a status page that shows what is wrong.
 
 Or use the scripts (PowerShell):
 
 ```powershell
-.\scripts\dev.ps1                 # development: go run with .env (add -Generate to regenerate gen/ first)
+.\scripts\dev.ps1                 # development: rebuilds and restarts on every change (.go/.sql/.html/.proto/.env)
+.\scripts\dev.ps1 -NoWatch        # development, run once without restarts
 .\scripts\build.ps1               # production build into bin/ (vet + test first)
 .\scripts\build.ps1 -OS linux     # cross-compile for a Linux server
 ```

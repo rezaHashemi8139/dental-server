@@ -21,9 +21,12 @@ var pageHTML string
 var page = template.Must(template.New("status").Parse(pageHTML))
 
 type Handler struct {
-	DB      *pgxpool.Pool
-	Version string
-	Started time.Time
+	DB *pgxpool.Pool
+	// NotReady reports why the database is not usable yet (unreachable at startup,
+	// migrations failed...), or nil once it is. Optional.
+	NotReady func() error
+	Version  string
+	Started  time.Time
 	// ShowErrors puts raw database errors on the page. Development only:
 	// they name hosts and users, so in production the page stays generic.
 	ShowErrors bool
@@ -69,6 +72,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) checkDatabase(ctx context.Context) check {
+	// Still starting up: the background setup already logs each failed attempt.
+	if h.NotReady != nil {
+		if err := h.NotReady(); err != nil {
+			return h.failed("Database is not ready yet (retrying). See the server log for details.", err)
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -77,9 +87,13 @@ func (h *Handler) checkDatabase(ctx context.Context) check {
 	if err == nil {
 		return check{Name: "Database", OK: true, Detail: fmt.Sprintf("Connected (%d ms)", time.Since(start).Milliseconds())}
 	}
-
 	slog.Warn("status page: database unreachable", "error", err)
-	detail := "Cannot reach PostgreSQL. See the server log for details."
+	return h.failed("Cannot reach PostgreSQL. See the server log for details.", err)
+}
+
+// failed shows the raw error only when ShowErrors is set, otherwise the generic text.
+func (h *Handler) failed(generic string, err error) check {
+	detail := generic
 	if h.ShowErrors {
 		detail = err.Error()
 	}

@@ -2,6 +2,7 @@ package statuspage
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -44,6 +45,28 @@ func TestDatabaseDown(t *testing.T) {
 	_, body = get(t, &Handler{DB: db, Version: "test", Started: time.Now(), ShowErrors: true})
 	if !strings.Contains(body, "nobody") {
 		t.Error("page does not show the raw database error although ShowErrors is true")
+	}
+}
+
+func TestDatabaseNotReady(t *testing.T) {
+	db, err := pgxpool.New(context.Background(), "postgres://nobody@127.0.0.1:1/none?connect_timeout=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	notReady := func() error { return errors.New("apply migrations: boom") }
+
+	code, body := get(t, &Handler{DB: db, NotReady: notReady, Version: "test", Started: time.Now()})
+	if code != http.StatusServiceUnavailable {
+		t.Errorf("status = %d, want 503", code)
+	}
+	if !strings.Contains(body, "not ready yet") || strings.Contains(body, "boom") {
+		t.Error("page should show the generic not-ready text, not the raw error")
+	}
+
+	_, body = get(t, &Handler{DB: db, NotReady: notReady, Version: "test", Started: time.Now(), ShowErrors: true})
+	if !strings.Contains(body, "apply migrations: boom") {
+		t.Error("page does not show the raw error although ShowErrors is true")
 	}
 }
 

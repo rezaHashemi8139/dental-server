@@ -43,11 +43,13 @@ func run() error {
 		return err
 	}
 
-	db, err := database.Open(ctx, cfg.DatabaseURL)
+	// Does not wait for PostgreSQL: the server comes up anyway, keeps retrying in the
+	// background and reports the problem on the status page until the database is ready.
+	db, err := database.Start(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer db.Pool.Close()
 
 	keys, err := secure.NewKeyWrapper(cfg.KeyEncryptionKey)
 	if err != nil {
@@ -57,17 +59,18 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	deps := &service.Deps{DB: db, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
+	deps := &service.Deps{DB: db.Pool, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
 
-	interceptors := connect.WithInterceptors(loggingInterceptor(), service.SessionInterceptor(deps))
+	// Outermost first: log everything, refuse calls while the database is not ready, then check the session.
+	interceptors := connect.WithInterceptors(loggingInterceptor(), service.ReadyInterceptor(db.NotReady), service.SessionInterceptor(deps))
 
 	mux := http.NewServeMux()
-	mux.Handle(dentalv1connect.NewHealthServiceHandler(service.NewHealthService(db, version), interceptors))
+	mux.Handle(dentalv1connect.NewHealthServiceHandler(service.NewHealthService(db.Pool, version, db.NotReady), interceptors))
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(service.NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(service.NewAuthService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(service.NewMemberService(deps), interceptors))
 	// Status page for people and uptime monitors. Raw errors only without TLS (development).
-	mux.Handle("GET /{$}", &statuspage.Handler{DB: db, Version: version, Started: started, ShowErrors: !cfg.TLS()})
+	mux.Handle("GET /{$}", &statuspage.Handler{DB: db.Pool, NotReady: db.NotReady, Version: version, Started: started, ShowErrors: !cfg.TLS()})
 
 	server := &http.Server{
 		Addr:              cfg.Addr,
