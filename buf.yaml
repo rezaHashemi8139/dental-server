@@ -1,6 +1,9 @@
 version: v2
 modules:
   - path: proto
+deps:
+  # Validation rules for request fields (buf/validate/validate.proto), checked by protovalidate.
+  - buf.build/bufbuild/protovalidate
 lint:
   use:
     - STANDARD

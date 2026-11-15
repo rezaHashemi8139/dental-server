@@ -7,6 +7,7 @@
 package dentalv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -87,10 +88,11 @@ type SignUpRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 3–32 characters: letters, digits, '.', '_' or '-'. Not case-sensitive.
 	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	// At least 8 characters (at most 256), with at least one lowercase letter,
-	// one uppercase letter and one digit. Otherwise SignUp fails with
+	// At least 8 characters (at most 256), with at least one lowercase letter (a-z),
+	// one uppercase letter (A-Z) and one digit (0-9). Otherwise SignUp fails with
 	// INVALID_ARGUMENT and the message "weak_password".
-	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	// At most 100 characters.
 	FullName      string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -192,11 +194,13 @@ func (x *SignUpResponse) GetUser() *User {
 }
 
 type LoginRequest struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	InstallationId     []byte                 `protobuf:"bytes,1,opt,name=installation_id,json=installationId,proto3" json:"installation_id,omitempty"`
-	InstallationSecret []byte                 `protobuf:"bytes,2,opt,name=installation_secret,json=installationSecret,proto3" json:"installation_secret,omitempty"`
-	Username           string                 `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	Password           string                 `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 raw UUID bytes, from InstallationService.Register.
+	InstallationId []byte `protobuf:"bytes,1,opt,name=installation_id,json=installationId,proto3" json:"installation_id,omitempty"`
+	// 32 bytes, from InstallationService.Register.
+	InstallationSecret []byte `protobuf:"bytes,2,opt,name=installation_secret,json=installationSecret,proto3" json:"installation_secret,omitempty"`
+	Username           string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Password           string `protobuf:"bytes,4,opt,name=password,proto3" json:"password,omitempty"`
 	// A new X25519 public key (32 bytes) made for this login only.
 	// The database keys are sealed to it (see SealedBox).
 	ClientPublicKey []byte `protobuf:"bytes,5,opt,name=client_public_key,json=clientPublicKey,proto3" json:"client_public_key,omitempty"`
@@ -537,23 +541,24 @@ var File_dental_v1_auth_proto protoreflect.FileDescriptor
 
 const file_dental_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x14dental/v1/auth.proto\x12\tdental.v1\x1a\x16dental/v1/crypto.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
+	"\x14dental/v1/auth.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16dental/v1/crypto.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
-	"\tfull_name\x18\x03 \x01(\tR\bfullName\"d\n" +
-	"\rSignUpRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x1b\n" +
-	"\tfull_name\x18\x03 \x01(\tR\bfullName\"5\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\"\xde\x02\n" +
+	"\rSignUpRequest\x129\n" +
+	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xeb\x01\n" +
+	"\bpassword\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\bpassword\x12$\n" +
+	"\tfull_name\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18dR\bfullName\"5\n" +
 	"\x0eSignUpResponse\x12#\n" +
-	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\xcc\x01\n" +
-	"\fLoginRequest\x12'\n" +
-	"\x0finstallation_id\x18\x01 \x01(\fR\x0einstallationId\x12/\n" +
-	"\x13installation_secret\x18\x02 \x01(\fR\x12installationSecret\x12\x1a\n" +
-	"\busername\x18\x03 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x04 \x01(\tR\bpassword\x12*\n" +
-	"\x11client_public_key\x18\x05 \x01(\fR\x0fclientPublicKey\"\x95\x03\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\xfc\x01\n" +
+	"\fLoginRequest\x120\n" +
+	"\x0finstallation_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x0einstallationId\x128\n" +
+	"\x13installation_secret\x18\x02 \x01(\fB\a\xbaH\x04z\x02h R\x12installationSecret\x12%\n" +
+	"\busername\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
+	"\bpassword\x18\x04 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\x123\n" +
+	"\x11client_public_key\x18\x05 \x01(\fB\a\xbaH\x04z\x02h R\x0fclientPublicKey\"\x95\x03\n" +
 	"\rLoginResponse\x12#\n" +
 	"\rsession_token\x18\x01 \x01(\tR\fsessionToken\x12H\n" +
 	"\x12session_expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x10sessionExpiresAt\x12#\n" +

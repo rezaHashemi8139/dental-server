@@ -61,8 +61,14 @@ func run() error {
 	}
 	deps := &service.Deps{DB: db.Pool, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
 
-	// Outermost first: log everything, refuse calls while the database is not ready, then check the session.
-	interceptors := connect.WithInterceptors(loggingInterceptor(), service.ReadyInterceptor(db.NotReady), service.SessionInterceptor(deps))
+	// Outermost first: log everything, reject invalid input (before any database work),
+	// refuse calls while the database is not ready, then check the session.
+	interceptors := connect.WithInterceptors(
+		loggingInterceptor(),
+		service.ValidateInterceptor(),
+		service.ReadyInterceptor(db.NotReady),
+		service.SessionInterceptor(deps),
+	)
 
 	mux := http.NewServeMux()
 	mux.Handle(dentalv1connect.NewHealthServiceHandler(service.NewHealthService(db.Pool, version, db.NotReady), interceptors))

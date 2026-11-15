@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package dental.v1;
 
+import "buf/validate/validate.proto";
 import "dental/v1/auth.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -32,7 +33,10 @@ message ListMembersResponse {
 
 message AddMemberRequest {
   // The account must already exist (AuthService.SignUp).
-  string username = 1;
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
   bool is_admin = 2;
 }
 
@@ -42,14 +46,14 @@ message AddMemberResponse {
 
 message RemoveMemberRequest {
   // 16 raw UUID bytes. The owner cannot be removed.
-  bytes user_id = 1;
+  bytes user_id = 1 [(buf.validate.field).bytes.len = 16];
 }
 
 message RemoveMemberResponse {}
 
 message SetMemberAdminRequest {
   // 16 raw UUID bytes. The owner is always admin.
-  bytes user_id = 1;
+  bytes user_id = 1 [(buf.validate.field).bytes.len = 16];
   bool is_admin = 2;
 }
 

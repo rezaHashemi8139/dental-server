@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -22,13 +21,9 @@ func NewInstallationService(d *Deps) *InstallationService {
 	return &InstallationService{d: d}
 }
 
-const maxMacAddresses = 32
-
+// Request fields are checked by ValidateInterceptor against proto/dental/v1/installation.proto.
 func (s *InstallationService) Register(ctx context.Context, req *dentalv1.RegisterRequest) (*dentalv1.RegisterResponse, error) {
 	m := req.GetMachine()
-	if m == nil || len(m.GetMachineIdHash()) != 32 || len(m.GetMacAddresses()) > maxMacAddresses {
-		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
-	}
 
 	secret := secure.RandomBytes(32)
 	var id pgtype.UUID

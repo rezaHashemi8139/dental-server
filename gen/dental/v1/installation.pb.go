@@ -7,6 +7,7 @@
 package dentalv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -28,17 +29,20 @@ type MachineInfo struct {
 	// SHA-256 of the Windows MachineGuid (32 bytes). Stays the same when the app
 	// is reinstalled, changes when Windows is reinstalled.
 	MachineIdHash []byte `protobuf:"bytes,1,opt,name=machine_id_hash,json=machineIdHash,proto3" json:"machine_id_hash,omitempty"`
-	Hostname      string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	// e.g. "Windows 11 Enterprise"
+	// At most 255 characters.
+	Hostname string `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	// e.g. "Windows 11 Enterprise". At most 100 characters.
 	OsName string `protobuf:"bytes,3,opt,name=os_name,json=osName,proto3" json:"os_name,omitempty"`
-	// e.g. "10.0.26200"
-	OsVersion   string `protobuf:"bytes,4,opt,name=os_version,json=osVersion,proto3" json:"os_version,omitempty"`
+	// e.g. "10.0.26200". At most 50 characters.
+	OsVersion string `protobuf:"bytes,4,opt,name=os_version,json=osVersion,proto3" json:"os_version,omitempty"`
+	// At most 200 characters.
 	CpuModel    string `protobuf:"bytes,5,opt,name=cpu_model,json=cpuModel,proto3" json:"cpu_model,omitempty"`
 	CpuCores    uint32 `protobuf:"varint,6,opt,name=cpu_cores,json=cpuCores,proto3" json:"cpu_cores,omitempty"`
 	MemoryBytes uint64 `protobuf:"varint,7,opt,name=memory_bytes,json=memoryBytes,proto3" json:"memory_bytes,omitempty"`
 	// MAC addresses of the physical network adapters, e.g. "AA:BB:CC:DD:EE:FF".
+	// At most 32 addresses of at most 64 characters each.
 	MacAddresses []string `protobuf:"bytes,8,rep,name=mac_addresses,json=macAddresses,proto3" json:"mac_addresses,omitempty"`
-	// Desktop app version, e.g. "0.1.0".
+	// Desktop app version, e.g. "0.1.0". At most 50 characters.
 	AppVersion    string `protobuf:"bytes,9,opt,name=app_version,json=appVersion,proto3" json:"app_version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -257,21 +261,21 @@ var File_dental_v1_installation_proto protoreflect.FileDescriptor
 
 const file_dental_v1_installation_proto_rawDesc = "" +
 	"\n" +
-	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\xac\x02\n" +
-	"\vMachineInfo\x12&\n" +
-	"\x0fmachine_id_hash\x18\x01 \x01(\fR\rmachineIdHash\x12\x1a\n" +
-	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x17\n" +
-	"\aos_name\x18\x03 \x01(\tR\x06osName\x12\x1d\n" +
+	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf4\x02\n" +
+	"\vMachineInfo\x12/\n" +
+	"\x0fmachine_id_hash\x18\x01 \x01(\fB\a\xbaH\x04z\x02h R\rmachineIdHash\x12$\n" +
+	"\bhostname\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\xff\x01R\bhostname\x12 \n" +
+	"\aos_name\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18dR\x06osName\x12&\n" +
 	"\n" +
-	"os_version\x18\x04 \x01(\tR\tosVersion\x12\x1b\n" +
-	"\tcpu_model\x18\x05 \x01(\tR\bcpuModel\x12\x1b\n" +
+	"os_version\x18\x04 \x01(\tB\a\xbaH\x04r\x02\x182R\tosVersion\x12%\n" +
+	"\tcpu_model\x18\x05 \x01(\tB\b\xbaH\x05r\x03\x18\xc8\x01R\bcpuModel\x12\x1b\n" +
 	"\tcpu_cores\x18\x06 \x01(\rR\bcpuCores\x12!\n" +
-	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x12#\n" +
-	"\rmac_addresses\x18\b \x03(\tR\fmacAddresses\x12\x1f\n" +
-	"\vapp_version\x18\t \x01(\tR\n" +
-	"appVersion\"C\n" +
-	"\x0fRegisterRequest\x120\n" +
-	"\amachine\x18\x01 \x01(\v2\x16.dental.v1.MachineInfoR\amachine\"\xce\x01\n" +
+	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x123\n" +
+	"\rmac_addresses\x18\b \x03(\tB\x0e\xbaH\v\x92\x01\b\x10 \"\x04r\x02\x18@R\fmacAddresses\x12(\n" +
+	"\vapp_version\x18\t \x01(\tB\a\xbaH\x04r\x02\x182R\n" +
+	"appVersion\"K\n" +
+	"\x0fRegisterRequest\x128\n" +
+	"\amachine\x18\x01 \x01(\v2\x16.dental.v1.MachineInfoB\x06\xbaH\x03\xc8\x01\x01R\amachine\"\xce\x01\n" +
 	"\x10RegisterResponse\x12'\n" +
 	"\x0finstallation_id\x18\x01 \x01(\fR\x0einstallationId\x12/\n" +
 	"\x13installation_secret\x18\x02 \x01(\fR\x12installationSecret\x12#\n" +

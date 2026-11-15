@@ -55,7 +55,7 @@ func newTestEnv(t *testing.T) *testEnv {
 	signer, _ := secure.NewSigner(secure.RandomBytes(32))
 	deps := &Deps{DB: db, Keys: keys, Signer: signer, SessionTTL: time.Hour, Now: time.Now}
 
-	interceptors := connect.WithInterceptors(SessionInterceptor(deps))
+	interceptors := connect.WithInterceptors(ValidateInterceptor(), SessionInterceptor(deps))
 	mux := http.NewServeMux()
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(NewAuthService(deps), interceptors))

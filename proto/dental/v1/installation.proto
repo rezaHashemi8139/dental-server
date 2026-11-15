@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package dental.v1;
 
+import "buf/validate/validate.proto";
 import "google/protobuf/timestamp.proto";
 
 // An installation is one copy of the desktop app on one computer, with its own
@@ -15,23 +16,31 @@ service InstallationService {
 message MachineInfo {
   // SHA-256 of the Windows MachineGuid (32 bytes). Stays the same when the app
   // is reinstalled, changes when Windows is reinstalled.
-  bytes machine_id_hash = 1;
-  string hostname = 2;
-  // e.g. "Windows 11 Enterprise"
-  string os_name = 3;
-  // e.g. "10.0.26200"
-  string os_version = 4;
-  string cpu_model = 5;
+  bytes machine_id_hash = 1 [(buf.validate.field).bytes.len = 32];
+  // At most 255 characters.
+  string hostname = 2 [(buf.validate.field).string.max_len = 255];
+  // e.g. "Windows 11 Enterprise". At most 100 characters.
+  string os_name = 3 [(buf.validate.field).string.max_len = 100];
+  // e.g. "10.0.26200". At most 50 characters.
+  string os_version = 4 [(buf.validate.field).string.max_len = 50];
+  // At most 200 characters.
+  string cpu_model = 5 [(buf.validate.field).string.max_len = 200];
   uint32 cpu_cores = 6;
   uint64 memory_bytes = 7;
   // MAC addresses of the physical network adapters, e.g. "AA:BB:CC:DD:EE:FF".
-  repeated string mac_addresses = 8;
-  // Desktop app version, e.g. "0.1.0".
-  string app_version = 9;
+  // At most 32 addresses of at most 64 characters each.
+  repeated string mac_addresses = 8 [(buf.validate.field).repeated = {
+    max_items: 32
+    items: {
+      string: {max_len: 64}
+    }
+  }];
+  // Desktop app version, e.g. "0.1.0". At most 50 characters.
+  string app_version = 9 [(buf.validate.field).string.max_len = 50];
 }
 
 message RegisterRequest {
-  MachineInfo machine = 1;
+  MachineInfo machine = 1 [(buf.validate.field).required = true];
 }
 
 message RegisterResponse {

@@ -3,6 +3,9 @@
 version: v2
 managed:
   enabled: true
+  disable:
+    # Its Go code comes from the protovalidate library; keep its own go_package.
+    - module: buf.build/bufbuild/protovalidate
   override:
     - file_option: go_package_prefix
       value: dental-server/gen

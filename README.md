@@ -43,7 +43,9 @@ curl -X POST -H "Content-Type: application/json" -d '{}' localhost:8080/dental.v
 
 ## Changing the API
 
-1. Edit or add `.proto` files in `proto/dental/v1/`.
+1. Edit or add `.proto` files in `proto/dental/v1/`. Put input rules (lengths, formats...)
+   on the fields with [protovalidate](https://protovalidate.com) options (`buf.validate.field`):
+   every request is checked against them by `service.ValidateInterceptor` before it reaches a handler.
 2. Run `go generate ./...` (lints the protos, regenerates `gen/`).
 3. Implement the new methods in `internal/service/` and register the handler in `main.go`.
 

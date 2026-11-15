@@ -3,10 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
-	"unicode"
-	"unicode/utf8"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
@@ -30,45 +27,12 @@ func NewAuthService(d *Deps) *AuthService {
 	return &AuthService{d: d}
 }
 
-var usernamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]{3,32}$`)
+const databaseKeyLength = 32
 
-const (
-	minPasswordLength = 8
-	maxPasswordLength = 256
-	maxFullNameLength = 100
-	databaseKeyLength = 32
-)
-
-// strongPassword reports whether a new password follows the policy: at least
-// minPasswordLength characters with a lowercase letter, an uppercase letter and a digit.
-func strongPassword(password string) bool {
-	if utf8.RuneCountInString(password) < minPasswordLength {
-		return false
-	}
-	var lower, upper, digit bool
-	for _, r := range password {
-		switch {
-		case unicode.IsLower(r):
-			lower = true
-		case unicode.IsUpper(r):
-			upper = true
-		case unicode.IsDigit(r):
-			digit = true
-		}
-	}
-	return lower && upper && digit
-}
+// Request fields (username format, password policy, lengths) are checked by
+// ValidateInterceptor against the rules in proto/dental/v1/auth.proto.
 
 func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (*dentalv1.SignUpResponse, error) {
-	if !usernamePattern.MatchString(req.GetUsername()) ||
-		utf8.RuneCountInString(req.GetPassword()) > maxPasswordLength ||
-		utf8.RuneCountInString(req.GetFullName()) > maxFullNameLength {
-		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
-	}
-	if !strongPassword(req.GetPassword()) {
-		return nil, fail(connect.CodeInvalidArgument, reasonWeakPassword)
-	}
-
 	var id pgtype.UUID
 	err := s.d.DB.QueryRow(ctx,
 		`INSERT INTO users (username, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id`,
@@ -90,8 +54,7 @@ func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (
 
 func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*dentalv1.LoginResponse, error) {
 	installationID, ok := toUUID(req.GetInstallationId())
-	if !ok || len(req.GetInstallationSecret()) != 32 || len(req.GetClientPublicKey()) != 32 ||
-		req.GetUsername() == "" || len(req.GetPassword()) > 4*maxPasswordLength {
+	if !ok {
 		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
 	}
 	now := s.d.Now()

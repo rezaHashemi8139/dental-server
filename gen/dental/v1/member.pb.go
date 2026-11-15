@@ -7,6 +7,7 @@
 package dentalv1
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -449,7 +450,7 @@ var File_dental_v1_member_proto protoreflect.FileDescriptor
 
 const file_dental_v1_member_proto_rawDesc = "" +
 	"\n" +
-	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x14dental/v1/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
+	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
 	"\x06Member\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x12\x19\n" +
 	"\bis_owner\x18\x02 \x01(\bR\aisOwner\x12\x19\n" +
@@ -457,17 +458,17 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"\badded_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aaddedAt\"\x14\n" +
 	"\x12ListMembersRequest\"B\n" +
 	"\x13ListMembersResponse\x12+\n" +
-	"\amembers\x18\x01 \x03(\v2\x11.dental.v1.MemberR\amembers\"I\n" +
-	"\x10AddMemberRequest\x12\x1a\n" +
-	"\busername\x18\x01 \x01(\tR\busername\x12\x19\n" +
+	"\amembers\x18\x01 \x03(\v2\x11.dental.v1.MemberR\amembers\"T\n" +
+	"\x10AddMemberRequest\x12%\n" +
+	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12\x19\n" +
 	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\">\n" +
 	"\x11AddMemberResponse\x12)\n" +
-	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member\".\n" +
-	"\x13RemoveMemberRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\fR\x06userId\"\x16\n" +
-	"\x14RemoveMemberResponse\"K\n" +
-	"\x15SetMemberAdminRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\fR\x06userId\x12\x19\n" +
+	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member\"7\n" +
+	"\x13RemoveMemberRequest\x12 \n" +
+	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\"\x16\n" +
+	"\x14RemoveMemberResponse\"T\n" +
+	"\x15SetMemberAdminRequest\x12 \n" +
+	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\x12\x19\n" +
 	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\"C\n" +
 	"\x16SetMemberAdminResponse\x12)\n" +
 	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member2\xd5\x02\n" +
