@@ -12,7 +12,7 @@ import (
 
 func TestLanguageService(t *testing.T) {
 	s := NewLanguageService([]languages.Language{
-		{Code: "de", Name: "Deutsch", Abbr: "DE", Dir: "ltr", Version: 3, Content: []byte(`{"_meta":{}}`)},
+		{Code: "de", Name: "German", Abbr: "DE", Dir: "ltr", Version: 3, Content: []byte(`{"_meta":{}}`)},
 	})
 	ctx := context.Background()
 
@@ -28,7 +28,7 @@ func TestLanguageService(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.GetLanguage().GetName() != "Deutsch" || string(got.GetContent()) != `{"_meta":{}}` {
+	if got.GetLanguage().GetName() != "German" || string(got.GetContent()) != `{"_meta":{}}` {
 		t.Fatalf("get: %v", got)
 	}
 

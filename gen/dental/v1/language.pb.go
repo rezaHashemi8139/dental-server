@@ -27,7 +27,7 @@ type Language struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// e.g. "de", "pt-BR".
 	Code string `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
-	// Name in the language itself, e.g. "Deutsch".
+	// Name of the language as written in that language (the file's _meta.name).
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Short label, e.g. "DE".
 	Abbr string `protobuf:"bytes,3,opt,name=abbr,proto3" json:"abbr,omitempty"`

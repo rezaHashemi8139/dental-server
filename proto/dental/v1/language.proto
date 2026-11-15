@@ -19,7 +19,7 @@ service LanguageService {
 message Language {
   // e.g. "de", "pt-BR".
   string code = 1;
-  // Name in the language itself, e.g. "Deutsch".
+  // Name of the language as written in that language (the file's _meta.name).
   string name = 2;
   // Short label, e.g. "DE".
   string abbr = 3;
@@ -27,12 +27,10 @@ message Language {
   string dir = 4;
   // Goes up whenever the file changes.
   uint32 version = 5;
-  // Calendar for showing dates, as a CLDR / JavaScript Intl calendar id that can be
-  // passed to Intl.DateTimeFormat: "persian" (Solar Hijri), "gregory"
-  // (Gregorian) or "islamic" (Lunar Hijri).
-  // Display only: the app converts dates when showing them. The server and the
-  // database always use UTC Gregorian time (google.protobuf.Timestamp / timestamptz).
-  string calendar = 6;
+
+  // Was the display calendar; calendars are now chosen by the app alone.
+  reserved 6;
+  reserved "calendar";
 }
 
 message ListLanguagesRequest {}
