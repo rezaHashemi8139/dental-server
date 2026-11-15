@@ -76,30 +76,22 @@ func TestLanguagesHaveTheSameKeys(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	ok := `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "calendar": "gregory", "version": 2}, "app": {}}`
+	ok := `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 2}, "app": {}}`
 	l, err := parse("de", []byte(ok))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if l.Abbr != "DE" || l.Version != 2 || l.Calendar != "gregory" {
+	if l.Abbr != "DE" || l.Version != 2 {
 		t.Errorf("got %+v", l)
-	}
-	for _, calendar := range []string{"persian", "islamic"} {
-		content := `{"_meta": {"code": "fa", "name": "Farsi", "dir": "rtl", "calendar": "` + calendar + `", "version": 1}}`
-		if l, err := parse("fa", []byte(content)); err != nil || l.Calendar != calendar {
-			t.Errorf("calendar %q: got %+v, %v", calendar, l, err)
-		}
 	}
 
 	bad := map[string]string{
 		"not json":     `{`,
 		"no meta":      `{"app": {}}`,
-		"code differs": `{"_meta": {"code": "fr", "name": "French", "dir": "ltr", "calendar": "gregory", "version": 1}}`,
-		"no name":      `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "calendar": "gregory", "version": 1}}`,
-		"bad dir":      `{"_meta": {"code": "de", "name": "German", "dir": "up", "calendar": "gregory", "version": 1}}`,
-		"no calendar":  `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1}}`,
-		"bad calendar": `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "calendar": "gregorian", "version": 1}}`,
-		"no version":   `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "calendar": "gregory"}}`,
+		"code differs": `{"_meta": {"code": "fr", "name": "French", "dir": "ltr", "version": 1}}`,
+		"no name":      `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "version": 1}}`,
+		"bad dir":      `{"_meta": {"code": "de", "name": "German", "dir": "up", "version": 1}}`,
+		"no version":   `{"_meta": {"code": "de", "name": "German", "dir": "ltr"}}`,
 	}
 	for name, content := range bad {
 		if _, err := parse("de", []byte(content)); err == nil {

@@ -4,8 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "calendar": "gregory",
-    "version": 4
+    "version": 5
   },
   "app": {
     "title": "Smart Management Base",

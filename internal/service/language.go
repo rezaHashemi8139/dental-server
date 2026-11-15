@@ -41,7 +41,5 @@ func (s *LanguageService) GetLanguage(_ context.Context, req *dentalv1.GetLangua
 }
 
 func toProtoLanguage(l languages.Language) *dentalv1.Language {
-	return &dentalv1.Language{
-		Code: l.Code, Name: l.Name, Abbr: l.Abbr, Dir: l.Dir, Calendar: l.Calendar, Version: l.Version,
-	}
+	return &dentalv1.Language{Code: l.Code, Name: l.Name, Abbr: l.Abbr, Dir: l.Dir, Version: l.Version}
 }

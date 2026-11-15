@@ -4,8 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "calendar": "persian",
-    "version": 4
+    "version": 5
   },
   "app": {
     "title": "Smart Management Base",
