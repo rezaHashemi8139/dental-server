@@ -4,7 +4,8 @@
   Watches the source and rebuilds + restarts the server on every change.
 
 .DESCRIPTION
-  Watched: *.go, *.sql, *.html in the project, *.proto in proto/, go.mod, go.sum and .env.
+  Watched: *.go, *.sql, *.html and *.json (embedded language files) in the project,
+  *.proto in proto/, go.mod, go.sum and .env.
   A changed .proto first runs `go generate` (lint + regenerate gen/).
   If the build fails, the previous server keeps running until the next change.
   Stop with Ctrl+C.
@@ -38,7 +39,8 @@ function Get-Fingerprint([string[]]$Dirs, [string[]]$Exts, [string[]]$Names = @(
         Where-Object { $Exts -contains $_.Extension })
     ($files | Sort-Object FullName | ForEach-Object { "$($_.FullName)|$($_.LastWriteTimeUtc.Ticks)" }) -join "`n"
 }
-function Get-SourceFingerprint { Get-Fingerprint -Dirs 'internal', 'gen' -Exts '.go', '.sql', '.html' -Names 'go.mod', 'go.sum', '.env' }
+# .json: the language files in internal/languages/files are embedded in the binary.
+function Get-SourceFingerprint { Get-Fingerprint -Dirs 'internal', 'gen' -Exts '.go', '.sql', '.html', '.json' -Names 'go.mod', 'go.sum', '.env' }
 function Get-ProtoFingerprint { Get-Fingerprint -Dirs 'proto' -Exts '.proto' }
 
 function Stop-Server {
