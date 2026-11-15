@@ -5,6 +5,7 @@ import (
 	"errors"
 	"regexp"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"connectrpc.com/connect"
@@ -32,18 +33,40 @@ func NewAuthService(d *Deps) *AuthService {
 var usernamePattern = regexp.MustCompile(`^[A-Za-z0-9._-]{3,32}$`)
 
 const (
-	minPasswordLength = 10
+	minPasswordLength = 8
 	maxPasswordLength = 256
 	maxFullNameLength = 100
 	databaseKeyLength = 32
 )
 
+// strongPassword reports whether a new password follows the policy: at least
+// minPasswordLength characters with a lowercase letter, an uppercase letter and a digit.
+func strongPassword(password string) bool {
+	if utf8.RuneCountInString(password) < minPasswordLength {
+		return false
+	}
+	var lower, upper, digit bool
+	for _, r := range password {
+		switch {
+		case unicode.IsLower(r):
+			lower = true
+		case unicode.IsUpper(r):
+			upper = true
+		case unicode.IsDigit(r):
+			digit = true
+		}
+	}
+	return lower && upper && digit
+}
+
 func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (*dentalv1.SignUpResponse, error) {
-	passwordLength := utf8.RuneCountInString(req.GetPassword())
 	if !usernamePattern.MatchString(req.GetUsername()) ||
-		passwordLength < minPasswordLength || passwordLength > maxPasswordLength ||
+		utf8.RuneCountInString(req.GetPassword()) > maxPasswordLength ||
 		utf8.RuneCountInString(req.GetFullName()) > maxFullNameLength {
 		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
+	if !strongPassword(req.GetPassword()) {
+		return nil, fail(connect.CodeInvalidArgument, reasonWeakPassword)
 	}
 
 	var id pgtype.UUID

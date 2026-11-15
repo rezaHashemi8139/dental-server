@@ -28,6 +28,7 @@ type Deps struct {
 // desktop app can map it to a translated text.
 const (
 	reasonInvalidArgument     = "invalid_argument"
+	reasonWeakPassword        = "weak_password"
 	reasonInvalidInstallation = "invalid_installation"
 	reasonInstallationRevoked = "installation_revoked"
 	reasonInvalidCredentials  = "invalid_credentials"

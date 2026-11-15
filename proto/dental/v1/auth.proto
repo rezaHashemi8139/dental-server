@@ -35,7 +35,9 @@ message User {
 message SignUpRequest {
   // 3–32 characters: letters, digits, '.', '_' or '-'. Not case-sensitive.
   string username = 1;
-  // At least 10 characters.
+  // At least 8 characters (at most 256), with at least one lowercase letter,
+  // one uppercase letter and one digit. Otherwise SignUp fails with
+  // INVALID_ARGUMENT and the message "weak_password".
   string password = 2;
   string full_name = 3;
 }

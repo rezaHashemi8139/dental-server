@@ -110,7 +110,7 @@ func (e *testEnv) register(machine byte) *dentalv1.RegisterResponse {
 func (e *testEnv) signUp(username string) {
 	e.t.Helper()
 	if _, err := e.auth.SignUp(context.Background(), &dentalv1.SignUpRequest{
-		Username: username, Password: "password-" + username, FullName: "Dr. " + username,
+		Username: username, Password: "Passw0rd-" + username, FullName: "Dr. " + username,
 	}); err != nil {
 		e.t.Fatal(err)
 	}
@@ -175,13 +175,13 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	}
 
 	e.signUp("doctor")
-	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "DOCTOR", Password: "another-password"})
+	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "DOCTOR", Password: "Another-passw0rd"})
 	wantCode(t, err, connect.CodeAlreadyExists, reasonUsernameTaken)
 	_, err = e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "x", Password: "short"})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
 	// First login: the doctor becomes owner, the database does not exist yet.
-	first, err := e.login(inst, "doctor", "password-doctor")
+	first, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +196,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	}
 
 	// A retried login before confirming gets the same pending key.
-	retry, err := e.login(inst, "doctor", "password-doctor")
+	retry, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +216,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	wantCode(t, err, connect.CodeFailedPrecondition, reasonRotationMismatch)
 
 	// Next login: current is the confirmed key, and there is a new next key.
-	second, err := e.login(inst, "doctor", "password-doctor")
+	second, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,16 +230,16 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	// Wrong password, wrong installation secret, unknown user.
 	_, err = e.login(inst, "doctor", "wrong-password")
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidCredentials)
-	_, err = e.login(inst, "nobody", "password-nobody")
+	_, err = e.login(inst, "nobody", "Passw0rd-nobody")
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidCredentials)
 	forged := proto.Clone(inst).(*dentalv1.RegisterResponse)
 	forged.InstallationSecret = bytes.Repeat([]byte{9}, 32)
-	_, err = e.login(forged, "doctor", "password-doctor")
+	_, err = e.login(forged, "doctor", "Passw0rd-doctor")
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidInstallation)
 
 	// A user who is not a member cannot get the keys.
 	e.signUp("secretary")
-	_, err = e.login(inst, "secretary", "password-secretary")
+	_, err = e.login(inst, "secretary", "Passw0rd-secretary")
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAMember)
 
 	// The admin adds them; then they get the same database key.
@@ -253,7 +253,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	_, err = owner.AddMember(ctx, &dentalv1.AddMemberRequest{Username: "ghost"})
 	wantCode(t, err, connect.CodeNotFound, reasonUserNotFound)
 
-	sec, err := e.login(inst, "secretary", "password-secretary")
+	sec, err := e.login(inst, "secretary", "Passw0rd-secretary")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -293,7 +293,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	if _, err := e.deps.DB.Exec(ctx, `UPDATE installations SET revoked_at = now() WHERE id = $1`, installationID); err != nil {
 		t.Fatal(err)
 	}
-	_, err = e.login(inst, "doctor", "password-doctor")
+	_, err = e.login(inst, "doctor", "Passw0rd-doctor")
 	wantCode(t, err, connect.CodePermissionDenied, reasonInstallationRevoked)
 	_, err = owner.ListMembers(ctx, &dentalv1.ListMembersRequest{})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
@@ -303,7 +303,7 @@ func TestKeysAreEncryptedAtRest(t *testing.T) {
 	e := newTestEnv(t)
 	inst := e.register(2)
 	e.signUp("doctor")
-	res, err := e.login(inst, "doctor", "password-doctor")
+	res, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
 	}

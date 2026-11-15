@@ -87,7 +87,9 @@ type SignUpRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 3–32 characters: letters, digits, '.', '_' or '-'. Not case-sensitive.
 	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	// At least 10 characters.
+	// At least 8 characters (at most 256), with at least one lowercase letter,
+	// one uppercase letter and one digit. Otherwise SignUp fails with
+	// INVALID_ARGUMENT and the message "weak_password".
 	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	FullName      string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
