@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Data encrypted to a one-time X25519 key of the client, on top of TLS.
+// Used for local-database keys, so they stay secret even if TLS is intercepted.
+//
+// Scheme (both sides must match exactly):
+//   shared  = X25519(server_ephemeral_private, client_ephemeral_public)
+//   key     = HKDF-SHA256(ikm = shared, salt = client_public || server_public,
+//                         info = "dental/sealed-box/v1"), 32 bytes
+//   plain   = XChaCha20-Poly1305-Open(key, nonce, ciphertext, aad)
+// The AAD is the installation id (16 raw UUID bytes).
+message SealedBox {
+  // The server's one-time X25519 public key (32 bytes).
+  bytes server_public_key = 1;
+  // 24 bytes.
+  bytes nonce = 2;
+  // A serialized message, encrypted. Its type is given by the field holding the box.
+  bytes ciphertext = 3;
+}
+
+// Keys of the encrypted local database (SQLCipher raw keys).
+// Sent inside a SealedBox, never in plain form.
+//
+// Rotation (two-phase, so the database can never end up locked):
+//   1. The client opens the database with current_key (or with next_key, if an
+//      earlier rotation finished locally but its confirmation never reached the server).
+//   2. If it opened with current_key, it rekeys the database to next_key and
+//      verifies that next_key opens it.
+//   3. It calls AuthService.ConfirmKeyRotation(current_version + 1).
+// Until step 3 succeeds the server keeps sending the same current_key and next_key.
+message DatabaseKeys {
+  // Version of current_key. 0 = the local database has not been created yet:
+  // the client creates it with next_key, then confirms version 1.
+  uint32 current_version = 1;
+  // 32 bytes. Empty when current_version is 0.
+  bytes current_key = 2;
+  // 32 bytes. Becomes version current_version + 1 once confirmed.
+  bytes next_key = 3;
+}
+
+// Permission to open the local database without the server, until expires_at.
+// The client verifies the signature with the server's Ed25519 public key built
+// into the app, so none of these fields can be changed locally.
+message OfflineGrant {
+  // 16 raw UUID bytes.
+  bytes installation_id = 1;
+  // 16 raw UUID bytes.
+  bytes user_id = 2;
+  string username = 3;
+  string full_name = 4;
+  // Whether the user may add and remove members of this installation.
+  bool is_admin = 5;
+  // Server time when issued. The client never accepts a local clock earlier than this.
+  google.protobuf.Timestamp issued_at = 6;
+  // After this, logging in needs the server again. Set per installation by the server.
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+message SignedOfflineGrant {
+  // A serialized OfflineGrant. Kept as bytes so the signature covers exactly what was signed.
+  bytes grant = 1;
+  // Ed25519 signature of `grant` (64 bytes).
+  bytes signature = 2;
+}

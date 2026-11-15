@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// An installation is one copy of the desktop app on one computer, with its own
+// local database. A doctor working in three clinics has three installations.
+service InstallationService {
+  // Called once, the first time the app starts. No login needed.
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+}
+
+// Describes the computer, so the server knows where an installation runs.
+message MachineInfo {
+  // SHA-256 of the Windows MachineGuid (32 bytes). Stays the same when the app
+  // is reinstalled, changes when Windows is reinstalled.
+  bytes machine_id_hash = 1;
+  string hostname = 2;
+  // e.g. "Windows 11 Enterprise"
+  string os_name = 3;
+  // e.g. "10.0.26200"
+  string os_version = 4;
+  string cpu_model = 5;
+  uint32 cpu_cores = 6;
+  uint64 memory_bytes = 7;
+  // MAC addresses of the physical network adapters, e.g. "AA:BB:CC:DD:EE:FF".
+  repeated string mac_addresses = 8;
+  // Desktop app version, e.g. "0.1.0".
+  string app_version = 9;
+}
+
+message RegisterRequest {
+  MachineInfo machine = 1;
+}
+
+message RegisterResponse {
+  // 16 raw UUID bytes. The client stores it; it marks the app as already set up.
+  bytes installation_id = 1;
+  // 32 random bytes. The client stores it encrypted with DPAPI and sends it with
+  // every login: keys are only given to logins coming from this installation.
+  bytes installation_secret = 2;
+  // True if an earlier installation was registered from the same computer.
+  bool known_machine = 3;
+  google.protobuf.Timestamp server_time = 4;
+}

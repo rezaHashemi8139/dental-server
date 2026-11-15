@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Lets clients check that the server is up and read its clock.
+service HealthService {
+  rpc Check(CheckRequest) returns (CheckResponse) {}
+}
+
+message CheckRequest {}
+
+message CheckResponse {
+  // Server version, e.g. "0.1.0".
+  string version = 1;
+  // Server time. The desktop app trusts this over the local clock.
+  google.protobuf.Timestamp server_time = 2;
+  // Whether the server can reach PostgreSQL.
+  bool database_ok = 3;
+}

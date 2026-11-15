@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "dental/v1/crypto.proto";
+import "google/protobuf/timestamp.proto";
+
+// Accounts, logins and local-database keys.
+//
+// Calls marked "needs session" must send the session token from Login as
+// the header `Authorization: Bearer <token>`.
+service AuthService {
+  // Creates an account. Does not log in.
+  rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
+
+  // Logs in on an installation and returns the local-database keys.
+  // The first user to log in on a new installation becomes its owner and admin.
+  // Anyone else must have been added with MemberService.AddMember first.
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+
+  // Confirms that the local database now uses the next key. Needs session.
+  rpc ConfirmKeyRotation(ConfirmKeyRotationRequest) returns (ConfirmKeyRotationResponse) {}
+
+  // Ends the session. Needs session.
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+}
+
+message User {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string username = 2;
+  string full_name = 3;
+}
+
+message SignUpRequest {
+  // 3–32 characters: letters, digits, '.', '_' or '-'. Not case-sensitive.
+  string username = 1;
+  // At least 10 characters.
+  string password = 2;
+  string full_name = 3;
+}
+
+message SignUpResponse {
+  User user = 1;
+}
+
+message LoginRequest {
+  bytes installation_id = 1;
+  bytes installation_secret = 2;
+  string username = 3;
+  string password = 4;
+  // A new X25519 public key (32 bytes) made for this login only.
+  // The database keys are sealed to it (see SealedBox).
+  bytes client_public_key = 5;
+}
+
+message LoginResponse {
+  // Session token for calls that need a session. Kept in memory only.
+  string session_token = 1;
+  google.protobuf.Timestamp session_expires_at = 2;
+  User user = 3;
+  bool is_owner = 4;
+  bool is_admin = 5;
+  // A sealed DatabaseKeys.
+  SealedBox database_keys = 6;
+  // Lets this user log in on this installation without the server until it expires.
+  SignedOfflineGrant offline_grant = 7;
+  google.protobuf.Timestamp server_time = 8;
+}
+
+message ConfirmKeyRotationRequest {
+  // The version the database now uses: DatabaseKeys.current_version + 1.
+  uint32 new_version = 1;
+}
+
+message ConfirmKeyRotationResponse {
+  uint32 current_version = 1;
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {}

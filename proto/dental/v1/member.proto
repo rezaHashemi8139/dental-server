@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "dental/v1/auth.proto";
+import "google/protobuf/timestamp.proto";
+
+// Who may log in on an installation. Every call needs a session of an admin of
+// the session's installation, except ListMembers which any member may call.
+//
+// The server only knows membership and the admin flag. Roles (doctor,
+// secretary, accountant...) and their permissions live in the local database.
+service MemberService {
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse) {}
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {}
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {}
+  rpc SetMemberAdmin(SetMemberAdminRequest) returns (SetMemberAdminResponse) {}
+}
+
+message Member {
+  User user = 1;
+  bool is_owner = 2;
+  bool is_admin = 3;
+  google.protobuf.Timestamp added_at = 4;
+}
+
+message ListMembersRequest {}
+
+message ListMembersResponse {
+  repeated Member members = 1;
+}
+
+message AddMemberRequest {
+  // The account must already exist (AuthService.SignUp).
+  string username = 1;
+  bool is_admin = 2;
+}
+
+message AddMemberResponse {
+  Member member = 1;
+}
+
+message RemoveMemberRequest {
+  // 16 raw UUID bytes. The owner cannot be removed.
+  bytes user_id = 1;
+}
+
+message RemoveMemberResponse {}
+
+message SetMemberAdminRequest {
+  // 16 raw UUID bytes. The owner is always admin.
+  bytes user_id = 1;
+  bool is_admin = 2;
+}
+
+message SetMemberAdminResponse {
+  Member member = 1;
+}

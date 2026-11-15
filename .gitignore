@@ -1,0 +1,24 @@
+# Secrets
+.env
+
+# Build output
+/dental-server
+/dental-server.exe
+/bin/
+
+# Local env variants (keep the example)
+.env.*
+!.env.example
+
+# TLS certs/keys used locally
+*.pem
+*.key
+*.crt
+
+# Test / coverage output
+*.test
+coverage.out
+
+# Editor
+.vscode/
+.idea/

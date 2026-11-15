@@ -1,0 +1,48 @@
+# Dental server
+
+Accounts, installations and local-database keys for the dental desktop app.
+
+- **Go** 1.27
+- **PostgreSQL** 18
+- **ConnectRPC** (connect-go): RPCs defined in Protobuf, served over plain `net/http`.
+  Speaks gRPC (used by the desktop app), gRPC-Web and Connect (JSON, handy for `curl`).
+- **pgx** for PostgreSQL, **goose** for migrations, **buf** for code generation.
+
+## Run
+
+```sh
+cp .env.example .env   # then fill in DATABASE_URL
+go run .
+```
+
+Migrations in `internal/database/migrations/` are applied automatically on startup.
+
+Quick check with curl (Connect protocol, JSON):
+
+```sh
+curl -X POST -H "Content-Type: application/json" -d '{}' localhost:8080/dental.v1.HealthService/Check
+```
+
+## Changing the API
+
+1. Edit or add `.proto` files in `proto/dental/v1/`.
+2. Run `go generate ./...` (lints the protos, regenerates `gen/`).
+3. Implement the new methods in `internal/service/` and register the handler in `main.go`.
+
+buf and the protoc plugins are pinned in `go.mod` as tools, so nothing needs to be installed globally.
+
+## Layout
+
+```
+proto/dental/v1/        API definitions (shared with the desktop app)
+gen/                    generated code — do not edit
+internal/config/        settings from environment / .env
+internal/database/      PostgreSQL connection + migrations
+internal/service/       RPC implementations
+main.go                 server setup, interceptors, graceful shutdown
+```
+
+## Production
+
+Set `TLS_CERT_FILE` and `TLS_KEY_FILE`: the desktop app only talks to the server over TLS.
+Without them the server runs plain HTTP/2 (h2c), which is for local development only.
