@@ -10,10 +10,14 @@ Accounts, installations and local-database keys for the dental desktop app.
 
 ## Run
 
-```sh
-cp .env.example .env   # then fill in DATABASE_URL
-go run .
+First time only (never overwrite an existing `.env`: its keys can't be recovered):
+
+```powershell
+.\scripts\dev.ps1   # creates .env with fresh random keys; then set DATABASE_URL and run it again
 ```
+
+Or by hand: copy `.env.example` to `.env`, generate `KEY_ENCRYPTION_KEY` and `SIGNING_KEY`
+with the command noted there, set `DATABASE_URL`, then `go run .`.
 
 Migrations in `internal/database/migrations/` are applied automatically on startup.
 
