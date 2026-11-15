@@ -34,13 +34,7 @@ type Language struct {
 	// "ltr" or "rtl".
 	Dir string `protobuf:"bytes,4,opt,name=dir,proto3" json:"dir,omitempty"`
 	// Goes up whenever the file changes.
-	Version uint32 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
-	// Calendar for showing dates, as a CLDR / JavaScript Intl calendar id that can be
-	// passed to Intl.DateTimeFormat: "persian" (Solar Hijri), "gregory"
-	// (Gregorian) or "islamic" (Lunar Hijri).
-	// Display only: the app converts dates when showing them. The server and the
-	// database always use UTC Gregorian time (google.protobuf.Timestamp / timestamptz).
-	Calendar      string `protobuf:"bytes,6,opt,name=calendar,proto3" json:"calendar,omitempty"`
+	Version       uint32 `protobuf:"varint,5,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -108,13 +102,6 @@ func (x *Language) GetVersion() uint32 {
 		return x.Version
 	}
 	return 0
-}
-
-func (x *Language) GetCalendar() string {
-	if x != nil {
-		return x.Calendar
-	}
-	return ""
 }
 
 type ListLanguagesRequest struct {
@@ -298,14 +285,13 @@ var File_dental_v1_language_proto protoreflect.FileDescriptor
 
 const file_dental_v1_language_proto_rawDesc = "" +
 	"\n" +
-	"\x18dental/v1/language.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\"\x8e\x01\n" +
+	"\x18dental/v1/language.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\"\x82\x01\n" +
 	"\bLanguage\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
 	"\x04abbr\x18\x03 \x01(\tR\x04abbr\x12\x10\n" +
 	"\x03dir\x18\x04 \x01(\tR\x03dir\x12\x18\n" +
-	"\aversion\x18\x05 \x01(\rR\aversion\x12\x1a\n" +
-	"\bcalendar\x18\x06 \x01(\tR\bcalendar\"\x16\n" +
+	"\aversion\x18\x05 \x01(\rR\aversionJ\x04\b\x06\x10\aR\bcalendar\"\x16\n" +
 	"\x14ListLanguagesRequest\"J\n" +
 	"\x15ListLanguagesResponse\x121\n" +
 	"\tlanguages\x18\x01 \x03(\v2\x13.dental.v1.LanguageR\tlanguages\"M\n" +
