@@ -53,6 +53,7 @@ gen/                    generated code — do not edit
 internal/config/        settings from environment / .env
 internal/database/      PostgreSQL connection + migrations
 internal/service/       RPC implementations
+internal/statuspage/    HTML status page at / (server + database health)
 main.go                 server setup, interceptors, graceful shutdown
 ```
 

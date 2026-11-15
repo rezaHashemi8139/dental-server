@@ -20,6 +20,7 @@ import (
 	"dental-server/internal/database"
 	"dental-server/internal/secure"
 	"dental-server/internal/service"
+	"dental-server/internal/statuspage"
 )
 
 // Set at build time: go build -ldflags "-X main.version=1.2.3"
@@ -33,6 +34,7 @@ func main() {
 }
 
 func run() error {
+	started := time.Now()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -64,6 +66,8 @@ func run() error {
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(service.NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(service.NewAuthService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(service.NewMemberService(deps), interceptors))
+	// Status page for people and uptime monitors. Raw errors only without TLS (development).
+	mux.Handle("GET /{$}", &statuspage.Handler{DB: db, Version: version, Started: started, ShowErrors: !cfg.TLS()})
 
 	server := &http.Server{
 		Addr:              cfg.Addr,
