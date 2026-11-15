@@ -27,6 +27,12 @@ message Language {
   string dir = 4;
   // Goes up whenever the file changes.
   uint32 version = 5;
+  // Calendar for showing dates, as a CLDR / JavaScript Intl calendar id that can be
+  // passed to Intl.DateTimeFormat: "persian" (Solar Hijri), "gregory"
+  // (Gregorian) or "islamic" (Lunar Hijri).
+  // Display only: the app converts dates when showing them. The server and the
+  // database always use UTC Gregorian time (google.protobuf.Timestamp / timestamptz).
+  string calendar = 6;
 }
 
 message ListLanguagesRequest {}

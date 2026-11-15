@@ -4,7 +4,8 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 2
+    "calendar": "persian",
+    "version": 4
   },
   "app": {
     "title": "Smart Management Base",
@@ -95,6 +96,13 @@
     "system": "سیستم",
     "light": "روشن",
     "dark": "تیره"
+  },
+  "calendar": {
+    "label": "تقویم",
+    "auto": "بر اساس زبان",
+    "persian": "شمسی",
+    "gregory": "میلادی",
+    "islamic": "قمری"
   },
   "languageManager": {
     "title": "زبان‌ها",

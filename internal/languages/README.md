@@ -13,11 +13,15 @@ The list the app shows comes from each file's own `_meta` section, so there is n
 separate index to keep in sync:
 
 ```json
-"_meta": { "code": "de", "name": "Deutsch", "abbr": "DE", "dir": "ltr", "version": 1 }
+"_meta": { "code": "de", "name": "Deutsch", "abbr": "DE", "dir": "ltr", "calendar": "gregory", "version": 1 }
 ```
 
 - `code` must equal the file name (`de.json` → `"de"`).
 - `dir` is `"ltr"` or `"rtl"`; `abbr` defaults to the code in capitals.
+- `calendar` is how the app shows dates in this language, as a CLDR / JavaScript `Intl`
+  calendar id: `"persian"` (Solar Hijri), `"gregory"` (Gregorian) or
+  `"islamic"` (Lunar Hijri). Required. Display only: the app converts dates
+  when showing them; the server and the database always store UTC Gregorian time.
 - Raise `version` whenever the file changes: installed copies are updated when it goes up.
 
 ## Adding or updating a language

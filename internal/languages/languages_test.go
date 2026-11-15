@@ -76,22 +76,30 @@ func TestLanguagesHaveTheSameKeys(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	ok := `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr", "version": 2}, "app": {}}`
+	ok := `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr", "calendar": "gregory", "version": 2}, "app": {}}`
 	l, err := parse("de", []byte(ok))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if l.Abbr != "DE" || l.Version != 2 {
+	if l.Abbr != "DE" || l.Version != 2 || l.Calendar != "gregory" {
 		t.Errorf("got %+v", l)
+	}
+	for _, calendar := range []string{"persian", "islamic"} {
+		content := `{"_meta": {"code": "fa", "name": "فارسی", "dir": "rtl", "calendar": "` + calendar + `", "version": 1}}`
+		if l, err := parse("fa", []byte(content)); err != nil || l.Calendar != calendar {
+			t.Errorf("calendar %q: got %+v, %v", calendar, l, err)
+		}
 	}
 
 	bad := map[string]string{
 		"not json":     `{`,
 		"no meta":      `{"app": {}}`,
-		"code differs": `{"_meta": {"code": "fr", "name": "Français", "dir": "ltr", "version": 1}}`,
-		"no name":      `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "version": 1}}`,
-		"bad dir":      `{"_meta": {"code": "de", "name": "Deutsch", "dir": "up", "version": 1}}`,
-		"no version":   `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr"}}`,
+		"code differs": `{"_meta": {"code": "fr", "name": "Français", "dir": "ltr", "calendar": "gregory", "version": 1}}`,
+		"no name":      `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "calendar": "gregory", "version": 1}}`,
+		"bad dir":      `{"_meta": {"code": "de", "name": "Deutsch", "dir": "up", "calendar": "gregory", "version": 1}}`,
+		"no calendar":  `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr", "version": 1}}`,
+		"bad calendar": `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr", "calendar": "gregorian", "version": 1}}`,
+		"no version":   `{"_meta": {"code": "de", "name": "Deutsch", "dir": "ltr", "calendar": "gregory"}}`,
 	}
 	for name, content := range bad {
 		if _, err := parse("de", []byte(content)); err == nil {

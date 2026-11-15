@@ -19,23 +19,33 @@ var files embed.FS
 // Same rule as the desktop app (codes become file names there).
 var codePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9-]{1,15}$`)
 
+// Calendars a language can use, as CLDR / JavaScript Intl calendar ids
+// (the app can pass them straight to Intl.DateTimeFormat).
+var calendars = map[string]bool{
+	"persian": true, // Solar Hijri
+	"gregory": true, // Gregorian
+	"islamic": true, // Lunar Hijri
+}
+
 // Language is one language file and what its `_meta` section says about it.
 type Language struct {
-	Code    string
-	Name    string
-	Abbr    string
-	Dir     string // "ltr" or "rtl"
-	Version uint32
+	Code     string
+	Name     string
+	Abbr     string
+	Dir      string // "ltr" or "rtl"
+	Calendar string // "persian", "gregory" or "islamic"
+	Version  uint32
 	// The whole file, sent to the app as is.
 	Content []byte
 }
 
 type meta struct {
-	Code    string `json:"code"`
-	Name    string `json:"name"`
-	Abbr    string `json:"abbr"`
-	Dir     string `json:"dir"`
-	Version uint32 `json:"version"`
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Abbr     string `json:"abbr"`
+	Dir      string `json:"dir"`
+	Calendar string `json:"calendar"`
+	Version  uint32 `json:"version"`
 }
 
 // Load reads and checks every embedded language file, sorted by code.
@@ -88,6 +98,8 @@ func parse(code string, content []byte) (Language, error) {
 		return Language{}, fmt.Errorf(`missing "_meta.name"`)
 	case m.Dir != "ltr" && m.Dir != "rtl":
 		return Language{}, fmt.Errorf(`"_meta.dir" must be "ltr" or "rtl"`)
+	case !calendars[m.Calendar]:
+		return Language{}, fmt.Errorf(`"_meta.calendar" must be "persian", "gregory" or "islamic"`)
 	case m.Version == 0:
 		return Language{}, fmt.Errorf(`"_meta.version" must be 1 or more`)
 	}
@@ -95,5 +107,8 @@ func parse(code string, content []byte) (Language, error) {
 	if abbr == "" {
 		abbr = strings.ToUpper(code)
 	}
-	return Language{Code: code, Name: m.Name, Abbr: abbr, Dir: m.Dir, Version: m.Version, Content: content}, nil
+	return Language{
+		Code: code, Name: m.Name, Abbr: abbr, Dir: m.Dir, Calendar: m.Calendar,
+		Version: m.Version, Content: content,
+	}, nil
 }

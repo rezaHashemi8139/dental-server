@@ -4,7 +4,8 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 2
+    "calendar": "gregory",
+    "version": 4
   },
   "app": {
     "title": "Smart Management Base",
@@ -95,6 +96,13 @@
     "system": "System",
     "light": "Light",
     "dark": "Dark"
+  },
+  "calendar": {
+    "label": "Calendar",
+    "auto": "Follow language",
+    "persian": "Solar Hijri",
+    "gregory": "Gregorian",
+    "islamic": "Lunar Hijri"
   },
   "languageManager": {
     "title": "Languages",

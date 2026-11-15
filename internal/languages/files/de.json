@@ -4,7 +4,8 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 2
+    "calendar": "gregory",
+    "version": 4
   },
   "app": {
     "title": "Smart Management Base",
@@ -95,6 +96,13 @@
     "system": "System",
     "light": "Hell",
     "dark": "Dunkel"
+  },
+  "calendar": {
+    "label": "Kalender",
+    "auto": "Wie die Sprache",
+    "persian": "Persisch (Sonnenkalender)",
+    "gregory": "Gregorianisch",
+    "islamic": "Islamisch (Mondkalender)"
   },
   "languageManager": {
     "title": "Sprachen",
