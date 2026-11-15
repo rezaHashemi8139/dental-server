@@ -17,6 +17,16 @@ go run .
 
 Migrations in `internal/database/migrations/` are applied automatically on startup.
 
+Or use the scripts (PowerShell):
+
+```powershell
+.\scripts\dev.ps1                 # development: go run with .env (add -Generate to regenerate gen/ first)
+.\scripts\build.ps1               # production build into bin/ (vet + test first)
+.\scripts\build.ps1 -OS linux     # cross-compile for a Linux server
+```
+
+If Windows blocks the scripts, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
 Quick check with curl (Connect protocol, JSON):
 
 ```sh
