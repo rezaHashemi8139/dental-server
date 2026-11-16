@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 7,
+    "version": 8,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -93,6 +93,16 @@
   "language": {
     "label": "زبان",
     "manage": "مدیریت زبان‌ها..."
+  },
+  "settings": {
+    "label": "تنظیمات",
+    "title": "تنظیمات",
+    "region": "زبان و منطقه",
+    "about": {
+      "title": "درباره",
+      "version": "نسخه {{version}}",
+      "description": "نرم‌افزار مدیریت کلینیک"
+    }
   },
   "theme": {
     "label": "پوسته",

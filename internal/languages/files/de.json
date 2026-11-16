@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 7,
+    "version": 8,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -85,6 +85,16 @@
     "offline": "Offline",
     "offlineUntil": "Offline-Zugang bis {{date}}",
     "logout": "Abmelden"
+  },
+  "settings": {
+    "label": "Einstellungen",
+    "title": "Einstellungen",
+    "region": "Sprache und Region",
+    "about": {
+      "title": "Über",
+      "version": "Version {{version}}",
+      "description": "Software für die Praxisverwaltung"
+    }
   },
   "roles": {
     "manager": "Leitung",

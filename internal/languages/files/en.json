@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 7,
+    "version": 8,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -85,6 +85,16 @@
     "offline": "Offline",
     "offlineUntil": "Offline access until {{date}}",
     "logout": "Log out"
+  },
+  "settings": {
+    "label": "Settings",
+    "title": "Settings",
+    "region": "Language and region",
+    "about": {
+      "title": "About",
+      "version": "Version {{version}}",
+      "description": "Clinic management software"
+    }
   },
   "roles": {
     "manager": "Manager",
