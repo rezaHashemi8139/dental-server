@@ -4,15 +4,14 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 9,
+    "version": 10,
     "currency": {
       "default": "EUR",
       "minorUnit": true
     }
   },
   "app": {
-    "title": "Smart Management Base",
-    "subtitle": "Verwaltung für Zahnarztpraxen"
+    "title": "Intelligente Verwaltungsbasis"
   },
   "auth": {
     "tabs": {

@@ -4,15 +4,14 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 9,
+    "version": 10,
     "currency": {
       "default": "IRT",
       "minorUnit": false
     }
   },
   "app": {
-    "title": "Smart Management Base",
-    "subtitle": "مدیریت کلینیک"
+    "title": "پایگاه مدیریت هوشمند"
   },
   "auth": {
     "tabs": {

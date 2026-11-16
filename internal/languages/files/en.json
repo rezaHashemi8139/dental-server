@@ -4,15 +4,14 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 9,
+    "version": 10,
     "currency": {
       "default": "USD",
       "minorUnit": true
     }
   },
   "app": {
-    "title": "Smart Management Base",
-    "subtitle": "Clinic management"
+    "title": "Smart Management Base"
   },
   "auth": {
     "tabs": {
