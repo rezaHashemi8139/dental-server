@@ -101,7 +101,8 @@
     "about": {
       "title": "About",
       "version": "Version {{version}}",
-      "description": "Clinic management software"
+      "description": "Clinic management software",
+      "createdBy": "Created by"
     }
   },
   "theme": {

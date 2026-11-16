@@ -101,7 +101,8 @@
     "about": {
       "title": "Über",
       "version": "Version {{version}}",
-      "description": "Software für die Praxisverwaltung"
+      "description": "Software für die Praxisverwaltung",
+      "createdBy": "Entwickelt von"
     }
   },
   "theme": {
