@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 8,
+    "version": 9,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -101,7 +101,8 @@
     "about": {
       "title": "درباره",
       "version": "نسخه {{version}}",
-      "description": "نرم‌افزار مدیریت کلینیک"
+      "description": "نرم‌افزار مدیریت کلینیک",
+      "createdBy": "سازنده"
     }
   },
   "theme": {

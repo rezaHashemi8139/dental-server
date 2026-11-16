@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 8,
+    "version": 9,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -86,6 +86,14 @@
     "offlineUntil": "Offline access until {{date}}",
     "logout": "Log out"
   },
+  "roles": {
+    "manager": "Manager",
+    "staff": "Staff"
+  },
+  "language": {
+    "label": "Language",
+    "manage": "Manage languages..."
+  },
   "settings": {
     "label": "Settings",
     "title": "Settings",
@@ -95,14 +103,6 @@
       "version": "Version {{version}}",
       "description": "Clinic management software"
     }
-  },
-  "roles": {
-    "manager": "Manager",
-    "staff": "Staff"
-  },
-  "language": {
-    "label": "Language",
-    "manage": "Manage languages..."
   },
   "theme": {
     "label": "Theme",

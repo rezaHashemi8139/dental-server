@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 8,
+    "version": 9,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -86,6 +86,14 @@
     "offlineUntil": "Offline-Zugang bis {{date}}",
     "logout": "Abmelden"
   },
+  "roles": {
+    "manager": "Leitung",
+    "staff": "Mitarbeiter"
+  },
+  "language": {
+    "label": "Sprache",
+    "manage": "Sprachen verwalten..."
+  },
   "settings": {
     "label": "Einstellungen",
     "title": "Einstellungen",
@@ -95,14 +103,6 @@
       "version": "Version {{version}}",
       "description": "Software für die Praxisverwaltung"
     }
-  },
-  "roles": {
-    "manager": "Leitung",
-    "staff": "Mitarbeiter"
-  },
-  "language": {
-    "label": "Sprache",
-    "manage": "Sprachen verwalten..."
   },
   "theme": {
     "label": "Design",
