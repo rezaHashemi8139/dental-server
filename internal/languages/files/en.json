@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 1,
+    "version": 7,
     "currency": {
       "default": "USD",
       "minorUnit": true

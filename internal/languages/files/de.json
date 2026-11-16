@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 1,
+    "version": 7,
     "currency": {
       "default": "EUR",
       "minorUnit": true
