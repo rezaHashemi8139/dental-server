@@ -7,10 +7,7 @@
     "version": 1,
     "currency": {
       "default": "IRT",
-      "available": [
-        "IRR",
-        "IRT"
-      ]
+      "minorUnit": false
     }
   },
   "app": {
@@ -112,7 +109,7 @@
   },
   "currency": {
     "label": "واحد پول",
-    "default": "پیش‌فرض",
+    "auto": "بر اساس زبان",
     "amount": "{{amount}} {{unit}}",
     "IRR": "ریال",
     "IRT": "تومان"

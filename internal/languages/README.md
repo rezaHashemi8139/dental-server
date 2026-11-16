@@ -13,11 +13,17 @@ The list the app shows comes from each file's own `_meta` section, so there is n
 separate index to keep in sync:
 
 ```json
-"_meta": { "code": "en", "name": "English", "abbr": "EN", "dir": "ltr", "version": 1 }
+"_meta": {
+  "code": "en", "name": "English", "abbr": "EN", "dir": "ltr", "version": 1,
+  "currency": { "default": "USD", "minorUnit": true }
+}
 ```
 
 - `code` must equal the file name (`de.json` → `"de"`).
 - `dir` is `"ltr"` or `"rtl"`; `abbr` defaults to the code in capitals.
+- `currency` is required: `default` is the language's own currency (ISO 4217 code, or `IRT` for Toman),
+  used while the user keeps "follow language"; `minorUnit` (`true`/`false`) says whether it is used with
+  small change such as cents. Users can still pick any other currency in the app.
 - Raise `version` whenever the file changes: installed copies are updated when it goes up.
 
 ## Adding or updating a language

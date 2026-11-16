@@ -7,9 +7,7 @@
     "version": 1,
     "currency": {
       "default": "EUR",
-      "available": [
-        "EUR"
-      ]
+      "minorUnit": true
     }
   },
   "app": {
@@ -111,7 +109,7 @@
   },
   "currency": {
     "label": "Währung",
-    "default": "Standard",
+    "auto": "Wie die Sprache",
     "amount": "{{amount}} {{unit}}",
     "IRR": "Rial",
     "IRT": "Toman"

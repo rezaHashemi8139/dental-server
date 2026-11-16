@@ -19,6 +19,9 @@ var files embed.FS
 // Same rule as the desktop app (codes become file names there).
 var codePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9-]{1,15}$`)
 
+// currencyPattern matches an ISO 4217 code, or "IRT" for Toman (see the desktop app's src/i18n/currency.ts).
+var currencyPattern = regexp.MustCompile(`^[A-Z]{3}$`)
+
 // Language is one language file and what its `_meta` section says about it.
 type Language struct {
 	Code    string
@@ -36,6 +39,12 @@ type meta struct {
 	Abbr    string `json:"abbr"`
 	Dir     string `json:"dir"`
 	Version uint32 `json:"version"`
+	// The language's own currency, e.g. {"default": "IRT", "minorUnit": false}: shown until
+	// the user picks another one; minorUnit says whether it is used with small change (cents).
+	Currency *struct {
+		Default   string `json:"default"`
+		MinorUnit *bool  `json:"minorUnit"`
+	} `json:"currency"`
 }
 
 // Load reads and checks every embedded language file, sorted by code.
@@ -91,9 +100,25 @@ func parse(code string, content []byte) (Language, error) {
 	case m.Version == 0:
 		return Language{}, fmt.Errorf(`"_meta.version" must be 1 or more`)
 	}
+	if err := checkCurrency(m); err != nil {
+		return Language{}, err
+	}
 	abbr := strings.TrimSpace(m.Abbr)
 	if abbr == "" {
 		abbr = strings.ToUpper(code)
 	}
 	return Language{Code: code, Name: m.Name, Abbr: abbr, Dir: m.Dir, Version: m.Version, Content: content}, nil
+}
+
+func checkCurrency(m *meta) error {
+	c := m.Currency
+	switch {
+	case c == nil:
+		return fmt.Errorf(`missing "_meta.currency"`)
+	case !currencyPattern.MatchString(c.Default):
+		return fmt.Errorf(`"_meta.currency.default" is %q, not a currency code like "EUR"`, c.Default)
+	case c.MinorUnit == nil:
+		return fmt.Errorf(`missing "_meta.currency.minorUnit" (true or false)`)
+	}
+	return nil
 }

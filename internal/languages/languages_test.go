@@ -94,7 +94,7 @@ func TestLanguagesMatchPersian(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	ok := `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 2}, "app": {}}`
+	ok := `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 2, "currency": {"default": "EUR", "minorUnit": true}}, "app": {}}`
 	l, err := parse("de", []byte(ok))
 	if err != nil {
 		t.Fatal(err)
@@ -104,12 +104,17 @@ func TestParse(t *testing.T) {
 	}
 
 	bad := map[string]string{
-		"not json":     `{`,
-		"no meta":      `{"app": {}}`,
-		"code differs": `{"_meta": {"code": "fr", "name": "French", "dir": "ltr", "version": 1}}`,
-		"no name":      `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "version": 1}}`,
-		"bad dir":      `{"_meta": {"code": "de", "name": "German", "dir": "up", "version": 1}}`,
-		"no version":   `{"_meta": {"code": "de", "name": "German", "dir": "ltr"}}`,
+		"not json":            `{`,
+		"no meta":             `{"app": {}}`,
+		"code differs":        `{"_meta": {"code": "fr", "name": "French", "dir": "ltr", "version": 1, "currency": {"default": "EUR", "minorUnit": true}}}`,
+		"no name":             `{"_meta": {"code": "de", "name": " ", "dir": "ltr", "version": 1, "currency": {"default": "EUR", "minorUnit": true}}}`,
+		"bad dir":             `{"_meta": {"code": "de", "name": "German", "dir": "up", "version": 1, "currency": {"default": "EUR", "minorUnit": true}}}`,
+		"no currency":         `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1}}`,
+		"bad currency code":   `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1, "currency": {"default": "eur", "minorUnit": true}}}`,
+		"no default":          `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1, "currency": {"minorUnit": true}}}`,
+		"no minor unit":       `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1, "currency": {"default": "EUR"}}}`,
+		"minor unit not bool": `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "version": 1, "currency": {"default": "EUR", "minorUnit": "yes"}}}`,
+		"no version":          `{"_meta": {"code": "de", "name": "German", "dir": "ltr", "currency": {"default": "EUR", "minorUnit": true}}}`,
 	}
 	for name, content := range bad {
 		if _, err := parse("de", []byte(content)); err == nil {
