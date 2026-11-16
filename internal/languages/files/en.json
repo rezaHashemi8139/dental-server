@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 5
+    "version": 6
   },
   "app": {
     "title": "Smart Management Base",
@@ -103,6 +103,13 @@
     "gregory": "Gregorian",
     "islamic": "Lunar Hijri"
   },
+  "currency": {
+    "label": "Currency",
+    "default": "Default",
+    "amount": "{{amount}} {{unit}}",
+    "IRR": "Rial",
+    "IRT": "Toman"
+  },
   "languageManager": {
     "title": "Languages",
     "description": "Download more languages or remove the ones you don't need.",
@@ -111,10 +118,10 @@
     "builtIn": "Built-in",
     "active": "Active",
     "install": "Download",
+    "restore": "Add",
     "update": "Update",
     "remove": "Remove",
     "activeCannotBeRemoved": "The language in use cannot be removed. Switch to another language first.",
-    "builtInCannotBeRemoved": "Built-in languages cannot be removed.",
     "loading": "Loading the language list...",
     "noneAvailable": "No other languages are available right now.",
     "retry": "Try again"

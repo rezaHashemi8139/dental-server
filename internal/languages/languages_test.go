@@ -2,6 +2,10 @@ package languages
 
 import (
 	"encoding/json"
+	"fmt"
+	"regexp"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -21,19 +25,21 @@ func TestEmbeddedLanguagesLoad(t *testing.T) {
 	}
 }
 
-// Text missing from a file shows in the app's built-in Persian, so every file must
-// have the same keys as the English one.
-func TestLanguagesHaveTheSameKeys(t *testing.T) {
+// Persian (fa.json, a copy of the desktop app's built-in src/locales/fa.json) is the
+// reference: text missing from a file shows in Persian, so every file must have the
+// same keys as it, with the same {{placeholders}}. The desktop app's
+// `pnpm sync-locales` brings the files in line.
+func TestLanguagesMatchPersian(t *testing.T) {
 	all, err := Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	keysOf := func(l Language) map[string]bool {
+	textsOf := func(l Language) map[string]string {
 		var tree map[string]any
 		if err := json.Unmarshal(l.Content, &tree); err != nil {
 			t.Fatal(err)
 		}
-		keys := map[string]bool{}
+		texts := map[string]string{}
 		var walk func(prefix string, node map[string]any)
 		walk = func(prefix string, node map[string]any) {
 			for k, v := range node {
@@ -43,33 +49,45 @@ func TestLanguagesHaveTheSameKeys(t *testing.T) {
 				if child, ok := v.(map[string]any); ok {
 					walk(prefix+k+".", child)
 				} else {
-					keys[prefix+k] = true
+					texts[prefix+k] = fmt.Sprint(v)
 				}
 			}
 		}
 		walk("", tree)
-		return keys
+		return texts
+	}
+	placeholder := regexp.MustCompile(`\{\{\s*(\w+)\s*\}\}`)
+	placeholdersOf := func(text string) string {
+		var names []string
+		for _, m := range placeholder.FindAllStringSubmatch(text, -1) {
+			names = append(names, m[1])
+		}
+		slices.Sort(names)
+		return strings.Join(names, ", ")
 	}
 
-	var reference map[string]bool
+	var reference map[string]string
 	for _, l := range all {
-		if l.Code == "en" {
-			reference = keysOf(l)
+		if l.Code == "fa" {
+			reference = textsOf(l)
 		}
 	}
 	if reference == nil {
-		t.Fatal("en.json is missing")
+		t.Fatal("fa.json is missing")
 	}
 	for _, l := range all {
-		keys := keysOf(l)
-		for k := range reference {
-			if !keys[k] {
+		texts := textsOf(l)
+		for k, want := range reference {
+			got, ok := texts[k]
+			if !ok {
 				t.Errorf("%s.json: missing %q", l.Code, k)
+			} else if placeholdersOf(got) != placeholdersOf(want) {
+				t.Errorf("%s.json: %q has placeholders [%s], fa.json has [%s]", l.Code, k, placeholdersOf(got), placeholdersOf(want))
 			}
 		}
-		for k := range keys {
-			if !reference[k] {
-				t.Errorf("%s.json: %q is not in en.json", l.Code, k)
+		for k := range texts {
+			if _, ok := reference[k]; !ok {
+				t.Errorf("%s.json: %q is not in fa.json", l.Code, k)
 			}
 		}
 	}

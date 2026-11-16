@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 5
+    "version": 6
   },
   "app": {
     "title": "Smart Management Base",
@@ -103,6 +103,13 @@
     "gregory": "Gregorianisch",
     "islamic": "Islamisch (Mondkalender)"
   },
+  "currency": {
+    "label": "Währung",
+    "default": "Standard",
+    "amount": "{{amount}} {{unit}}",
+    "IRR": "Rial",
+    "IRT": "Toman"
+  },
   "languageManager": {
     "title": "Sprachen",
     "description": "Laden Sie weitere Sprachen herunter oder entfernen Sie nicht benötigte.",
@@ -111,10 +118,10 @@
     "builtIn": "Integriert",
     "active": "Aktiv",
     "install": "Herunterladen",
+    "restore": "Hinzufügen",
     "update": "Aktualisieren",
     "remove": "Entfernen",
     "activeCannotBeRemoved": "Die verwendete Sprache kann nicht entfernt werden. Wechseln Sie zuerst zu einer anderen Sprache.",
-    "builtInCannotBeRemoved": "Integrierte Sprachen können nicht entfernt werden.",
     "loading": "Sprachliste wird geladen...",
     "noneAvailable": "Derzeit sind keine weiteren Sprachen verfügbar.",
     "retry": "Erneut versuchen"

@@ -22,7 +22,13 @@ separate index to keep in sync:
 
 ## Adding or updating a language
 
+Persian is the reference: `files/fa.json` is a copy of the desktop app's built-in
+`src/locales/fa.json`, and every other file must have exactly its keys, with the same
+`{{placeholders}}` (text missing from a file shows in Persian). The test checks this.
+
 1. Translate `files/en.json` or the desktop app's `src/locales/fa.json` (its `src/locales/README.md` has the AI prompt).
-   Text missing from a file shows in Persian, so keep every file complete.
 2. Save it here as `files/<code>.json`, or raise `version` in the file you changed.
-3. Run `go test ./internal/languages/` and deploy the server.
+3. After Persian changed in the desktop app, run `pnpm sync-locales` there: it copies `fa.json` here,
+   puts the keys of every file in Persian's order, removes keys Persian no longer has, raises `version`
+   of each changed file, and lists keys that still need a translation (`--check` only reports).
+4. Run `go test ./internal/languages/` and deploy the server.

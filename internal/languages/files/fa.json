@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 5
+    "version": 6
   },
   "app": {
     "title": "Smart Management Base",
@@ -103,6 +103,13 @@
     "gregory": "میلادی",
     "islamic": "قمری"
   },
+  "currency": {
+    "label": "واحد پول",
+    "default": "پیش‌فرض",
+    "amount": "{{amount}} {{unit}}",
+    "IRR": "ریال",
+    "IRT": "تومان"
+  },
   "languageManager": {
     "title": "زبان‌ها",
     "description": "زبان‌های بیشتری دانلود کنید یا زبان‌هایی را که لازم ندارید حذف کنید.",
@@ -111,10 +118,10 @@
     "builtIn": "پیش‌فرض",
     "active": "فعال",
     "install": "دانلود",
+    "restore": "افزودن",
     "update": "به‌روزرسانی",
     "remove": "حذف",
     "activeCannotBeRemoved": "زبانی که در حال استفاده است حذف نمی‌شود. اول به زبان دیگری بروید.",
-    "builtInCannotBeRemoved": "زبان‌های پیش‌فرض برنامه حذف نمی‌شوند.",
     "loading": "در حال دریافت فهرست زبان‌ها...",
     "noneAvailable": "فعلاً زبان دیگری برای دانلود وجود ندارد.",
     "retry": "تلاش دوباره"
