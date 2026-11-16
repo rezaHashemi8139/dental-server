@@ -4,7 +4,13 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 6
+    "version": 1,
+    "currency": {
+      "default": "EUR",
+      "available": [
+        "EUR"
+      ]
+    }
   },
   "app": {
     "title": "Smart Management Base",

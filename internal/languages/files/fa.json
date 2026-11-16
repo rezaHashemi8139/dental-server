@@ -4,7 +4,14 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 6
+    "version": 1,
+    "currency": {
+      "default": "IRT",
+      "available": [
+        "IRR",
+        "IRT"
+      ]
+    }
   },
   "app": {
     "title": "Smart Management Base",
