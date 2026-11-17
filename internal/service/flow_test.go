@@ -7,6 +7,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -47,7 +48,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		t.Fatal(err)
 	}
 	t.Cleanup(db.Close)
-	if _, err := db.Exec(ctx, `TRUNCATE users, installations, installation_members, installation_keys, sessions CASCADE`); err != nil {
+	if _, err := db.Exec(ctx, `TRUNCATE users, clinics, installations, installation_members, installation_keys, sessions CASCADE`); err != nil {
 		t.Fatal(err)
 	}
 
@@ -94,17 +95,54 @@ func bearer(token string) connect.UnaryInterceptorFunc {
 	}
 }
 
-func (e *testEnv) register(machine byte) *dentalv1.RegisterResponse {
+// registerRequest registers a clinic with license number "LIC-<machine>" whose owner is
+// a new account `owner` (password "Passw0rd-<owner>", national ID nationalID(machine)).
+func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
+	return &dentalv1.RegisterRequest{
+		Machine: &dentalv1.MachineInfo{
+			MachineIdHash: bytes.Repeat([]byte{machine}, 32),
+			Hostname:      "clinic-pc",
+			MacAddresses:  []string{"AA:BB:CC:DD:EE:FF"},
+		},
+		Clinic: &dentalv1.ClinicInfo{
+			Name:          "Clinic " + owner,
+			LicenseNumber: fmt.Sprintf("LIC-%d", machine),
+			Phone:         "02112345678",
+			City:          "Tehran",
+			Address:       "1 Test Street",
+		},
+		Owner: &dentalv1.RegisterRequest_NewOwner{NewOwner: &dentalv1.NewOwner{
+			Username:   owner,
+			Password:   "Passw0rd-" + owner,
+			FullName:   "Dr. " + owner,
+			NationalId: nationalID(int(machine)),
+			Phone:      "09121234567",
+		}},
+	}
+}
+
+// register registers an installation on `machine` whose new owner is `owner` (see registerRequest).
+func (e *testEnv) register(machine byte, owner string) *dentalv1.RegisterResponse {
 	e.t.Helper()
-	res, err := e.installation.Register(context.Background(), &dentalv1.RegisterRequest{Machine: &dentalv1.MachineInfo{
-		MachineIdHash: bytes.Repeat([]byte{machine}, 32),
-		Hostname:      "clinic-pc",
-		MacAddresses:  []string{"AA:BB:CC:DD:EE:FF"},
-	}})
+	res, err := e.installation.Register(context.Background(), registerRequest(machine, owner))
 	if err != nil {
 		e.t.Fatal(err)
 	}
 	return res
+}
+
+// nationalID returns a valid national ID that differs for every n below 10^8.
+func nationalID(n int) string {
+	digits := fmt.Sprintf("1%08d", n)
+	sum := 0
+	for i := range 9 {
+		sum += int(digits[i]-'0') * (10 - i)
+	}
+	check := sum % 11
+	if check >= 2 {
+		check = 11 - check
+	}
+	return fmt.Sprintf("%s%d", digits, check)
 }
 
 func (e *testEnv) signUp(username string) {
@@ -166,21 +204,23 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	e := newTestEnv(t)
 	ctx := context.Background()
 
-	inst := e.register(1)
+	inst := e.register(1, "doctor")
 	if inst.GetKnownMachine() {
 		t.Error("first installation reported as known machine")
 	}
-	if e.register(1).GetKnownMachine() != true {
-		t.Error("second installation on the same machine not recognised")
+	again := registerRequest(1, "dentist")
+	again.GetClinic().LicenseNumber = "LIC-1-second"
+	again.GetNewOwner().NationalId = nationalID(1001)
+	if res, err := e.installation.Register(ctx, again); err != nil || !res.GetKnownMachine() {
+		t.Errorf("second installation on the same machine not recognised (%v)", err)
 	}
 
-	e.signUp("doctor")
 	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "DOCTOR", Password: "Another-passw0rd"})
 	wantCode(t, err, connect.CodeAlreadyExists, reasonUsernameTaken)
 	_, err = e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "x", Password: "short"})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
-	// First login: the doctor becomes owner, the database does not exist yet.
+	// First login: the doctor is already owner, the database does not exist yet.
 	first, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
@@ -301,8 +341,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 
 func TestKeysAreEncryptedAtRest(t *testing.T) {
 	e := newTestEnv(t)
-	inst := e.register(2)
-	e.signUp("doctor")
+	inst := e.register(2, "doctor")
 	res, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)

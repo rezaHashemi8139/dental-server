@@ -11,22 +11,24 @@ for message formats and the crypto scheme.
 
 | Where | What |
 |---|---|
-| Server (PostgreSQL) | users, installations (+ machine info), membership + admin flag, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions |
+| Server (PostgreSQL) | users (+ national ID), clinics (+ unique license number, owner), installations (+ machine info, clinic), membership + admin flag, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions |
 | Desktop app (Rust) | installation id + secret (DPAPI), per-user offline vault, roles and permissions (inside the encrypted local DB) |
 | Both | server Ed25519 public key built into the app, to verify offline grants |
 
 ## First start
 
 1. App generates nothing secret yet; it collects `MachineInfo` (MachineGuid hash, hostname, OS, CPU, RAM, MAC addresses).
-2. `InstallationService.Register` → `installation_id` + `installation_secret`.
-3. App stores both, the secret encrypted with DPAPI.
+2. The user fills in the clinic (name, unique license number, phone, address) and its owner:
+   a new account (with a unique national ID) or an existing one (username + password + national ID).
+3. `InstallationService.Register` → `installation_id` + `installation_secret`. The owner is
+   already a member and admin of the installation.
+4. App stores both, the secret encrypted with DPAPI.
 
 ## Online login
 
 1. App makes a one-time X25519 key pair and calls `AuthService.Login` with
    installation id + secret, username + password and the public key.
-2. Server checks the secret, the password and membership (the first user to
-   log in on an installation becomes owner + admin).
+2. Server checks the secret, the password and membership.
 3. Server returns a session token, the `DatabaseKeys` sealed to the one-time key,
    and a signed `OfflineGrant` (expiry = now + `installations.offline_access`).
 4. App opens the database (current key, or next key if a previous rotation was not
@@ -45,9 +47,27 @@ Per user who has logged in online on this installation, the app keeps:
 Because database keys are sealed to *public* keys, a rotation by one user updates
 every other user's copy without knowing their passwords.
 
-Login without the server: unlock the private key with the password (a wrong
-password fails decryption), verify the grant signature, check it has not
+Login without the server: check the database file looks usable without its key
+(present, whole pages, encrypted), unlock the private key with the password (a
+wrong password fails decryption), verify the grant signature, check it has not
 expired, open the database.
+
+The app is "online" only when `HealthService.Check` answers with the database
+ready; network access alone is not enough. One watcher in the app checks it
+periodically and whenever Windows reports a network change.
+
+### Reconnecting
+
+An offline session keeps the user's password in memory (wiped on drop) so it can
+log in online by itself when the server is back. That login rekeys the
+already-open database in place, refreshes the vault and confirms the rotation,
+exactly like a normal online login, and the user keeps working. If the server
+now refuses the user (`not_a_member`, `user_disabled`, `installation_revoked`),
+the session ends at once and offline access is removed.
+
+After every online login the app also calls `MemberService.ListMembers` and
+removes the vault entries of users who are no longer members, so access removed
+on the server stops working offline too, without waiting for those users to try.
 
 ### Clock tampering
 

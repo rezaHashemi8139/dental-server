@@ -1,0 +1,98 @@
+{
+    // Project tasks (like npm scripts). Run with Ctrl+Shift+P > "Tasks: Run Task",
+    // Ctrl+Shift+B for the default build task, or "Tasks: Run Test Task" for tests.
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}"
+    },
+    "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+    },
+    "tasks": [
+        {
+            "label": "dev",
+            "detail": "Run the server and rebuild + restart on every change (scripts/dev.ps1)",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev.ps1"],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "dev: generate + watch",
+            "detail": "Regenerate gen/ from proto/, then run with restarts (scripts/dev.ps1 -Generate)",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev.ps1", "-Generate"],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "dev: run once",
+            "detail": "Run the server once without watching (scripts/dev.ps1 -NoWatch)",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/dev.ps1", "-NoWatch"],
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "generate",
+            "detail": "Lint the protos and regenerate gen/ (go generate ./...)",
+            "type": "shell",
+            "command": "go",
+            "args": ["generate", "./..."],
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "build",
+            "detail": "Production build for this OS into bin/, vet + test first (scripts/build.ps1)",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "build: linux",
+            "detail": "Cross-compile a production build for a Linux server (scripts/build.ps1 -OS linux)",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/scripts/build.ps1", "-OS", "linux"],
+            "group": "build",
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "test",
+            "detail": "Run all tests (go test ./...)",
+            "type": "shell",
+            "command": "go",
+            "args": ["test", "./..."],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "vet",
+            "detail": "Static checks (go vet ./...)",
+            "type": "shell",
+            "command": "go",
+            "args": ["vet", "./..."],
+            "problemMatcher": "$go"
+        },
+        {
+            "label": "tidy",
+            "detail": "Sync go.mod and go.sum with the imports (go mod tidy)",
+            "type": "shell",
+            "command": "go",
+            "args": ["mod", "tidy"],
+            "problemMatcher": []
+        }
+    ]
+}

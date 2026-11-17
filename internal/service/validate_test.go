@@ -66,10 +66,24 @@ func TestValidateInterceptor(t *testing.T) {
 	_, err = installation.Register(ctx, &dentalv1.RegisterRequest{})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
-	_, err = installation.Register(ctx, &dentalv1.RegisterRequest{Machine: &dentalv1.MachineInfo{
-		MachineIdHash: make([]byte, 32),
-		Hostname:      strings.Repeat("h", 10_000),
-	}})
+	// Clinic and owner are required, with their formats; a new owner gets the password policy.
+	noOwner := registerRequest(1, "doctor")
+	noOwner.Owner = nil
+	_, err = installation.Register(ctx, noOwner)
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	badClinic := registerRequest(1, "doctor")
+	badClinic.GetClinic().LicenseNumber = "x"
+	badClinic.GetClinic().Phone = "call me"
+	_, err = installation.Register(ctx, badClinic)
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	weakOwner := registerRequest(1, "doctor")
+	weakOwner.GetNewOwner().Password = "password1"
+	_, err = installation.Register(ctx, weakOwner)
+	wantCode(t, err, connect.CodeInvalidArgument, reasonWeakPassword)
+
+	longHostname := registerRequest(1, "doctor")
+	longHostname.GetMachine().Hostname = strings.Repeat("h", 10_000)
+	_, err = installation.Register(ctx, longHostname)
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
 	// The violations travel as an error detail, naming the field.

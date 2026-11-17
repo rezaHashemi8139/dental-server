@@ -35,6 +35,10 @@ Or use the scripts (PowerShell):
 
 If Windows blocks the scripts, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
+In VS Code the same commands are tasks (`.vscode/tasks.json`): `Ctrl+Shift+P` → **Tasks: Run Task**
+(`dev`, `generate`, `build`, `build: linux`, `test`, `vet`, `tidy`), or `Ctrl+Shift+B` for `build`.
+With the recommended **Task Runner** extension they are also listed in the Explorer sidebar; click one to run it.
+
 Quick check with curl (Connect protocol, JSON):
 
 ```sh

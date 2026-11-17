@@ -41,6 +41,20 @@ const (
 // InstallationServiceClient is a client for the dental.v1.InstallationService service.
 type InstallationServiceClient interface {
 	// Called once, the first time the app starts. No login needed.
+	//
+	// Also registers the clinic the installation belongs to, and its owner: the
+	// person responsible for the clinic, either a new account (created here) or an
+	// existing one (proven with its password). The owner is the installation's
+	// owner and admin from the start.
+	//
+	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
+	// - ALREADY_EXISTS "username_taken" / "national_id_taken": a new owner's username
+	//   or national ID belongs to another account;
+	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
+	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
+	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
+	// - FAILED_PRECONDITION "national_id_mismatch": an existing owner has another national ID on file.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
 }
 
@@ -81,6 +95,20 @@ func (c *installationServiceClient) Register(ctx context.Context, req *v1.Regist
 // InstallationServiceHandler is an implementation of the dental.v1.InstallationService service.
 type InstallationServiceHandler interface {
 	// Called once, the first time the app starts. No login needed.
+	//
+	// Also registers the clinic the installation belongs to, and its owner: the
+	// person responsible for the clinic, either a new account (created here) or an
+	// existing one (proven with its password). The owner is the installation's
+	// owner and admin from the start.
+	//
+	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
+	// - ALREADY_EXISTS "username_taken" / "national_id_taken": a new owner's username
+	//   or national ID belongs to another account;
+	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
+	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
+	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
+	// - FAILED_PRECONDITION "national_id_mismatch": an existing owner has another national ID on file.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
 }
 

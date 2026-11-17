@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 10,
+    "version": 12,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -55,6 +55,8 @@
       "offline": "Der Server ist nicht erreichbar. Sie können sich mit einem Konto anmelden, das sich schon einmal auf diesem Computer angemeldet hat. Zum Erstellen eines Kontos wird der Server benötigt.",
       "unavailableTitle": "Keine Verbindung",
       "unavailable": "Der Server ist nicht erreichbar, und auf diesem Computer hat sich noch niemand angemeldet. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.",
+      "localDatabaseUnavailableTitle": "Lokale Datenbank nicht verfügbar",
+      "localDatabaseUnavailable": "Der Server ist nicht erreichbar, und die Praxisdatenbank auf diesem Computer fehlt oder ist beschädigt. Eine Anmeldung ohne Internet ist daher nicht möglich. Stellen Sie eine Internetverbindung her und versuchen Sie es erneut.",
       "retry": "Erneut versuchen"
     },
     "errors": {
@@ -68,13 +70,68 @@
       "weakPassword": "Das Passwort muss mindestens 8 Zeichen lang sein und eine Ziffer, einen Klein- und einen Großbuchstaben enthalten.",
       "server": "Der Server hat einen Fehler gemeldet. ({{details}})",
       "serverUnreachable": "Keine Verbindung zum Server. Prüfen Sie Ihre Internetverbindung.",
-      "setupNeedsInternet": "Der erste Start benötigt eine Internetverbindung.",
+      "busy": "Die vorherige Anfrage läuft noch. Bitte warten Sie einen Moment.",
       "invalidGrant": "Die gespeicherten Anmeldedaten sind ungültig. Melden Sie sich einmal mit Internetverbindung an.",
       "clockTampered": "Datum und Uhrzeit des Computers sind falsch. Korrigieren Sie sie und versuchen Sie es erneut.",
       "offlineExpired": "Der Offline-Zugang ist abgelaufen. Verbinden Sie sich mit dem Internet, um sich anzumelden.",
       "offlineNotAvailable": "Der Server ist nicht erreichbar, und dieser Benutzer hat sich auf diesem Computer noch nie mit Internetverbindung angemeldet.",
       "databaseUnavailable": "Die Praxisdatenbank konnte nicht geöffnet werden. Melden Sie sich einmal mit Internetverbindung an."
     }
+  },
+  "setup": {
+    "title": "Praxis einrichten",
+    "description": "Die App wird auf diesem Computer zum ersten Mal gestartet. Geben Sie die Daten der Praxis und der verantwortlichen Person ein. Dafür ist eine Internetverbindung nötig.",
+    "clinic": "Praxisdaten",
+    "owner": "Verantwortliche Person",
+    "ownerDescription": "Die Praxis wird mit dem Konto der verantwortlichen Person verknüpft, die sie verwaltet. Hat diese Person bereits ein Konto, wählen Sie „Bestehendes Konto“.",
+    "ownerKind": {
+      "new": "Neues Konto",
+      "existing": "Bestehendes Konto"
+    },
+    "fields": {
+      "clinicName": "Name der Praxis",
+      "licenseNumber": "Zulassungsnummer der Praxis",
+      "clinicPhone": "Telefon der Praxis",
+      "city": "Ort",
+      "address": "Adresse",
+      "postalCode": "Postleitzahl (optional)",
+      "nationalId": "Nationale Identifikationsnummer",
+      "ownerPhone": "Mobiltelefon"
+    },
+    "hints": {
+      "licenseNumber": "Mit lateinischen Buchstaben und Ziffern, wie auf der Zulassung angegeben.",
+      "existingNationalId": "Ist für dieses Konto noch keine Identifikationsnummer hinterlegt, wird diese gespeichert."
+    },
+    "validation": {
+      "licenseNumberFormat": "Verwenden Sie 3 bis 32 lateinische Buchstaben, Ziffern, Punkte, Bindestriche oder Schrägstriche.",
+      "phoneFormat": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
+      "postalCodeFormat": "Die Postleitzahl muss 5 bis 10 Ziffern haben.",
+      "nationalIdFormat": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern."
+    },
+    "submit": "Praxis registrieren",
+    "working": "Praxis wird registriert...",
+    "success": "Die Praxis ist registriert. Die verantwortliche Person kann sich jetzt anmelden.",
+    "errors": {
+      "required": "Dieser Computer ist noch nicht eingerichtet. Registrieren Sie zuerst die Praxis.",
+      "alreadyDone": "Dieser Computer ist bereits eingerichtet.",
+      "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert.",
+      "nationalIdTaken": "Diese Identifikationsnummer gehört zu einem anderen Konto.",
+      "invalidNationalId": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
+      "nationalIdMismatch": "Diese Identifikationsnummer stimmt nicht mit der für dieses Konto hinterlegten überein."
+    }
+  },
+  "connectivity": {
+    "checking": "Verbindung wird geprüft...",
+    "online": "Online",
+    "offline": "Offline",
+    "serverUnavailable": "Server nicht erreichbar",
+    "details": {
+      "checking": "Es wird geprüft, ob der Server erreichbar ist.",
+      "online": "Mit dem Server verbunden.",
+      "offline": "Dieser Computer ist mit keinem Netzwerk verbunden. Die App arbeitet mit der lokalen Datenbank.",
+      "serverUnavailable": "Das Netzwerk ist verbunden, aber der Server antwortet nicht. Die App arbeitet mit der lokalen Datenbank und versucht es weiter."
+    },
+    "checkedAt": "Zuletzt geprüft: {{time}}"
   },
   "home": {
     "welcome": "Willkommen, {{name}}",

@@ -15,8 +15,10 @@ service AuthService {
   rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
 
   // Logs in on an installation and returns the local-database keys.
-  // The first user to log in on a new installation becomes its owner and admin.
-  // Anyone else must have been added with MemberService.AddMember first.
+  // The clinic owner is a member from InstallationService.Register on; anyone
+  // else must have been added with MemberService.AddMember first. (On an
+  // installation registered before clinics existed, which has no owner yet,
+  // the first user to log in becomes its owner and admin.)
   rpc Login(LoginRequest) returns (LoginResponse) {}
 
   // Confirms that the local database now uses the next key. Needs session.

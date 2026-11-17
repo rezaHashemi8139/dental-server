@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 10,
+    "version": 12,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -55,6 +55,8 @@
       "offline": "The server cannot be reached. You can log in with an account that has logged in on this computer before. Creating an account needs the server.",
       "unavailableTitle": "No connection",
       "unavailable": "The server cannot be reached, and nobody has logged in on this computer yet. Check the internet connection and try again.",
+      "localDatabaseUnavailableTitle": "Local database unavailable",
+      "localDatabaseUnavailable": "The server cannot be reached, and the clinic database on this computer is missing or damaged, so logging in without internet is not possible. Connect to the internet and try again.",
       "retry": "Try again"
     },
     "errors": {
@@ -68,13 +70,68 @@
       "weakPassword": "The password must be at least 8 characters, with a digit, a lowercase and an uppercase letter.",
       "server": "The server returned an error. ({{details}})",
       "serverUnreachable": "Could not connect to the server. Check your internet connection.",
-      "setupNeedsInternet": "The first start needs an internet connection.",
+      "busy": "The previous request is still in progress. Please wait a moment.",
       "invalidGrant": "The saved login information is not valid. Log in once with an internet connection.",
       "clockTampered": "The computer's date and time are wrong. Correct them and try again.",
       "offlineExpired": "Offline access has expired. Connect to the internet to log in.",
       "offlineNotAvailable": "The server cannot be reached, and this user has not logged in on this computer with an internet connection before.",
       "databaseUnavailable": "The clinic database could not be opened. Log in once with an internet connection."
     }
+  },
+  "setup": {
+    "title": "Clinic setup",
+    "description": "The app is running on this computer for the first time. Enter the details of the clinic and the person responsible for it. This needs an internet connection.",
+    "clinic": "Clinic details",
+    "owner": "Person responsible",
+    "ownerDescription": "The clinic is linked to the account of the person responsible for it, who becomes its manager. If they already have an account, choose \"Existing account\".",
+    "ownerKind": {
+      "new": "New account",
+      "existing": "Existing account"
+    },
+    "fields": {
+      "clinicName": "Clinic name",
+      "licenseNumber": "Clinic license number",
+      "clinicPhone": "Clinic phone",
+      "city": "City",
+      "address": "Address",
+      "postalCode": "Postal code (optional)",
+      "nationalId": "National ID",
+      "ownerPhone": "Mobile phone"
+    },
+    "hints": {
+      "licenseNumber": "In Latin letters and digits, as printed on the license.",
+      "existingNationalId": "If this account has no national ID on file yet, this one is saved for it."
+    },
+    "validation": {
+      "licenseNumberFormat": "Use 3 to 32 Latin letters, digits, dots, dashes or slashes.",
+      "phoneFormat": "The phone number must have 7 to 15 digits (optionally starting with +).",
+      "postalCodeFormat": "The postal code must have 5 to 10 digits.",
+      "nationalIdFormat": "This national ID is not valid. Check its 10 digits."
+    },
+    "submit": "Register clinic",
+    "working": "Registering clinic...",
+    "success": "The clinic is registered. The person responsible can now log in.",
+    "errors": {
+      "required": "This computer has not been set up yet. Register the clinic first.",
+      "alreadyDone": "This computer has already been set up.",
+      "licenseNumberTaken": "A clinic with this license number is already registered.",
+      "nationalIdTaken": "This national ID belongs to another account.",
+      "invalidNationalId": "This national ID is not valid. Check its 10 digits.",
+      "nationalIdMismatch": "This national ID does not match the one on file for this account."
+    }
+  },
+  "connectivity": {
+    "checking": "Checking connection...",
+    "online": "Online",
+    "offline": "Offline",
+    "serverUnavailable": "Server unavailable",
+    "details": {
+      "checking": "Checking whether the server can be reached.",
+      "online": "Connected to the server.",
+      "offline": "This computer is not connected to a network. The app works with the local database.",
+      "serverUnavailable": "The network is connected, but the server is not responding. The app works with the local database and keeps retrying."
+    },
+    "checkedAt": "Last checked: {{time}}"
   },
   "home": {
     "welcome": "Welcome, {{name}}",

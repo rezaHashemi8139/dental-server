@@ -141,16 +141,258 @@ func (x *MachineInfo) GetAppVersion() string {
 	return ""
 }
 
+// The clinic an installation belongs to. Text is sent trimmed.
+type ClinicInfo struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 1–200 characters.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The clinic's operating license number. Unique across all clinics, not
+	// case-sensitive. 3–32 characters: letters, digits, '.', '/' or '-'.
+	LicenseNumber string `protobuf:"bytes,2,opt,name=license_number,json=licenseNumber,proto3" json:"license_number,omitempty"`
+	// 7–15 digits, optionally starting with '+'.
+	Phone string `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
+	// 1–100 characters.
+	City string `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
+	// 1–500 characters.
+	Address string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
+	// Optional: empty, or 5–10 digits.
+	PostalCode    string `protobuf:"bytes,6,opt,name=postal_code,json=postalCode,proto3" json:"postal_code,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClinicInfo) Reset() {
+	*x = ClinicInfo{}
+	mi := &file_dental_v1_installation_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClinicInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClinicInfo) ProtoMessage() {}
+
+func (x *ClinicInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClinicInfo.ProtoReflect.Descriptor instead.
+func (*ClinicInfo) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ClinicInfo) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *ClinicInfo) GetLicenseNumber() string {
+	if x != nil {
+		return x.LicenseNumber
+	}
+	return ""
+}
+
+func (x *ClinicInfo) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *ClinicInfo) GetCity() string {
+	if x != nil {
+		return x.City
+	}
+	return ""
+}
+
+func (x *ClinicInfo) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *ClinicInfo) GetPostalCode() string {
+	if x != nil {
+		return x.PostalCode
+	}
+	return ""
+}
+
+// A clinic owner who has no account yet: the account is created by Register.
+type NewOwner struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Same rules as SignUpRequest.username.
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	// Same rules as SignUpRequest.password.
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	// 1–100 characters.
+	FullName string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	// Iranian national ID: 10 digits, the last one a check digit. Unique across all accounts.
+	NationalId string `protobuf:"bytes,4,opt,name=national_id,json=nationalId,proto3" json:"national_id,omitempty"`
+	// Mobile number: 7–15 digits, optionally starting with '+'.
+	Phone         string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NewOwner) Reset() {
+	*x = NewOwner{}
+	mi := &file_dental_v1_installation_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NewOwner) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NewOwner) ProtoMessage() {}
+
+func (x *NewOwner) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NewOwner.ProtoReflect.Descriptor instead.
+func (*NewOwner) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *NewOwner) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *NewOwner) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *NewOwner) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *NewOwner) GetNationalId() string {
+	if x != nil {
+		return x.NationalId
+	}
+	return ""
+}
+
+func (x *NewOwner) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+// A clinic owner who already has an account (AuthService.SignUp, or the owner of another clinic).
+type ExistingOwner struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Username string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	// Must match the national ID on file. Saved if the account has none yet.
+	NationalId    string `protobuf:"bytes,3,opt,name=national_id,json=nationalId,proto3" json:"national_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExistingOwner) Reset() {
+	*x = ExistingOwner{}
+	mi := &file_dental_v1_installation_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExistingOwner) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExistingOwner) ProtoMessage() {}
+
+func (x *ExistingOwner) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExistingOwner.ProtoReflect.Descriptor instead.
+func (*ExistingOwner) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ExistingOwner) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *ExistingOwner) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *ExistingOwner) GetNationalId() string {
+	if x != nil {
+		return x.NationalId
+	}
+	return ""
+}
+
 type RegisterRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Machine       *MachineInfo           `protobuf:"bytes,1,opt,name=machine,proto3" json:"machine,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Machine *MachineInfo           `protobuf:"bytes,1,opt,name=machine,proto3" json:"machine,omitempty"`
+	Clinic  *ClinicInfo            `protobuf:"bytes,2,opt,name=clinic,proto3" json:"clinic,omitempty"`
+	// Types that are valid to be assigned to Owner:
+	//
+	//	*RegisterRequest_NewOwner
+	//	*RegisterRequest_ExistingOwner
+	Owner         isRegisterRequest_Owner `protobuf_oneof:"owner"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RegisterRequest) Reset() {
 	*x = RegisterRequest{}
-	mi := &file_dental_v1_installation_proto_msgTypes[1]
+	mi := &file_dental_v1_installation_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -162,7 +404,7 @@ func (x *RegisterRequest) String() string {
 func (*RegisterRequest) ProtoMessage() {}
 
 func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_installation_proto_msgTypes[1]
+	mi := &file_dental_v1_installation_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -175,7 +417,7 @@ func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
 func (*RegisterRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_installation_proto_rawDescGZIP(), []int{1}
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RegisterRequest) GetMachine() *MachineInfo {
@@ -185,6 +427,54 @@ func (x *RegisterRequest) GetMachine() *MachineInfo {
 	return nil
 }
 
+func (x *RegisterRequest) GetClinic() *ClinicInfo {
+	if x != nil {
+		return x.Clinic
+	}
+	return nil
+}
+
+func (x *RegisterRequest) GetOwner() isRegisterRequest_Owner {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
+func (x *RegisterRequest) GetNewOwner() *NewOwner {
+	if x != nil {
+		if x, ok := x.Owner.(*RegisterRequest_NewOwner); ok {
+			return x.NewOwner
+		}
+	}
+	return nil
+}
+
+func (x *RegisterRequest) GetExistingOwner() *ExistingOwner {
+	if x != nil {
+		if x, ok := x.Owner.(*RegisterRequest_ExistingOwner); ok {
+			return x.ExistingOwner
+		}
+	}
+	return nil
+}
+
+type isRegisterRequest_Owner interface {
+	isRegisterRequest_Owner()
+}
+
+type RegisterRequest_NewOwner struct {
+	NewOwner *NewOwner `protobuf:"bytes,3,opt,name=new_owner,json=newOwner,proto3,oneof"`
+}
+
+type RegisterRequest_ExistingOwner struct {
+	ExistingOwner *ExistingOwner `protobuf:"bytes,4,opt,name=existing_owner,json=existingOwner,proto3,oneof"`
+}
+
+func (*RegisterRequest_NewOwner) isRegisterRequest_Owner() {}
+
+func (*RegisterRequest_ExistingOwner) isRegisterRequest_Owner() {}
+
 type RegisterResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 16 raw UUID bytes. The client stores it; it marks the app as already set up.
@@ -193,15 +483,17 @@ type RegisterResponse struct {
 	// every login: keys are only given to logins coming from this installation.
 	InstallationSecret []byte `protobuf:"bytes,2,opt,name=installation_secret,json=installationSecret,proto3" json:"installation_secret,omitempty"`
 	// True if an earlier installation was registered from the same computer.
-	KnownMachine  bool                   `protobuf:"varint,3,opt,name=known_machine,json=knownMachine,proto3" json:"known_machine,omitempty"`
-	ServerTime    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
+	KnownMachine bool                   `protobuf:"varint,3,opt,name=known_machine,json=knownMachine,proto3" json:"known_machine,omitempty"`
+	ServerTime   *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
+	// The clinic's owner, already a member and admin of the installation.
+	Owner         *User `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RegisterResponse) Reset() {
 	*x = RegisterResponse{}
-	mi := &file_dental_v1_installation_proto_msgTypes[2]
+	mi := &file_dental_v1_installation_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -213,7 +505,7 @@ func (x *RegisterResponse) String() string {
 func (*RegisterResponse) ProtoMessage() {}
 
 func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_installation_proto_msgTypes[2]
+	mi := &file_dental_v1_installation_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -226,7 +518,7 @@ func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
 func (*RegisterResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_installation_proto_rawDescGZIP(), []int{2}
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *RegisterResponse) GetInstallationId() []byte {
@@ -257,11 +549,18 @@ func (x *RegisterResponse) GetServerTime() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *RegisterResponse) GetOwner() *User {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
 var File_dental_v1_installation_proto protoreflect.FileDescriptor
 
 const file_dental_v1_installation_proto_rawDesc = "" +
 	"\n" +
-	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf4\x02\n" +
+	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf4\x02\n" +
 	"\vMachineInfo\x12/\n" +
 	"\x0fmachine_id_hash\x18\x01 \x01(\fB\a\xbaH\x04z\x02h R\rmachineIdHash\x12$\n" +
 	"\bhostname\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\xff\x01R\bhostname\x12 \n" +
@@ -273,15 +572,44 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x123\n" +
 	"\rmac_addresses\x18\b \x03(\tB\x0e\xbaH\v\x92\x01\b\x10 \"\x04r\x02\x18@R\fmacAddresses\x12(\n" +
 	"\vapp_version\x18\t \x01(\tB\a\xbaH\x04r\x02\x182R\n" +
-	"appVersion\"K\n" +
+	"appVersion\"\xa0\x02\n" +
+	"\n" +
+	"ClinicInfo\x12\x1e\n" +
+	"\x04name\x18\x01 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xc8\x01R\x04name\x12D\n" +
+	"\x0elicense_number\x18\x02 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9./-]{3,32}$R\rlicenseNumber\x12-\n" +
+	"\x05phone\x18\x03 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12\x1d\n" +
+	"\x04city\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\x04city\x12$\n" +
+	"\aaddress\x18\x05 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xf4\x03R\aaddress\x128\n" +
+	"\vpostal_code\x18\x06 \x01(\tB\x17\xbaH\x14r\x122\x10^([0-9]{5,10})?$R\n" +
+	"postalCode\"\xbf\x03\n" +
+	"\bNewOwner\x129\n" +
+	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xeb\x01\n" +
+	"\bpassword\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\bpassword\x12&\n" +
+	"\tfull_name\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x123\n" +
+	"\vnational_id\x18\x04 \x01(\tB\x12\xbaH\x0fr\r2\v^[0-9]{10}$R\n" +
+	"nationalId\x12-\n" +
+	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\"\x91\x01\n" +
+	"\rExistingOwner\x12%\n" +
+	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
+	"\bpassword\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\x123\n" +
+	"\vnational_id\x18\x03 \x01(\tB\x12\xbaH\x0fr\r2\v^[0-9]{10}$R\n" +
+	"nationalId\"\x89\x02\n" +
 	"\x0fRegisterRequest\x128\n" +
-	"\amachine\x18\x01 \x01(\v2\x16.dental.v1.MachineInfoB\x06\xbaH\x03\xc8\x01\x01R\amachine\"\xce\x01\n" +
+	"\amachine\x18\x01 \x01(\v2\x16.dental.v1.MachineInfoB\x06\xbaH\x03\xc8\x01\x01R\amachine\x125\n" +
+	"\x06clinic\x18\x02 \x01(\v2\x15.dental.v1.ClinicInfoB\x06\xbaH\x03\xc8\x01\x01R\x06clinic\x122\n" +
+	"\tnew_owner\x18\x03 \x01(\v2\x13.dental.v1.NewOwnerH\x00R\bnewOwner\x12A\n" +
+	"\x0eexisting_owner\x18\x04 \x01(\v2\x18.dental.v1.ExistingOwnerH\x00R\rexistingOwnerB\x0e\n" +
+	"\x05owner\x12\x05\xbaH\x02\b\x01\"\xf5\x01\n" +
 	"\x10RegisterResponse\x12'\n" +
 	"\x0finstallation_id\x18\x01 \x01(\fR\x0einstallationId\x12/\n" +
 	"\x13installation_secret\x18\x02 \x01(\fR\x12installationSecret\x12#\n" +
 	"\rknown_machine\x18\x03 \x01(\bR\fknownMachine\x12;\n" +
 	"\vserver_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"serverTime2\\\n" +
+	"serverTime\x12%\n" +
+	"\x05owner\x18\x05 \x01(\v2\x0f.dental.v1.UserR\x05owner2\\\n" +
 	"\x13InstallationService\x12E\n" +
 	"\bRegister\x12\x1a.dental.v1.RegisterRequest\x1a\x1b.dental.v1.RegisterResponse\"\x00B\x8d\x01\n" +
 	"\rcom.dental.v1B\x11InstallationProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
@@ -299,23 +627,31 @@ func file_dental_v1_installation_proto_rawDescGZIP() []byte {
 	return file_dental_v1_installation_proto_rawDescData
 }
 
-var file_dental_v1_installation_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_dental_v1_installation_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_dental_v1_installation_proto_goTypes = []any{
 	(*MachineInfo)(nil),           // 0: dental.v1.MachineInfo
-	(*RegisterRequest)(nil),       // 1: dental.v1.RegisterRequest
-	(*RegisterResponse)(nil),      // 2: dental.v1.RegisterResponse
-	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
+	(*ClinicInfo)(nil),            // 1: dental.v1.ClinicInfo
+	(*NewOwner)(nil),              // 2: dental.v1.NewOwner
+	(*ExistingOwner)(nil),         // 3: dental.v1.ExistingOwner
+	(*RegisterRequest)(nil),       // 4: dental.v1.RegisterRequest
+	(*RegisterResponse)(nil),      // 5: dental.v1.RegisterResponse
+	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
+	(*User)(nil),                  // 7: dental.v1.User
 }
 var file_dental_v1_installation_proto_depIdxs = []int32{
 	0, // 0: dental.v1.RegisterRequest.machine:type_name -> dental.v1.MachineInfo
-	3, // 1: dental.v1.RegisterResponse.server_time:type_name -> google.protobuf.Timestamp
-	1, // 2: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
-	2, // 3: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 1: dental.v1.RegisterRequest.clinic:type_name -> dental.v1.ClinicInfo
+	2, // 2: dental.v1.RegisterRequest.new_owner:type_name -> dental.v1.NewOwner
+	3, // 3: dental.v1.RegisterRequest.existing_owner:type_name -> dental.v1.ExistingOwner
+	6, // 4: dental.v1.RegisterResponse.server_time:type_name -> google.protobuf.Timestamp
+	7, // 5: dental.v1.RegisterResponse.owner:type_name -> dental.v1.User
+	4, // 6: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
+	5, // 7: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
+	7, // [7:8] is the sub-list for method output_type
+	6, // [6:7] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_installation_proto_init() }
@@ -323,13 +659,18 @@ func file_dental_v1_installation_proto_init() {
 	if File_dental_v1_installation_proto != nil {
 		return
 	}
+	file_dental_v1_auth_proto_init()
+	file_dental_v1_installation_proto_msgTypes[4].OneofWrappers = []any{
+		(*RegisterRequest_NewOwner)(nil),
+		(*RegisterRequest_ExistingOwner)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_installation_proto_rawDesc), len(file_dental_v1_installation_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

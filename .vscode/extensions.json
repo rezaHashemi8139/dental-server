@@ -1,0 +1,7 @@
+{
+    // Suggested to everyone who opens this project.
+    "recommendations": [
+        // Lists the tasks from tasks.json in the Explorer sidebar ("Task Runner"); click to run.
+        "sanaajani.taskrunnercode"
+    ]
+}

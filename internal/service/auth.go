@@ -104,7 +104,8 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	}
 	user.Id = uuidBytes(userID)
 
-	// Membership. The first user to log in on a new installation becomes its owner.
+	// Membership. Register makes the clinic owner a member. Installations registered
+	// before clinics existed have no owner yet: the first user to log in becomes it.
 	isOwner := !owner.Valid || owner == userID
 	var isAdmin bool
 	if !owner.Valid {
