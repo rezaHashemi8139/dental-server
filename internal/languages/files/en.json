@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 12,
+    "version": 14,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -12,6 +12,11 @@
   },
   "app": {
     "title": "Smart Management Base"
+  },
+  "nav": {
+    "label": "Main menu",
+    "home": "Home",
+    "database": "Database"
   },
   "auth": {
     "tabs": {
@@ -54,7 +59,7 @@
       "checking": "Connecting to the server...",
       "offline": "The server cannot be reached. You can log in with an account that has logged in on this computer before. Creating an account needs the server.",
       "unavailableTitle": "No connection",
-      "unavailable": "The server cannot be reached, and nobody has logged in on this computer yet. Check the internet connection and try again.",
+      "unavailable": "The server cannot be reached, and nobody has logged in on this computer yet. The first start always needs a connection to the server. Check the internet connection and try again.",
       "localDatabaseUnavailableTitle": "Local database unavailable",
       "localDatabaseUnavailable": "The server cannot be reached, and the clinic database on this computer is missing or damaged, so logging in without internet is not possible. Connect to the internet and try again.",
       "retry": "Try again"
@@ -81,6 +86,11 @@
   "setup": {
     "title": "Clinic setup",
     "description": "The app is running on this computer for the first time. Enter the details of the clinic and the person responsible for it. This needs an internet connection.",
+    "firstRun": {
+      "title": "Before you start",
+      "subscription": "If you already had a subscription, choose \"Existing account\", log in with your account and choose your clinic from the subscription. Otherwise, add a new clinic.",
+      "backup": "If you have a backup of the clinic's data, restore it from the Database page in the side menu after your first login. You will need that backup's password and recovery key."
+    },
     "clinic": "Clinic details",
     "owner": "Person responsible",
     "ownerDescription": "The clinic is linked to the account of the person responsible for it, who becomes its manager. If they already have an account, choose \"Existing account\".",
@@ -141,6 +151,97 @@
     "offline": "Offline",
     "offlineUntil": "Offline access until {{date}}",
     "logout": "Log out"
+  },
+  "identity": {
+    "title": "Confirm it's you",
+    "description": "To continue, enter the password of the account \"{{username}}\" so we know it's really you.",
+    "submit": "Continue",
+    "working": "Checking...",
+    "errors": {
+      "wrongPassword": "The password is incorrect.",
+      "unavailable": "Your password can't be checked on this computer. Log out and log in again.",
+      "expired": "Your confirmation has expired. Enter your password again."
+    }
+  },
+  "database": {
+    "title": "Database",
+    "description": "Back up the clinic data on this computer, restore it from a backup, or clear it.",
+    "clear": {
+      "title": "Clear data",
+      "summary": "Permanently delete all clinic data on this computer.",
+      "description": "All clinic data on this computer is deleted. You stay in the app as manager.",
+      "warning": "This cannot be undone. Without a backup, the deleted data is gone for good. If needed, make a backup first.",
+      "confirmLabel": "To confirm, type your username: {{username}}",
+      "submit": "Delete all data",
+      "working": "Deleting...",
+      "success": "The clinic data on this computer has been deleted.",
+      "close": "Close"
+    },
+    "validation": {
+      "confirmationMismatch": "This is not your username."
+    },
+    "errors": {
+      "notAllowed": "Only the clinic's manager can back up, restore or clear the clinic data."
+    }
+  },
+  "backup": {
+    "secretsTitle": "Don't lose the password and recovery key",
+    "fileType": "Clinic backup",
+    "fields": {
+      "file": "Backup file",
+      "password": "Backup password",
+      "confirmPassword": "Repeat backup password",
+      "recoveryKey": "Recovery key"
+    },
+    "hints": {
+      "recoveryKey": "36 characters like XXXX-XXXX-…, as shown when the backup was made."
+    },
+    "validation": {
+      "fileRequired": "Choose a backup file.",
+      "recoveryKeyFormat": "The recovery key must be 36 characters: digits and the letters A to F."
+    },
+    "export": {
+      "title": "Make a backup",
+      "summary": "Save an encrypted copy of the clinic data to a file.",
+      "description": "An encrypted copy of all the clinic's data on this computer is saved to a file you choose.",
+      "warning": "This backup is locked with two things: the password you choose here and a recovery key the app shows you after saving. Neither is stored in the app or on the server. Keep both somewhere safe yourself; without both of them, this backup can never be restored.",
+      "submit": "Choose where to save and make the backup",
+      "working": "Making the backup...",
+      "saveTitle": "Save backup",
+      "doneTitle": "Backup saved",
+      "doneDescription": "\"{{file}}\" was saved. Keep the recovery key below, together with the password you chose, somewhere safe.",
+      "keepWarning": "This key is shown only this once and is not stored anywhere. If you lose this key or the password, there is no way to restore this backup, and support cannot help either.",
+      "copy": "Copy recovery key",
+      "copied": "Copied",
+      "confirm": "I have kept the key and password somewhere safe"
+    },
+    "restore": {
+      "title": "Restore from a backup",
+      "summary": "Merge a backup into the clinic data on this computer, or replace the data with it.",
+      "description": "Choose the backup file and enter its recovery key and password.",
+      "mode": {
+        "label": "How to restore",
+        "replace": "Replace",
+        "merge": "Merge"
+      },
+      "warning": "All the clinic's current data on this computer is replaced with the data in the backup. If needed, make a backup of the current data first.",
+      "mergeInfo": "The backup's data is added to the data on this computer and nothing is deleted. Where an item is both in the backup and on this computer, this computer's version is kept.",
+      "chooseFile": "Choose file",
+      "openTitle": "Choose backup file",
+      "noFile": "No file chosen.",
+      "submit": "Restore and replace data",
+      "submitMerge": "Restore and merge data",
+      "working": "Restoring...",
+      "success": "The clinic's data was restored from the backup.",
+      "successMerge": "The backup has been merged into the clinic data on this computer.",
+      "close": "Close"
+    },
+    "errors": {
+      "notABackup": "This file is not a backup from this app, or it is damaged.",
+      "invalidRecoveryKey": "The recovery key was not entered correctly. Enter it again carefully.",
+      "wrongSecrets": "The password or recovery key is wrong, or the backup file is damaged.",
+      "newerVersion": "This backup was made with a newer version of the app. Update the app first."
+    }
   },
   "roles": {
     "manager": "Manager",

@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 12,
+    "version": 14,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -12,6 +12,11 @@
   },
   "app": {
     "title": "Intelligente Verwaltungsbasis"
+  },
+  "nav": {
+    "label": "Hauptmenü",
+    "home": "Startseite",
+    "database": "Datenbank"
   },
   "auth": {
     "tabs": {
@@ -54,7 +59,7 @@
       "checking": "Verbindung zum Server wird hergestellt...",
       "offline": "Der Server ist nicht erreichbar. Sie können sich mit einem Konto anmelden, das sich schon einmal auf diesem Computer angemeldet hat. Zum Erstellen eines Kontos wird der Server benötigt.",
       "unavailableTitle": "Keine Verbindung",
-      "unavailable": "Der Server ist nicht erreichbar, und auf diesem Computer hat sich noch niemand angemeldet. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.",
+      "unavailable": "Der Server ist nicht erreichbar, und auf diesem Computer hat sich noch niemand angemeldet. Der erste Start erfordert immer eine Verbindung zum Server. Prüfen Sie die Internetverbindung und versuchen Sie es erneut.",
       "localDatabaseUnavailableTitle": "Lokale Datenbank nicht verfügbar",
       "localDatabaseUnavailable": "Der Server ist nicht erreichbar, und die Praxisdatenbank auf diesem Computer fehlt oder ist beschädigt. Eine Anmeldung ohne Internet ist daher nicht möglich. Stellen Sie eine Internetverbindung her und versuchen Sie es erneut.",
       "retry": "Erneut versuchen"
@@ -81,6 +86,11 @@
   "setup": {
     "title": "Praxis einrichten",
     "description": "Die App wird auf diesem Computer zum ersten Mal gestartet. Geben Sie die Daten der Praxis und der verantwortlichen Person ein. Dafür ist eine Internetverbindung nötig.",
+    "firstRun": {
+      "title": "Bevor Sie beginnen",
+      "subscription": "Wenn Sie bereits ein Abonnement hatten, wählen Sie „Bestehendes Konto“, melden Sie sich mit Ihrem Konto an und wählen Sie Ihre Praxis aus dem Abonnement. Andernfalls fügen Sie eine neue Praxis hinzu.",
+      "backup": "Wenn Sie eine Sicherung der Praxisdaten haben, stellen Sie sie nach der ersten Anmeldung über die Seite „Datenbank“ im Seitenmenü wieder her. Dafür brauchen Sie das Passwort und den Wiederherstellungsschlüssel dieser Sicherung."
+    },
     "clinic": "Praxisdaten",
     "owner": "Verantwortliche Person",
     "ownerDescription": "Die Praxis wird mit dem Konto der verantwortlichen Person verknüpft, die sie verwaltet. Hat diese Person bereits ein Konto, wählen Sie „Bestehendes Konto“.",
@@ -141,6 +151,97 @@
     "offline": "Offline",
     "offlineUntil": "Offline-Zugang bis {{date}}",
     "logout": "Abmelden"
+  },
+  "identity": {
+    "title": "Identität bestätigen",
+    "description": "Geben Sie zum Fortfahren das Passwort des Kontos „{{username}}“ ein, damit wir sicher sind, dass Sie es sind.",
+    "submit": "Weiter",
+    "working": "Wird geprüft...",
+    "errors": {
+      "wrongPassword": "Das Passwort ist falsch.",
+      "unavailable": "Ihr Passwort kann auf diesem Computer nicht geprüft werden. Melden Sie sich ab und wieder an.",
+      "expired": "Ihre Bestätigung ist abgelaufen. Geben Sie Ihr Passwort erneut ein."
+    }
+  },
+  "database": {
+    "title": "Datenbank",
+    "description": "Sichern Sie die Praxisdaten auf diesem Computer, stellen Sie sie aus einer Sicherung wieder her oder löschen Sie sie.",
+    "clear": {
+      "title": "Daten löschen",
+      "summary": "Alle Praxisdaten auf diesem Computer endgültig löschen.",
+      "description": "Alle Praxisdaten auf diesem Computer werden gelöscht. Sie bleiben mit der Rolle Leitung in der App.",
+      "warning": "Das lässt sich nicht rückgängig machen. Ohne Sicherung sind die gelöschten Daten endgültig verloren. Erstellen Sie bei Bedarf zuerst eine Sicherung.",
+      "confirmLabel": "Geben Sie zur Bestätigung Ihren Benutzernamen ein: {{username}}",
+      "submit": "Alle Daten löschen",
+      "working": "Wird gelöscht...",
+      "success": "Die Praxisdaten auf diesem Computer wurden gelöscht.",
+      "close": "Schließen"
+    },
+    "validation": {
+      "confirmationMismatch": "Das ist nicht Ihr Benutzername."
+    },
+    "errors": {
+      "notAllowed": "Nur die Praxisleitung kann die Praxisdaten sichern, wiederherstellen oder löschen."
+    }
+  },
+  "backup": {
+    "secretsTitle": "Passwort und Wiederherstellungsschlüssel nicht verlieren",
+    "fileType": "Praxissicherung",
+    "fields": {
+      "file": "Sicherungsdatei",
+      "password": "Sicherungspasswort",
+      "confirmPassword": "Sicherungspasswort wiederholen",
+      "recoveryKey": "Wiederherstellungsschlüssel"
+    },
+    "hints": {
+      "recoveryKey": "36 Zeichen wie XXXX-XXXX-…, so wie beim Erstellen der Sicherung angezeigt."
+    },
+    "validation": {
+      "fileRequired": "Wählen Sie eine Sicherungsdatei.",
+      "recoveryKeyFormat": "Der Wiederherstellungsschlüssel muss aus 36 Zeichen bestehen: Ziffern und die Buchstaben A bis F."
+    },
+    "export": {
+      "title": "Sicherung erstellen",
+      "summary": "Eine verschlüsselte Kopie der Praxisdaten in einer Datei speichern.",
+      "description": "Eine verschlüsselte Kopie aller Praxisdaten auf diesem Computer wird in einer Datei Ihrer Wahl gespeichert.",
+      "warning": "Diese Sicherung wird mit zwei Dingen gesperrt: dem Passwort, das Sie hier wählen, und einem Wiederherstellungsschlüssel, den die App nach dem Speichern anzeigt. Keines davon wird in der App oder auf dem Server gespeichert. Bewahren Sie beides selbst sicher auf; ohne beides kann diese Sicherung nie wiederhergestellt werden.",
+      "submit": "Speicherort wählen und Sicherung erstellen",
+      "working": "Sicherung wird erstellt...",
+      "saveTitle": "Sicherung speichern",
+      "doneTitle": "Sicherung gespeichert",
+      "doneDescription": "„{{file}}“ wurde gespeichert. Bewahren Sie den Wiederherstellungsschlüssel unten zusammen mit dem gewählten Passwort sicher auf.",
+      "keepWarning": "Dieser Schlüssel wird nur dieses eine Mal angezeigt und nirgends gespeichert. Wenn Sie ihn oder das Passwort verlieren, kann diese Sicherung nicht wiederhergestellt werden, auch nicht vom Support.",
+      "copy": "Wiederherstellungsschlüssel kopieren",
+      "copied": "Kopiert",
+      "confirm": "Ich habe Schlüssel und Passwort sicher aufbewahrt"
+    },
+    "restore": {
+      "title": "Aus Sicherung wiederherstellen",
+      "summary": "Eine Sicherung mit den Praxisdaten auf diesem Computer zusammenführen oder die Daten durch sie ersetzen.",
+      "description": "Wählen Sie die Sicherungsdatei und geben Sie ihren Wiederherstellungsschlüssel und ihr Passwort ein.",
+      "mode": {
+        "label": "Art der Wiederherstellung",
+        "replace": "Ersetzen",
+        "merge": "Zusammenführen"
+      },
+      "warning": "Alle aktuellen Praxisdaten auf diesem Computer werden durch die Daten der Sicherung ersetzt. Erstellen Sie bei Bedarf zuerst eine Sicherung der aktuellen Daten.",
+      "mergeInfo": "Die Daten der Sicherung werden zu den Daten auf diesem Computer hinzugefügt; nichts wird gelöscht. Ist ein Eintrag sowohl in der Sicherung als auch auf diesem Computer vorhanden, bleibt die Version dieses Computers erhalten.",
+      "chooseFile": "Datei wählen",
+      "openTitle": "Sicherungsdatei wählen",
+      "noFile": "Keine Datei gewählt.",
+      "submit": "Wiederherstellen und Daten ersetzen",
+      "submitMerge": "Wiederherstellen und zusammenführen",
+      "working": "Wird wiederhergestellt...",
+      "success": "Die Praxisdaten wurden aus der Sicherung wiederhergestellt.",
+      "successMerge": "Die Sicherung wurde mit den Praxisdaten auf diesem Computer zusammengeführt.",
+      "close": "Schließen"
+    },
+    "errors": {
+      "notABackup": "Diese Datei ist keine Sicherung dieser App oder sie ist beschädigt.",
+      "invalidRecoveryKey": "Der Wiederherstellungsschlüssel wurde nicht richtig eingegeben. Geben Sie ihn noch einmal sorgfältig ein.",
+      "wrongSecrets": "Das Passwort oder der Wiederherstellungsschlüssel ist falsch, oder die Sicherungsdatei ist beschädigt.",
+      "newerVersion": "Diese Sicherung wurde mit einer neueren Version der App erstellt. Aktualisieren Sie zuerst die App."
+    }
   },
   "roles": {
     "manager": "Leitung",

@@ -49,8 +49,10 @@ type AuthServiceClient interface {
 	// Creates an account. Does not log in.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
-	// The first user to log in on a new installation becomes its owner and admin.
-	// Anyone else must have been added with MemberService.AddMember first.
+	// The clinic owner is a member from InstallationService.Register on; anyone
+	// else must have been added with MemberService.AddMember first. (On an
+	// installation registered before clinics existed, which has no owner yet,
+	// the first user to log in becomes its owner and admin.)
 	Login(context.Context, *v1.LoginRequest) (*v1.LoginResponse, error)
 	// Confirms that the local database now uses the next key. Needs session.
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
@@ -145,8 +147,10 @@ type AuthServiceHandler interface {
 	// Creates an account. Does not log in.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
-	// The first user to log in on a new installation becomes its owner and admin.
-	// Anyone else must have been added with MemberService.AddMember first.
+	// The clinic owner is a member from InstallationService.Register on; anyone
+	// else must have been added with MemberService.AddMember first. (On an
+	// installation registered before clinics existed, which has no owner yet,
+	// the first user to log in becomes its owner and admin.)
 	Login(context.Context, *v1.LoginRequest) (*v1.LoginResponse, error)
 	// Confirms that the local database now uses the next key. Needs session.
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
