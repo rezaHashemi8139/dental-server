@@ -26,6 +26,8 @@ type Config struct {
 	// TLS certificate and key. Both empty = plain HTTP (development only).
 	TLSCertFile string
 	TLSKeyFile  string
+	// Folder with the desktop app release on offer (release.json + installer), see internal/releases.
+	UpdatesDir string
 }
 
 func Load() (Config, error) {
@@ -39,6 +41,7 @@ func Load() (Config, error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		TLSCertFile: os.Getenv("TLS_CERT_FILE"),
 		TLSKeyFile:  os.Getenv("TLS_KEY_FILE"),
+		UpdatesDir:  getenv("UPDATES_DIR", "updates"),
 	}
 
 	if cfg.DatabaseURL == "" {

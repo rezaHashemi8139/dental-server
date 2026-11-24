@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+import "dental/v1/patient.proto";
+
+// Keeps the records of a clinic the same on all its installations. Every
+// installation works on its own local database, offline too, and marks what it
+// changed; once online it sends those changes (Push) and fetches what changed
+// elsewhere (Pull).
+//
+// - Patients (Patient) are shared by every clinic that treats them. A clinic gets
+//   the patients it has sent itself, or that have one of its treatments.
+// - Treatments belong to the clinic that recorded them; only that clinic's
+//   installations receive or change them.
+// - The latest change wins (by `updated_at`), record by record.
+// - Financial data is never synced: these messages have no field for it.
+//
+// Needs a session; the clinic is the session's.
+service SyncService {
+  // Stores changed records. Fails as a whole only for invalid input; a single
+  // record that cannot be stored is listed in PushResponse.rejected instead.
+  rpc Push(PushRequest) returns (PushResponse) {}
+
+  // Records of the session's clinic changed after a revision, oldest change first.
+  rpc Pull(PullRequest) returns (PullResponse) {}
+}
+
+message PushRequest {
+  // Patients come first: a treatment may refer to a patient in the same request.
+  // At most 500 records in all.
+  repeated Patient patients = 1 [(buf.validate.field).repeated.max_items = 500];
+  repeated Treatment treatments = 2 [(buf.validate.field).repeated.max_items = 500];
+
+  option (buf.validate.message).cel = {
+    id: "push_size"
+    message: "at most 500 records per request"
+    expression: "size(this.patients) + size(this.treatments) <= 500"
+  };
+}
+
+// A record the server did not store and never will as it is: the client should
+// stop sending it until it is changed.
+message RejectedRecord {
+  // Patient.id or Treatment.id.
+  bytes id = 1;
+  // Why, as a stable code:
+  // - "invalid_patient_id": Patient.id does not match its identity;
+  // - "invalid_national_id": the national ID's check digit is wrong;
+  // - "unknown_patient": the treatment's patient is not on the server;
+  // - "unknown_user": Treatment.performed_by is not an account;
+  // - "other_clinic": the treatment id belongs to another clinic's treatment.
+  string reason = 2;
+}
+
+message PushResponse {
+  // Records stored, or already newer on the server (which the next Pull returns).
+  uint32 accepted = 1;
+  repeated RejectedRecord rejected = 2;
+}
+
+message PullRequest {
+  // PullResponse.revision of the previous pull; 0 for everything.
+  int64 since_revision = 1 [(buf.validate.field).int64.gte = 0];
+}
+
+message PullResponse {
+  repeated Patient patients = 1;
+  repeated Treatment treatments = 2;
+  // Pass as since_revision next time.
+  int64 revision = 3;
+  // More changes are waiting: pull again right away.
+  bool has_more = 4;
+}

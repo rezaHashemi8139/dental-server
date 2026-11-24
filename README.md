@@ -35,6 +35,15 @@ Or use the scripts (PowerShell):
 
 If Windows blocks the scripts, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
+The admin panel (`AdminService`: plans and selling subscriptions) needs an administrator.
+Create the first one on the server; it reads the password from standard input:
+
+```powershell
+go run . create-admin -username admin -full-name "Site Admin"
+```
+
+Further administrators can then be created from the panel (`AdminService.CreateAdmin`).
+
 In VS Code the same commands are tasks (`.vscode/tasks.json`): `Ctrl+Shift+P` → **Tasks: Run Task**
 (`dev`, `generate`, `build`, `build: linux`, `test`, `vet`, `tidy`), or `Ctrl+Shift+B` for `build`.
 With the recommended **Task Runner** extension they are also listed in the Explorer sidebar; click one to run it.
@@ -66,6 +75,7 @@ internal/languages/     downloadable interface languages for the app (see its RE
 internal/service/       RPC implementations
 internal/statuspage/    HTML status page at / (server + database health)
 main.go                 server setup, interceptors, graceful shutdown
+createadmin.go          `create-admin` command: the first administrator of the admin panel
 ```
 
 ## Production

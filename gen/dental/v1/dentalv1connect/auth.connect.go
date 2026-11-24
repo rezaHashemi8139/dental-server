@@ -37,6 +37,9 @@ const (
 	AuthServiceSignUpProcedure = "/dental.v1.AuthService/SignUp"
 	// AuthServiceLoginProcedure is the fully-qualified name of the AuthService's Login RPC.
 	AuthServiceLoginProcedure = "/dental.v1.AuthService/Login"
+	// AuthServiceChangePasswordProcedure is the fully-qualified name of the AuthService's
+	// ChangePassword RPC.
+	AuthServiceChangePasswordProcedure = "/dental.v1.AuthService/ChangePassword"
 	// AuthServiceConfirmKeyRotationProcedure is the fully-qualified name of the AuthService's
 	// ConfirmKeyRotation RPC.
 	AuthServiceConfirmKeyRotationProcedure = "/dental.v1.AuthService/ConfirmKeyRotation"
@@ -47,13 +50,40 @@ const (
 // AuthServiceClient is a client for the dental.v1.AuthService service.
 type AuthServiceClient interface {
 	// Creates an account. Does not log in.
+	//
+	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - ALREADY_EXISTS "username_taken";
+	// - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
+	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
-	// The clinic owner is a member from InstallationService.Register on; anyone
-	// else must have been added with MemberService.AddMember first. (On an
-	// installation registered before clinics existed, which has no owner yet,
-	// the first user to log in becomes its owner and admin.)
+	//
+	// The user must be a member of the installation's clinic (the clinic owner is
+	// one from InstallationService.Register on; anyone else is added with
+	// MemberService.AddMember), and the clinic owner must have a subscription in
+	// force that covers this clinic and this installation.
+	//
+	// Fails with:
+	// - UNAUTHENTICATED "invalid_installation" / "invalid_credentials";
+	// - PERMISSION_DENIED "installation_revoked" / "user_disabled" / "not_a_member";
+	// - FAILED_PRECONDITION "no_clinic": the installation was registered before clinics
+	//   existed and must be registered again;
+	// - FAILED_PRECONDITION "password_change_required": the account has a temporary
+	//   password (MemberService.CreateUser); call ChangePassword, then log in again;
+	// - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
+	// - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
+	//   subscription allows, and this one is not among the oldest that fit;
+	// - PERMISSION_DENIED "device_limit_exceeded": the same for installations of the clinic
+	//   (revoked installations do not count).
 	Login(context.Context, *v1.LoginRequest) (*v1.LoginResponse, error)
+	// Changes a password, proven with the current one. No session needed, so an
+	// account with a temporary password can set its own before the first login.
+	// Ends every session of the account.
+	//
+	// Fails with "weak_password", UNAUTHENTICATED "invalid_credentials",
+	// PERMISSION_DENIED "user_disabled" or INVALID_ARGUMENT "password_unchanged"
+	// (the new password equals the current one).
+	ChangePassword(context.Context, *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error)
 	// Confirms that the local database now uses the next key. Needs session.
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
 	// Ends the session. Needs session.
@@ -83,6 +113,12 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("Login")),
 			connect.WithClientOptions(opts...),
 		),
+		changePassword: connect.NewClient[v1.ChangePasswordRequest, v1.ChangePasswordResponse](
+			httpClient,
+			baseURL+AuthServiceChangePasswordProcedure,
+			connect.WithSchema(authServiceMethods.ByName("ChangePassword")),
+			connect.WithClientOptions(opts...),
+		),
 		confirmKeyRotation: connect.NewClient[v1.ConfirmKeyRotationRequest, v1.ConfirmKeyRotationResponse](
 			httpClient,
 			baseURL+AuthServiceConfirmKeyRotationProcedure,
@@ -102,6 +138,7 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 type authServiceClient struct {
 	signUp             *connect.Client[v1.SignUpRequest, v1.SignUpResponse]
 	login              *connect.Client[v1.LoginRequest, v1.LoginResponse]
+	changePassword     *connect.Client[v1.ChangePasswordRequest, v1.ChangePasswordResponse]
 	confirmKeyRotation *connect.Client[v1.ConfirmKeyRotationRequest, v1.ConfirmKeyRotationResponse]
 	logout             *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
 }
@@ -118,6 +155,15 @@ func (c *authServiceClient) SignUp(ctx context.Context, req *v1.SignUpRequest) (
 // Login calls dental.v1.AuthService.Login.
 func (c *authServiceClient) Login(ctx context.Context, req *v1.LoginRequest) (*v1.LoginResponse, error) {
 	response, err := c.login.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ChangePassword calls dental.v1.AuthService.ChangePassword.
+func (c *authServiceClient) ChangePassword(ctx context.Context, req *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
+	response, err := c.changePassword.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -145,13 +191,40 @@ func (c *authServiceClient) Logout(ctx context.Context, req *v1.LogoutRequest) (
 // AuthServiceHandler is an implementation of the dental.v1.AuthService service.
 type AuthServiceHandler interface {
 	// Creates an account. Does not log in.
+	//
+	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - ALREADY_EXISTS "username_taken";
+	// - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
+	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
-	// The clinic owner is a member from InstallationService.Register on; anyone
-	// else must have been added with MemberService.AddMember first. (On an
-	// installation registered before clinics existed, which has no owner yet,
-	// the first user to log in becomes its owner and admin.)
+	//
+	// The user must be a member of the installation's clinic (the clinic owner is
+	// one from InstallationService.Register on; anyone else is added with
+	// MemberService.AddMember), and the clinic owner must have a subscription in
+	// force that covers this clinic and this installation.
+	//
+	// Fails with:
+	// - UNAUTHENTICATED "invalid_installation" / "invalid_credentials";
+	// - PERMISSION_DENIED "installation_revoked" / "user_disabled" / "not_a_member";
+	// - FAILED_PRECONDITION "no_clinic": the installation was registered before clinics
+	//   existed and must be registered again;
+	// - FAILED_PRECONDITION "password_change_required": the account has a temporary
+	//   password (MemberService.CreateUser); call ChangePassword, then log in again;
+	// - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
+	// - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
+	//   subscription allows, and this one is not among the oldest that fit;
+	// - PERMISSION_DENIED "device_limit_exceeded": the same for installations of the clinic
+	//   (revoked installations do not count).
 	Login(context.Context, *v1.LoginRequest) (*v1.LoginResponse, error)
+	// Changes a password, proven with the current one. No session needed, so an
+	// account with a temporary password can set its own before the first login.
+	// Ends every session of the account.
+	//
+	// Fails with "weak_password", UNAUTHENTICATED "invalid_credentials",
+	// PERMISSION_DENIED "user_disabled" or INVALID_ARGUMENT "password_unchanged"
+	// (the new password equals the current one).
+	ChangePassword(context.Context, *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error)
 	// Confirms that the local database now uses the next key. Needs session.
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
 	// Ends the session. Needs session.
@@ -177,6 +250,12 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("Login")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceChangePasswordHandler := connect.NewUnaryHandlerSimple(
+		AuthServiceChangePasswordProcedure,
+		svc.ChangePassword,
+		connect.WithSchema(authServiceMethods.ByName("ChangePassword")),
+		connect.WithHandlerOptions(opts...),
+	)
 	authServiceConfirmKeyRotationHandler := connect.NewUnaryHandlerSimple(
 		AuthServiceConfirmKeyRotationProcedure,
 		svc.ConfirmKeyRotation,
@@ -195,6 +274,8 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceSignUpHandler.ServeHTTP(w, r)
 		case AuthServiceLoginProcedure:
 			authServiceLoginHandler.ServeHTTP(w, r)
+		case AuthServiceChangePasswordProcedure:
+			authServiceChangePasswordHandler.ServeHTTP(w, r)
 		case AuthServiceConfirmKeyRotationProcedure:
 			authServiceConfirmKeyRotationHandler.ServeHTTP(w, r)
 		case AuthServiceLogoutProcedure:
@@ -214,6 +295,10 @@ func (UnimplementedAuthServiceHandler) SignUp(context.Context, *v1.SignUpRequest
 
 func (UnimplementedAuthServiceHandler) Login(context.Context, *v1.LoginRequest) (*v1.LoginResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AuthService.Login is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) ChangePassword(context.Context, *v1.ChangePasswordRequest) (*v1.ChangePasswordResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AuthService.ChangePassword is not implemented"))
 }
 
 func (UnimplementedAuthServiceHandler) ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error) {

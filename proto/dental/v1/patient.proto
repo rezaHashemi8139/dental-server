@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+import "dental/v1/person.proto";
+import "google/protobuf/timestamp.proto";
+
+// Patients are people, unique across the whole system by their identity (an
+// Iranian national ID, or a foreign national's FIDA code; see PersonIdentity). Every clinic that
+// treats a patient shares the same patient record; each treatment belongs to the
+// clinic that recorded it.
+//
+// Financial data (fees, payments, balances) is never sent to the server: none of
+// these messages has a field for it, and it lives only in the local database of
+// each installation.
+//
+// Records are written by SyncService. PatientService lets any clinic see a
+// patient's history across clinics; every such view is logged.
+service PatientService {
+  // A patient's record and their treatments in every clinic, newest first.
+  // Logs the view (who, from which clinic and installation, when).
+  //
+  // Fails with NOT_FOUND "patient_not_found".
+  rpc GetPatientHistory(GetPatientHistoryRequest) returns (GetPatientHistoryResponse) {}
+}
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+// A patient's own details, shared by every clinic that treats them. Text is sent trimmed.
+message Patient {
+  // 16 bytes: the first 16 bytes of
+  //   SHA-256("dental/patient/v1" 0x00 <identity.type as a decimal number> 0x00 <identity.number>)
+  // with the UUID version set to 8 and the variant to RFC 4122, e.g. for national ID
+  // 0012345679 the hash of "dental/patient/v1\x001\x000012345679". The nationality is
+  // not part of it. The server checks it, so every installation gives the same
+  // person the same id, even offline.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  PersonIdentity identity = 2 [(buf.validate.field).required = true];
+  // 1–100 characters each.
+  string first_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string last_name = 4 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // Gregorian date "YYYY-MM-DD", or empty if unknown.
+  string birth_date = 5 [(buf.validate.field).string.pattern = "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"];
+  Gender gender = 6 [(buf.validate.field).enum.defined_only = true];
+  // Empty, or 7–15 digits optionally starting with '+'.
+  string phone = 7 [(buf.validate.field).string.pattern = "^(\\+?[0-9]{7,15})?$"];
+  // At most 500 characters.
+  string address = 8 [(buf.validate.field).string.max_len = 500];
+  // Medical history, allergies, medications... At most 5000 characters.
+  string medical_notes = 9 [(buf.validate.field).string.max_len = 5000];
+  // When these details were last changed, on the client's clock. The latest change
+  // wins; times in the future are taken as the server's current time.
+  google.protobuf.Timestamp updated_at = 10 [(buf.validate.field).required = true];
+}
+
+// One treatment, recorded by a clinic. Text is sent trimmed.
+message Treatment {
+  // 16 random bytes, chosen by the installation that recorded it.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  // The patient (Patient.id).
+  bytes patient_id = 2 [(buf.validate.field).bytes.len = 16];
+  // The account of who performed it (16 bytes), or empty if not given. It need not
+  // be a member of the clinic (see MemberService.FindUser).
+  bytes performed_by = 3 [(buf.validate.field).cel = {
+    id: "performed_by_length"
+    message: "must be empty or 16 bytes"
+    expression: "size(this) == 0 || size(this) == 16"
+  }];
+  google.protobuf.Timestamp performed_at = 4 [(buf.validate.field).required = true];
+  // The tooth, e.g. FDI "36". Empty if not about one tooth. At most 20 characters.
+  string tooth = 5 [(buf.validate.field).string.max_len = 20];
+  // What was done. 1–200 characters.
+  string procedure = 6 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 200
+  }];
+  // At most 5000 characters.
+  string notes = 7 [(buf.validate.field).string.max_len = 5000];
+  // Same rule as Patient.updated_at.
+  google.protobuf.Timestamp updated_at = 8 [(buf.validate.field).required = true];
+  // Set when the treatment was deleted. Deleted treatments stay as tombstones so
+  // every installation of the clinic learns about the deletion.
+  google.protobuf.Timestamp deleted_at = 9;
+}
+
+message GetPatientHistoryRequest {
+  PersonIdentity identity = 1 [(buf.validate.field).required = true];
+}
+
+// A treatment as another clinic sees it.
+message TreatmentHistoryEntry {
+  Treatment treatment = 1;
+  // The clinic that recorded it.
+  string clinic_name = 2;
+  string clinic_city = 3;
+  // Full name of Treatment.performed_by; empty if not given.
+  string performed_by_name = 4;
+}
+
+message GetPatientHistoryResponse {
+  Patient patient = 1;
+  // Not deleted ones only, newest first.
+  repeated TreatmentHistoryEntry treatments = 2;
+}

@@ -92,8 +92,12 @@ type SignUpRequest struct {
 	// one uppercase letter (A-Z) and one digit (0-9). Otherwise SignUp fails with
 	// INVALID_ARGUMENT and the message "weak_password".
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	// At most 100 characters.
-	FullName      string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	// 1–100 characters.
+	FullName string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	// National ID or FIDA code, and nationality. Unique across all accounts.
+	Identity *PersonIdentity `protobuf:"bytes,4,opt,name=identity,proto3" json:"identity,omitempty"`
+	// Mobile number: 7–15 digits, optionally starting with '+'.
+	Phone         string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -145,6 +149,20 @@ func (x *SignUpRequest) GetPassword() string {
 func (x *SignUpRequest) GetFullName() string {
 	if x != nil {
 		return x.FullName
+	}
+	return ""
+}
+
+func (x *SignUpRequest) GetIdentity() *PersonIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+func (x *SignUpRequest) GetPhone() string {
+	if x != nil {
+		return x.Phone
 	}
 	return ""
 }
@@ -279,15 +297,20 @@ type LoginResponse struct {
 	SessionToken     string                 `protobuf:"bytes,1,opt,name=session_token,json=sessionToken,proto3" json:"session_token,omitempty"`
 	SessionExpiresAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=session_expires_at,json=sessionExpiresAt,proto3" json:"session_expires_at,omitempty"`
 	User             *User                  `protobuf:"bytes,3,opt,name=user,proto3" json:"user,omitempty"`
-	IsOwner          bool                   `protobuf:"varint,4,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
-	IsAdmin          bool                   `protobuf:"varint,5,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
+	// Whether the user owns the installation's clinic.
+	IsOwner bool `protobuf:"varint,4,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
+	// Whether the user may manage the clinic's members. The owner always may.
+	IsAdmin bool `protobuf:"varint,5,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
 	// A sealed DatabaseKeys.
 	DatabaseKeys *SealedBox `protobuf:"bytes,6,opt,name=database_keys,json=databaseKeys,proto3" json:"database_keys,omitempty"`
 	// Lets this user log in on this installation without the server until it expires.
-	OfflineGrant  *SignedOfflineGrant    `protobuf:"bytes,7,opt,name=offline_grant,json=offlineGrant,proto3" json:"offline_grant,omitempty"`
-	ServerTime    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	OfflineGrant *SignedOfflineGrant    `protobuf:"bytes,7,opt,name=offline_grant,json=offlineGrant,proto3" json:"offline_grant,omitempty"`
+	ServerTime   *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
+	// When the clinic owner's paid time ends (renewals already bought included).
+	// Nobody can use the clinic's app after it, online or offline.
+	SubscriptionEndsAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=subscription_ends_at,json=subscriptionEndsAt,proto3" json:"subscription_ends_at,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *LoginResponse) Reset() {
@@ -376,6 +399,110 @@ func (x *LoginResponse) GetServerTime() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *LoginResponse) GetSubscriptionEndsAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.SubscriptionEndsAt
+	}
+	return nil
+}
+
+type ChangePasswordRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Username        string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	CurrentPassword string                 `protobuf:"bytes,2,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
+	// Same rules as SignUpRequest.password.
+	NewPassword   string `protobuf:"bytes,3,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangePasswordRequest) Reset() {
+	*x = ChangePasswordRequest{}
+	mi := &file_dental_v1_auth_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePasswordRequest) ProtoMessage() {}
+
+func (x *ChangePasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePasswordRequest.ProtoReflect.Descriptor instead.
+func (*ChangePasswordRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ChangePasswordRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *ChangePasswordRequest) GetCurrentPassword() string {
+	if x != nil {
+		return x.CurrentPassword
+	}
+	return ""
+}
+
+func (x *ChangePasswordRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+type ChangePasswordResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangePasswordResponse) Reset() {
+	*x = ChangePasswordResponse{}
+	mi := &file_dental_v1_auth_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangePasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangePasswordResponse) ProtoMessage() {}
+
+func (x *ChangePasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangePasswordResponse.ProtoReflect.Descriptor instead.
+func (*ChangePasswordResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{6}
+}
+
 type ConfirmKeyRotationRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The version the database now uses: DatabaseKeys.current_version + 1.
@@ -386,7 +513,7 @@ type ConfirmKeyRotationRequest struct {
 
 func (x *ConfirmKeyRotationRequest) Reset() {
 	*x = ConfirmKeyRotationRequest{}
-	mi := &file_dental_v1_auth_proto_msgTypes[5]
+	mi := &file_dental_v1_auth_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -398,7 +525,7 @@ func (x *ConfirmKeyRotationRequest) String() string {
 func (*ConfirmKeyRotationRequest) ProtoMessage() {}
 
 func (x *ConfirmKeyRotationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_auth_proto_msgTypes[5]
+	mi := &file_dental_v1_auth_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -411,7 +538,7 @@ func (x *ConfirmKeyRotationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmKeyRotationRequest.ProtoReflect.Descriptor instead.
 func (*ConfirmKeyRotationRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_auth_proto_rawDescGZIP(), []int{5}
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ConfirmKeyRotationRequest) GetNewVersion() uint32 {
@@ -430,7 +557,7 @@ type ConfirmKeyRotationResponse struct {
 
 func (x *ConfirmKeyRotationResponse) Reset() {
 	*x = ConfirmKeyRotationResponse{}
-	mi := &file_dental_v1_auth_proto_msgTypes[6]
+	mi := &file_dental_v1_auth_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +569,7 @@ func (x *ConfirmKeyRotationResponse) String() string {
 func (*ConfirmKeyRotationResponse) ProtoMessage() {}
 
 func (x *ConfirmKeyRotationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_auth_proto_msgTypes[6]
+	mi := &file_dental_v1_auth_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +582,7 @@ func (x *ConfirmKeyRotationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfirmKeyRotationResponse.ProtoReflect.Descriptor instead.
 func (*ConfirmKeyRotationResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_auth_proto_rawDescGZIP(), []int{6}
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ConfirmKeyRotationResponse) GetCurrentVersion() uint32 {
@@ -473,7 +600,7 @@ type LogoutRequest struct {
 
 func (x *LogoutRequest) Reset() {
 	*x = LogoutRequest{}
-	mi := &file_dental_v1_auth_proto_msgTypes[7]
+	mi := &file_dental_v1_auth_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -485,7 +612,7 @@ func (x *LogoutRequest) String() string {
 func (*LogoutRequest) ProtoMessage() {}
 
 func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_auth_proto_msgTypes[7]
+	mi := &file_dental_v1_auth_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -498,7 +625,7 @@ func (x *LogoutRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutRequest.ProtoReflect.Descriptor instead.
 func (*LogoutRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_auth_proto_rawDescGZIP(), []int{7}
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{9}
 }
 
 type LogoutResponse struct {
@@ -509,7 +636,7 @@ type LogoutResponse struct {
 
 func (x *LogoutResponse) Reset() {
 	*x = LogoutResponse{}
-	mi := &file_dental_v1_auth_proto_msgTypes[8]
+	mi := &file_dental_v1_auth_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -521,7 +648,7 @@ func (x *LogoutResponse) String() string {
 func (*LogoutResponse) ProtoMessage() {}
 
 func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_auth_proto_msgTypes[8]
+	mi := &file_dental_v1_auth_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -534,23 +661,25 @@ func (x *LogoutResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogoutResponse.ProtoReflect.Descriptor instead.
 func (*LogoutResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_auth_proto_rawDescGZIP(), []int{8}
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{10}
 }
 
 var File_dental_v1_auth_proto protoreflect.FileDescriptor
 
 const file_dental_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x14dental/v1/auth.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16dental/v1/crypto.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
+	"\x14dental/v1/auth.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16dental/v1/crypto.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
-	"\tfull_name\x18\x03 \x01(\tR\bfullName\"\xde\x02\n" +
+	"\tfull_name\x18\x03 \x01(\tR\bfullName\"\xce\x03\n" +
 	"\rSignUpRequest\x129\n" +
 	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xeb\x01\n" +
 	"\bpassword\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
-	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\bpassword\x12$\n" +
-	"\tfull_name\x18\x03 \x01(\tB\a\xbaH\x04r\x02\x18dR\bfullName\"5\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\bpassword\x12&\n" +
+	"\tfull_name\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12=\n" +
+	"\bidentity\x18\x04 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\x12-\n" +
+	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\"5\n" +
 	"\x0eSignUpResponse\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\xfc\x01\n" +
 	"\fLoginRequest\x120\n" +
@@ -558,7 +687,7 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\x13installation_secret\x18\x02 \x01(\fB\a\xbaH\x04z\x02h R\x12installationSecret\x12%\n" +
 	"\busername\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
 	"\bpassword\x18\x04 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\x123\n" +
-	"\x11client_public_key\x18\x05 \x01(\fB\a\xbaH\x04z\x02h R\x0fclientPublicKey\"\x95\x03\n" +
+	"\x11client_public_key\x18\x05 \x01(\fB\a\xbaH\x04z\x02h R\x0fclientPublicKey\"\xe3\x03\n" +
 	"\rLoginResponse\x12#\n" +
 	"\rsession_token\x18\x01 \x01(\tR\fsessionToken\x12H\n" +
 	"\x12session_expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x10sessionExpiresAt\x12#\n" +
@@ -568,17 +697,25 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\rdatabase_keys\x18\x06 \x01(\v2\x14.dental.v1.SealedBoxR\fdatabaseKeys\x12B\n" +
 	"\roffline_grant\x18\a \x01(\v2\x1d.dental.v1.SignedOfflineGrantR\fofflineGrant\x12;\n" +
 	"\vserver_time\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"serverTime\"<\n" +
+	"serverTime\x12L\n" +
+	"\x14subscription_ends_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x12subscriptionEndsAt\"\xe8\x02\n" +
+	"\x15ChangePasswordRequest\x12%\n" +
+	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x123\n" +
+	"\x10current_password\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\x0fcurrentPassword\x12\xf2\x01\n" +
+	"\fnew_password\x18\x03 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\vnewPassword\"\x18\n" +
+	"\x16ChangePasswordResponse\"<\n" +
 	"\x19ConfirmKeyRotationRequest\x12\x1f\n" +
 	"\vnew_version\x18\x01 \x01(\rR\n" +
 	"newVersion\"E\n" +
 	"\x1aConfirmKeyRotationResponse\x12'\n" +
 	"\x0fcurrent_version\x18\x01 \x01(\rR\x0ecurrentVersion\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse2\xb2\x02\n" +
+	"\x0eLogoutResponse2\x8b\x03\n" +
 	"\vAuthService\x12?\n" +
 	"\x06SignUp\x12\x18.dental.v1.SignUpRequest\x1a\x19.dental.v1.SignUpResponse\"\x00\x12<\n" +
-	"\x05Login\x12\x17.dental.v1.LoginRequest\x1a\x18.dental.v1.LoginResponse\"\x00\x12c\n" +
+	"\x05Login\x12\x17.dental.v1.LoginRequest\x1a\x18.dental.v1.LoginResponse\"\x00\x12W\n" +
+	"\x0eChangePassword\x12 .dental.v1.ChangePasswordRequest\x1a!.dental.v1.ChangePasswordResponse\"\x00\x12c\n" +
 	"\x12ConfirmKeyRotation\x12$.dental.v1.ConfirmKeyRotationRequest\x1a%.dental.v1.ConfirmKeyRotationResponse\"\x00\x12?\n" +
 	"\x06Logout\x12\x18.dental.v1.LogoutRequest\x1a\x19.dental.v1.LogoutResponse\"\x00B\x85\x01\n" +
 	"\rcom.dental.v1B\tAuthProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
@@ -596,41 +733,48 @@ func file_dental_v1_auth_proto_rawDescGZIP() []byte {
 	return file_dental_v1_auth_proto_rawDescData
 }
 
-var file_dental_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_dental_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_dental_v1_auth_proto_goTypes = []any{
 	(*User)(nil),                       // 0: dental.v1.User
 	(*SignUpRequest)(nil),              // 1: dental.v1.SignUpRequest
 	(*SignUpResponse)(nil),             // 2: dental.v1.SignUpResponse
 	(*LoginRequest)(nil),               // 3: dental.v1.LoginRequest
 	(*LoginResponse)(nil),              // 4: dental.v1.LoginResponse
-	(*ConfirmKeyRotationRequest)(nil),  // 5: dental.v1.ConfirmKeyRotationRequest
-	(*ConfirmKeyRotationResponse)(nil), // 6: dental.v1.ConfirmKeyRotationResponse
-	(*LogoutRequest)(nil),              // 7: dental.v1.LogoutRequest
-	(*LogoutResponse)(nil),             // 8: dental.v1.LogoutResponse
-	(*timestamppb.Timestamp)(nil),      // 9: google.protobuf.Timestamp
-	(*SealedBox)(nil),                  // 10: dental.v1.SealedBox
-	(*SignedOfflineGrant)(nil),         // 11: dental.v1.SignedOfflineGrant
+	(*ChangePasswordRequest)(nil),      // 5: dental.v1.ChangePasswordRequest
+	(*ChangePasswordResponse)(nil),     // 6: dental.v1.ChangePasswordResponse
+	(*ConfirmKeyRotationRequest)(nil),  // 7: dental.v1.ConfirmKeyRotationRequest
+	(*ConfirmKeyRotationResponse)(nil), // 8: dental.v1.ConfirmKeyRotationResponse
+	(*LogoutRequest)(nil),              // 9: dental.v1.LogoutRequest
+	(*LogoutResponse)(nil),             // 10: dental.v1.LogoutResponse
+	(*PersonIdentity)(nil),             // 11: dental.v1.PersonIdentity
+	(*timestamppb.Timestamp)(nil),      // 12: google.protobuf.Timestamp
+	(*SealedBox)(nil),                  // 13: dental.v1.SealedBox
+	(*SignedOfflineGrant)(nil),         // 14: dental.v1.SignedOfflineGrant
 }
 var file_dental_v1_auth_proto_depIdxs = []int32{
-	0,  // 0: dental.v1.SignUpResponse.user:type_name -> dental.v1.User
-	9,  // 1: dental.v1.LoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
-	0,  // 2: dental.v1.LoginResponse.user:type_name -> dental.v1.User
-	10, // 3: dental.v1.LoginResponse.database_keys:type_name -> dental.v1.SealedBox
-	11, // 4: dental.v1.LoginResponse.offline_grant:type_name -> dental.v1.SignedOfflineGrant
-	9,  // 5: dental.v1.LoginResponse.server_time:type_name -> google.protobuf.Timestamp
-	1,  // 6: dental.v1.AuthService.SignUp:input_type -> dental.v1.SignUpRequest
-	3,  // 7: dental.v1.AuthService.Login:input_type -> dental.v1.LoginRequest
-	5,  // 8: dental.v1.AuthService.ConfirmKeyRotation:input_type -> dental.v1.ConfirmKeyRotationRequest
-	7,  // 9: dental.v1.AuthService.Logout:input_type -> dental.v1.LogoutRequest
-	2,  // 10: dental.v1.AuthService.SignUp:output_type -> dental.v1.SignUpResponse
-	4,  // 11: dental.v1.AuthService.Login:output_type -> dental.v1.LoginResponse
-	6,  // 12: dental.v1.AuthService.ConfirmKeyRotation:output_type -> dental.v1.ConfirmKeyRotationResponse
-	8,  // 13: dental.v1.AuthService.Logout:output_type -> dental.v1.LogoutResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	11, // 0: dental.v1.SignUpRequest.identity:type_name -> dental.v1.PersonIdentity
+	0,  // 1: dental.v1.SignUpResponse.user:type_name -> dental.v1.User
+	12, // 2: dental.v1.LoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
+	0,  // 3: dental.v1.LoginResponse.user:type_name -> dental.v1.User
+	13, // 4: dental.v1.LoginResponse.database_keys:type_name -> dental.v1.SealedBox
+	14, // 5: dental.v1.LoginResponse.offline_grant:type_name -> dental.v1.SignedOfflineGrant
+	12, // 6: dental.v1.LoginResponse.server_time:type_name -> google.protobuf.Timestamp
+	12, // 7: dental.v1.LoginResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	1,  // 8: dental.v1.AuthService.SignUp:input_type -> dental.v1.SignUpRequest
+	3,  // 9: dental.v1.AuthService.Login:input_type -> dental.v1.LoginRequest
+	5,  // 10: dental.v1.AuthService.ChangePassword:input_type -> dental.v1.ChangePasswordRequest
+	7,  // 11: dental.v1.AuthService.ConfirmKeyRotation:input_type -> dental.v1.ConfirmKeyRotationRequest
+	9,  // 12: dental.v1.AuthService.Logout:input_type -> dental.v1.LogoutRequest
+	2,  // 13: dental.v1.AuthService.SignUp:output_type -> dental.v1.SignUpResponse
+	4,  // 14: dental.v1.AuthService.Login:output_type -> dental.v1.LoginResponse
+	6,  // 15: dental.v1.AuthService.ChangePassword:output_type -> dental.v1.ChangePasswordResponse
+	8,  // 16: dental.v1.AuthService.ConfirmKeyRotation:output_type -> dental.v1.ConfirmKeyRotationResponse
+	10, // 17: dental.v1.AuthService.Logout:output_type -> dental.v1.LogoutResponse
+	13, // [13:18] is the sub-list for method output_type
+	8,  // [8:13] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_auth_proto_init() }
@@ -639,13 +783,14 @@ func file_dental_v1_auth_proto_init() {
 		return
 	}
 	file_dental_v1_crypto_proto_init()
+	file_dental_v1_person_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_auth_proto_rawDesc), len(file_dental_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

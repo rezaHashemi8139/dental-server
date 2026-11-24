@@ -1,5 +1,5 @@
-// Dental server: accounts, installations, database keys and downloadable
-// interface languages for the desktop app.
+// Dental server: accounts, installations, database keys, patient records synced
+// from the clinics, downloadable interface languages and updates for the desktop app.
 // RPCs are defined in proto/ and served with ConnectRPC, which speaks the gRPC,
 // gRPC-Web and Connect protocols over plain net/http.
 package main
@@ -20,6 +20,7 @@ import (
 	"dental-server/internal/config"
 	"dental-server/internal/database"
 	"dental-server/internal/languages"
+	"dental-server/internal/releases"
 	"dental-server/internal/secure"
 	"dental-server/internal/service"
 	"dental-server/internal/statuspage"
@@ -29,6 +30,13 @@ import (
 var version = "0.1.0-dev"
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "create-admin" {
+		if err := createAdmin(os.Args[2:]); err != nil {
+			slog.Error("create-admin failed", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(); err != nil {
 		slog.Error("server stopped", "error", err)
 		os.Exit(1)
@@ -67,23 +75,42 @@ func run() error {
 		return err
 	}
 
+	// Checked at startup too: a broken release.json must not ship. Reread when it changes.
+	appReleases, err := releases.Open(cfg.UpdatesDir)
+	if err != nil {
+		return err
+	}
+
 	deps := &service.Deps{DB: db.Pool, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
 
-	// Outermost first: log everything, reject invalid input (before any database work),
-	// refuse calls while the database is not ready, then check the session.
+	// Outermost first: log everything, refuse desktop apps that must update first,
+	// reject invalid input (before any database work), refuse calls while the
+	// database is not ready, then check the session.
 	interceptors := connect.WithInterceptors(
 		loggingInterceptor(),
+		service.AppVersionInterceptor(appReleases),
 		service.ValidateInterceptor(),
 		service.ReadyInterceptor(db.NotReady),
 		service.SessionInterceptor(deps),
 	)
 
 	mux := http.NewServeMux()
-	mux.Handle(dentalv1connect.NewHealthServiceHandler(service.NewHealthService(db.Pool, version, db.NotReady), interceptors))
+	mux.Handle(dentalv1connect.NewHealthServiceHandler(service.NewHealthService(db.Pool, version, db.NotReady, appReleases), interceptors))
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(service.NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(service.NewAuthService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(service.NewMemberService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewSyncServiceHandler(service.NewSyncService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewPatientServiceHandler(service.NewPatientService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewLanguageServiceHandler(service.NewLanguageService(langs), interceptors))
+	// The desktop app's updater: release info and installers (plain HTTP, no session).
+	releases.Register(mux, appReleases)
+	// The admin panel has its own sessions: AdminSessionInterceptor instead of SessionInterceptor.
+	mux.Handle(dentalv1connect.NewAdminServiceHandler(service.NewAdminService(deps), connect.WithInterceptors(
+		loggingInterceptor(),
+		service.ValidateInterceptor(),
+		service.ReadyInterceptor(db.NotReady),
+		service.AdminSessionInterceptor(deps),
+	)))
 	// Status page for people and uptime monitors. Raw errors only without TLS (development).
 	mux.Handle("GET /{$}", &statuspage.Handler{DB: db.Pool, NotReady: db.NotReady, Version: version, Started: started, ShowErrors: !cfg.TLS()})
 

@@ -182,11 +182,12 @@ type OfflineGrant struct {
 	UserId   []byte `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
 	FullName string `protobuf:"bytes,4,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	// Whether the user may add and remove members of this installation.
+	// Whether the user may add and remove members of the installation's clinic.
 	IsAdmin bool `protobuf:"varint,5,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
 	// Server time when issued. The client never accepts a local clock earlier than this.
 	IssuedAt *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=issued_at,json=issuedAt,proto3" json:"issued_at,omitempty"`
-	// After this, logging in needs the server again. Set per installation by the server.
+	// After this, logging in needs the server again. Set per installation by the server,
+	// and never later than the end of the clinic owner's subscription.
 	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

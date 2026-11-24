@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+import "dental/v1/auth.proto";
+import "dental/v1/person.proto";
+import "google/protobuf/timestamp.proto";
+
+// The admin panel: system administrators, subscription plans and selling
+// subscriptions. Administrators are separate from user accounts, with their own
+// logins and sessions; a user session never works here and an admin session
+// never works anywhere else.
+//
+// Every call except Login needs an admin session: the token from Login as the
+// header `Authorization: Bearer <token>`. Without a valid one, calls fail with
+// UNAUTHENTICATED "unauthenticated".
+//
+// The first administrator is created on the server with `dental-server create-admin`.
+service AdminService {
+  // Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
+  rpc Login(AdminServiceLoginRequest) returns (AdminServiceLoginResponse) {}
+
+  rpc Logout(AdminServiceLogoutRequest) returns (AdminServiceLogoutResponse) {}
+
+  // Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
+  rpc CreateAdmin(CreateAdminRequest) returns (CreateAdminResponse) {}
+
+  // All plans, the ones still on sale first.
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse) {}
+
+  rpc CreatePlan(CreatePlanRequest) returns (CreatePlanResponse) {}
+
+  // Changes a plan. Subscriptions already sold keep the limits and price they
+  // were sold with. Fails with NOT_FOUND "plan_not_found".
+  rpc UpdatePlan(UpdatePlanRequest) returns (UpdatePlanResponse) {}
+
+  // An account by identity (type and number), with the clinics it owns and its subscriptions.
+  // Fails with NOT_FOUND "user_not_found".
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+
+  // Sells a subscription from a plan. It starts when the user's paid time ends
+  // (now, if they have none left), so buying early adds to the time left.
+  //
+  // Fails with NOT_FOUND "user_not_found" / "plan_not_found" or
+  // FAILED_PRECONDITION "plan_inactive".
+  rpc SellSubscription(SellSubscriptionRequest) returns (SellSubscriptionResponse) {}
+
+  // Cancels a subscription at once; its clinics lose access if no other
+  // subscription is in force. Canceling twice changes nothing.
+  // Fails with NOT_FOUND "subscription_not_found".
+  rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse) {}
+}
+
+message Admin {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string username = 2;
+  string full_name = 3;
+}
+
+message Plan {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  // How many clinics the owner may have.
+  uint32 max_clinics = 3;
+  // How many installations (not revoked) each clinic may have.
+  uint32 max_devices_per_clinic = 4;
+  uint32 duration_days = 5;
+  // In Iranian rials.
+  int64 price_rials = 6;
+  // Only active plans can be sold.
+  bool active = 7;
+}
+
+message Subscription {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  // 16 raw UUID bytes: the clinic owner.
+  bytes user_id = 2;
+  // 16 raw UUID bytes.
+  bytes plan_id = 3;
+  string plan_name = 4;
+  // Limits and price as sold, whatever the plan says now.
+  uint32 max_clinics = 5;
+  uint32 max_devices_per_clinic = 6;
+  int64 price_rials = 7;
+  google.protobuf.Timestamp starts_at = 8;
+  google.protobuf.Timestamp ends_at = 9;
+  // Unset unless canceled.
+  google.protobuf.Timestamp canceled_at = 10;
+  string note = 11;
+}
+
+// A clinic as the admin panel lists it.
+message ClinicSummary {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  string license_number = 3;
+  string city = 4;
+  // Installations that are not revoked.
+  uint32 installation_count = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message AdminServiceLoginRequest {
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+  string password = 2 [(buf.validate.field).string.max_bytes = 1024];
+}
+
+message AdminServiceLoginResponse {
+  // Session token for every other call. Kept in memory only.
+  string session_token = 1;
+  google.protobuf.Timestamp session_expires_at = 2;
+  Admin admin = 3;
+}
+
+message AdminServiceLogoutRequest {}
+
+message AdminServiceLogoutResponse {}
+
+message CreateAdminRequest {
+  // Same rules as SignUpRequest.username.
+  string username = 1 [(buf.validate.field).string.pattern = "^[A-Za-z0-9._-]{3,32}$"];
+  // Same rules as SignUpRequest.password.
+  string password = 2 [
+    (buf.validate.field).string.max_len = 256,
+    (buf.validate.field).cel = {
+      id: "weak_password"
+      message: "must have at least 8 characters, a lowercase letter, an uppercase letter and a digit"
+      expression: "size(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')"
+    }
+  ];
+  // 1–100 characters.
+  string full_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message CreateAdminResponse {
+  Admin admin = 1;
+}
+
+message ListPlansRequest {}
+
+message ListPlansResponse {
+  repeated Plan plans = 1;
+}
+
+message CreatePlanRequest {
+  // 1–100 characters.
+  string name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // 1–1000.
+  uint32 max_clinics = 2 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+  // 1–1000.
+  uint32 max_devices_per_clinic = 3 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+  // 1–3650.
+  uint32 duration_days = 4 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 3650
+  }];
+  // Not negative.
+  int64 price_rials = 5 [(buf.validate.field).int64.gte = 0];
+}
+
+message CreatePlanResponse {
+  Plan plan = 1;
+}
+
+message UpdatePlanRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  // The other fields replace the plan's; same rules as CreatePlanRequest.
+  string name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  uint32 max_clinics = 3 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+  uint32 max_devices_per_clinic = 4 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 1000
+  }];
+  uint32 duration_days = 5 [(buf.validate.field).uint32 = {
+    gte: 1
+    lte: 3650
+  }];
+  int64 price_rials = 6 [(buf.validate.field).int64.gte = 0];
+  bool active = 7;
+}
+
+message UpdatePlanResponse {
+  Plan plan = 1;
+}
+
+message GetUserRequest {
+  PersonIdentity identity = 1 [(buf.validate.field).required = true];
+}
+
+message GetUserResponse {
+  User user = 1;
+  // National ID or FIDA code, and nationality.
+  PersonIdentity identity = 2;
+  string phone = 3;
+  bool disabled = 4;
+  google.protobuf.Timestamp created_at = 5;
+  repeated ClinicSummary owned_clinics = 6;
+  // Newest first, canceled ones included.
+  repeated Subscription subscriptions = 7;
+}
+
+message SellSubscriptionRequest {
+  // 16 raw UUID bytes: the clinic owner (from GetUser).
+  bytes user_id = 1 [(buf.validate.field).bytes.len = 16];
+  // 16 raw UUID bytes.
+  bytes plan_id = 2 [(buf.validate.field).bytes.len = 16];
+  // E.g. the payment reference. At most 500 characters.
+  string note = 3 [(buf.validate.field).string.max_len = 500];
+}
+
+message SellSubscriptionResponse {
+  Subscription subscription = 1;
+}
+
+message CancelSubscriptionRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message CancelSubscriptionResponse {
+  Subscription subscription = 1;
+}

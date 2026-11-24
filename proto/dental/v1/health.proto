@@ -18,4 +18,9 @@ message CheckResponse {
   google.protobuf.Timestamp server_time = 2;
   // Whether the server can reach PostgreSQL.
   bool database_ok = 3;
+  // Desktop apps older than this ("major.minor.patch") must update before they
+  // may keep working: they stop until the update is installed, and the server
+  // refuses their other calls with FAILED_PRECONDITION "update_required" (see
+  // internal/releases). Empty when no update is forced.
+  string minimum_app_version = 4;
 }

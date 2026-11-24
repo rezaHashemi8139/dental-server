@@ -65,9 +65,14 @@ type CheckResponse struct {
 	// Server time. The desktop app trusts this over the local clock.
 	ServerTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
 	// Whether the server can reach PostgreSQL.
-	DatabaseOk    bool `protobuf:"varint,3,opt,name=database_ok,json=databaseOk,proto3" json:"database_ok,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	DatabaseOk bool `protobuf:"varint,3,opt,name=database_ok,json=databaseOk,proto3" json:"database_ok,omitempty"`
+	// Desktop apps older than this ("major.minor.patch") must update before they
+	// may keep working: they stop until the update is installed, and the server
+	// refuses their other calls with FAILED_PRECONDITION "update_required" (see
+	// internal/releases). Empty when no update is forced.
+	MinimumAppVersion string `protobuf:"bytes,4,opt,name=minimum_app_version,json=minimumAppVersion,proto3" json:"minimum_app_version,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CheckResponse) Reset() {
@@ -121,18 +126,26 @@ func (x *CheckResponse) GetDatabaseOk() bool {
 	return false
 }
 
+func (x *CheckResponse) GetMinimumAppVersion() string {
+	if x != nil {
+		return x.MinimumAppVersion
+	}
+	return ""
+}
+
 var File_dental_v1_health_proto protoreflect.FileDescriptor
 
 const file_dental_v1_health_proto_rawDesc = "" +
 	"\n" +
 	"\x16dental/v1/health.proto\x12\tdental.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x0e\n" +
-	"\fCheckRequest\"\x87\x01\n" +
+	"\fCheckRequest\"\xb7\x01\n" +
 	"\rCheckResponse\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12;\n" +
 	"\vserver_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"serverTime\x12\x1f\n" +
 	"\vdatabase_ok\x18\x03 \x01(\bR\n" +
-	"databaseOk2M\n" +
+	"databaseOk\x12.\n" +
+	"\x13minimum_app_version\x18\x04 \x01(\tR\x11minimumAppVersion2M\n" +
 	"\rHealthService\x12<\n" +
 	"\x05Check\x12\x17.dental.v1.CheckRequest\x1a\x18.dental.v1.CheckResponse\"\x00B\x87\x01\n" +
 	"\rcom.dental.v1B\vHealthProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +

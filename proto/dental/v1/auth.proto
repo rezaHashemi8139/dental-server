@@ -4,6 +4,7 @@ package dental.v1;
 
 import "buf/validate/validate.proto";
 import "dental/v1/crypto.proto";
+import "dental/v1/person.proto";
 import "google/protobuf/timestamp.proto";
 
 // Accounts, logins and local-database keys.
@@ -12,14 +13,42 @@ import "google/protobuf/timestamp.proto";
 // the header `Authorization: Bearer <token>`.
 service AuthService {
   // Creates an account. Does not log in.
+  //
+  // Besides the usual "invalid_argument" / "weak_password", fails with:
+  // - ALREADY_EXISTS "username_taken";
+  // - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
+  // - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
   rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
 
   // Logs in on an installation and returns the local-database keys.
-  // The clinic owner is a member from InstallationService.Register on; anyone
-  // else must have been added with MemberService.AddMember first. (On an
-  // installation registered before clinics existed, which has no owner yet,
-  // the first user to log in becomes its owner and admin.)
+  //
+  // The user must be a member of the installation's clinic (the clinic owner is
+  // one from InstallationService.Register on; anyone else is added with
+  // MemberService.AddMember), and the clinic owner must have a subscription in
+  // force that covers this clinic and this installation.
+  //
+  // Fails with:
+  // - UNAUTHENTICATED "invalid_installation" / "invalid_credentials";
+  // - PERMISSION_DENIED "installation_revoked" / "user_disabled" / "not_a_member";
+  // - FAILED_PRECONDITION "no_clinic": the installation was registered before clinics
+  //   existed and must be registered again;
+  // - FAILED_PRECONDITION "password_change_required": the account has a temporary
+  //   password (MemberService.CreateUser); call ChangePassword, then log in again;
+  // - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
+  // - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
+  //   subscription allows, and this one is not among the oldest that fit;
+  // - PERMISSION_DENIED "device_limit_exceeded": the same for installations of the clinic
+  //   (revoked installations do not count).
   rpc Login(LoginRequest) returns (LoginResponse) {}
+
+  // Changes a password, proven with the current one. No session needed, so an
+  // account with a temporary password can set its own before the first login.
+  // Ends every session of the account.
+  //
+  // Fails with "weak_password", UNAUTHENTICATED "invalid_credentials",
+  // PERMISSION_DENIED "user_disabled" or INVALID_ARGUMENT "password_unchanged"
+  // (the new password equals the current one).
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 
   // Confirms that the local database now uses the next key. Needs session.
   rpc ConfirmKeyRotation(ConfirmKeyRotationRequest) returns (ConfirmKeyRotationResponse) {}
@@ -49,8 +78,15 @@ message SignUpRequest {
       expression: "size(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')"
     }
   ];
-  // At most 100 characters.
-  string full_name = 3 [(buf.validate.field).string.max_len = 100];
+  // 1–100 characters.
+  string full_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // National ID or FIDA code, and nationality. Unique across all accounts.
+  PersonIdentity identity = 4 [(buf.validate.field).required = true];
+  // Mobile number: 7–15 digits, optionally starting with '+'.
+  string phone = 5 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
 }
 
 message SignUpResponse {
@@ -77,14 +113,38 @@ message LoginResponse {
   string session_token = 1;
   google.protobuf.Timestamp session_expires_at = 2;
   User user = 3;
+  // Whether the user owns the installation's clinic.
   bool is_owner = 4;
+  // Whether the user may manage the clinic's members. The owner always may.
   bool is_admin = 5;
   // A sealed DatabaseKeys.
   SealedBox database_keys = 6;
   // Lets this user log in on this installation without the server until it expires.
   SignedOfflineGrant offline_grant = 7;
   google.protobuf.Timestamp server_time = 8;
+  // When the clinic owner's paid time ends (renewals already bought included).
+  // Nobody can use the clinic's app after it, online or offline.
+  google.protobuf.Timestamp subscription_ends_at = 9;
 }
+
+message ChangePasswordRequest {
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+  string current_password = 2 [(buf.validate.field).string.max_bytes = 1024];
+  // Same rules as SignUpRequest.password.
+  string new_password = 3 [
+    (buf.validate.field).string.max_len = 256,
+    (buf.validate.field).cel = {
+      id: "weak_password"
+      message: "must have at least 8 characters, a lowercase letter, an uppercase letter and a digit"
+      expression: "size(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')"
+    }
+  ];
+}
+
+message ChangePasswordResponse {}
 
 message ConfirmKeyRotationRequest {
   // The version the database now uses: DatabaseKeys.current_version + 1.

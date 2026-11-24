@@ -32,7 +32,7 @@ func TestPasswordPolicy(t *testing.T) {
 		{"Ab1" + strings.Repeat("x", 254), false}, // 257, too long
 	}
 	for _, tt := range tests {
-		err := protovalidate.Validate(&dentalv1.SignUpRequest{Username: "doctor", Password: tt.password})
+		err := protovalidate.Validate(signUpRequest(tt.password))
 		if got := err == nil; got != tt.want {
 			t.Errorf("password %q: valid = %v, want %v (%v)", tt.password, got, tt.want, err)
 		}
@@ -53,7 +53,7 @@ func TestValidateInterceptor(t *testing.T) {
 	installation := dentalv1connect.NewInstallationServiceClient(server.Client(), server.URL)
 	ctx := context.Background()
 
-	_, err := auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "doctor", Password: "password1"})
+	_, err := auth.SignUp(ctx, signUpRequest("password1"))
 	wantCode(t, err, connect.CodeInvalidArgument, reasonWeakPassword)
 
 	// Another problem besides the password: the generic reason wins.
@@ -100,5 +100,13 @@ func TestValidateInterceptor(t *testing.T) {
 	}
 	if strings.Join(fields, ",") != "machine.hostname" {
 		t.Errorf("violation fields = %v, want [machine.hostname]", fields)
+	}
+}
+
+// signUpRequest is a valid SignUpRequest except, maybe, for its password.
+func signUpRequest(password string) *dentalv1.SignUpRequest {
+	return &dentalv1.SignUpRequest{
+		Username: "doctor", Password: password, FullName: "Dr. Doctor",
+		Identity: nationalIdentity("0013542419"), Phone: "09121234567",
 	}
 }

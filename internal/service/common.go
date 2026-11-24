@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -35,9 +37,9 @@ const (
 	reasonUserDisabled        = "user_disabled"
 	reasonNotAMember          = "not_a_member"
 	reasonUsernameTaken       = "username_taken"
-	reasonNationalIDTaken     = "national_id_taken"
+	reasonIdentityTaken       = "identity_taken"
 	reasonInvalidNationalID   = "invalid_national_id"
-	reasonNationalIDMismatch  = "national_id_mismatch"
+	reasonIdentityMismatch    = "identity_mismatch"
 	reasonLicenseNumberTaken  = "license_number_taken"
 	reasonUnauthenticated     = "unauthenticated"
 	reasonNotAdmin            = "not_admin"
@@ -49,7 +51,29 @@ const (
 	reasonLanguageNotFound    = "language_not_found"
 	reasonInternal            = "internal"
 	reasonUnavailable         = "unavailable"
+
+	reasonNoClinic               = "no_clinic"
+	reasonClinicNotFound         = "clinic_not_found"
+	reasonNotClinicOwner         = "not_clinic_owner"
+	reasonPasswordChangeRequired = "password_change_required"
+	reasonPasswordUnchanged      = "password_unchanged"
+	reasonSubscriptionInactive   = "subscription_inactive"
+	reasonClinicLimitExceeded    = "clinic_limit_exceeded"
+	reasonDeviceLimitExceeded    = "device_limit_exceeded"
+	reasonPlanNotFound           = "plan_not_found"
+	reasonPlanInactive           = "plan_inactive"
+	reasonSubscriptionNotFound   = "subscription_not_found"
+	reasonPatientNotFound        = "patient_not_found"
+	reasonUpdateRequired         = "update_required"
 )
+
+// querier is what both a connection pool and a transaction offer, for helpers
+// that work inside or outside a transaction.
+type querier interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
 
 // noDatabaseProcedures work while the database is down.
 var noDatabaseProcedures = map[string]bool{

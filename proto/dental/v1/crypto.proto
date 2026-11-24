@@ -52,11 +52,12 @@ message OfflineGrant {
   bytes user_id = 2;
   string username = 3;
   string full_name = 4;
-  // Whether the user may add and remove members of this installation.
+  // Whether the user may add and remove members of the installation's clinic.
   bool is_admin = 5;
   // Server time when issued. The client never accepts a local clock earlier than this.
   google.protobuf.Timestamp issued_at = 6;
-  // After this, logging in needs the server again. Set per installation by the server.
+  // After this, logging in needs the server again. Set per installation by the server,
+  // and never later than the end of the clinic owner's subscription.
   google.protobuf.Timestamp expires_at = 7;
 }
 

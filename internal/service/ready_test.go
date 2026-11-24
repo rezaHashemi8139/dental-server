@@ -25,7 +25,7 @@ func TestReadyInterceptor(t *testing.T) {
 	notReady := func() error { return errors.New("database is down") }
 	interceptors := connect.WithInterceptors(ReadyInterceptor(notReady))
 	mux := http.NewServeMux()
-	mux.Handle(dentalv1connect.NewHealthServiceHandler(NewHealthService(db, "test", notReady), interceptors))
+	mux.Handle(dentalv1connect.NewHealthServiceHandler(NewHealthService(db, "test", notReady, nil), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(NewAuthService(&Deps{}), interceptors))
 	server := httptest.NewServer(mux)
 	defer server.Close()

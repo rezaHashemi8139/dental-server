@@ -32,6 +32,8 @@ type testEnv struct {
 	installation dentalv1connect.InstallationServiceClient
 	auth         dentalv1connect.AuthServiceClient
 	signerPublic ed25519.PublicKey
+	// Distinct national IDs for signUp, above the range used by registerRequest.
+	nextPerson int
 }
 
 func newTestEnv(t *testing.T) *testEnv {
@@ -48,7 +50,9 @@ func newTestEnv(t *testing.T) *testEnv {
 		t.Fatal(err)
 	}
 	t.Cleanup(db.Close)
-	if _, err := db.Exec(ctx, `TRUNCATE users, clinics, installations, installation_members, installation_keys, sessions CASCADE`); err != nil {
+	if _, err := db.Exec(ctx, `TRUNCATE users, clinics, installations, clinic_members, installation_keys, sessions,
+		admins, admin_sessions, plans, subscriptions, patients, clinic_patients, treatments, patient_history_views
+		CASCADE`); err != nil {
 		t.Fatal(err)
 	}
 
@@ -61,6 +65,10 @@ func newTestEnv(t *testing.T) *testEnv {
 	mux.Handle(dentalv1connect.NewInstallationServiceHandler(NewInstallationService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAuthServiceHandler(NewAuthService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(NewMemberService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewSyncServiceHandler(NewSyncService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewPatientServiceHandler(NewPatientService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewAdminServiceHandler(NewAdminService(deps),
+		connect.WithInterceptors(ValidateInterceptor(), AdminSessionInterceptor(deps))))
 
 	server := httptest.NewUnstartedServer(mux)
 	server.EnableHTTP2 = true
@@ -72,6 +80,32 @@ func newTestEnv(t *testing.T) *testEnv {
 		installation: dentalv1connect.NewInstallationServiceClient(server.Client(), server.URL, connect.WithGRPC()),
 		auth:         dentalv1connect.NewAuthServiceClient(server.Client(), server.URL, connect.WithGRPC()),
 		signerPublic: signer.PublicKey(),
+		nextPerson:   1_000_000,
+	}
+}
+
+// admin returns an AdminService client that sends the given admin session token.
+func (e *testEnv) admin(token string) dentalv1connect.AdminServiceClient {
+	return dentalv1connect.NewAdminServiceClient(e.server.Client(), e.server.URL, connect.WithGRPC(),
+		connect.WithInterceptors(bearer(token)))
+}
+
+// subscribe gives the user `username` a subscription in force from an hour ago
+// for `days` days, as if sold from the admin panel.
+func (e *testEnv) subscribe(username string, maxClinics, maxDevices, days int) {
+	e.t.Helper()
+	ctx := context.Background()
+	var planID [16]byte
+	if err := e.deps.DB.QueryRow(ctx, `
+		INSERT INTO plans (name, max_clinics, max_devices_per_clinic, duration_days)
+		VALUES ('test', $1, $2, $3) RETURNING id`, maxClinics, maxDevices, days).Scan(&planID); err != nil {
+		e.t.Fatal(err)
+	}
+	if _, err := e.deps.DB.Exec(ctx, `
+		INSERT INTO subscriptions (user_id, plan_id, max_clinics, max_devices_per_clinic, price_rials, starts_at, ends_at)
+		SELECT u.id, $2, $3, $4, 0, now() - interval '1 hour', now() - interval '1 hour' + make_interval(days => $5)
+		FROM users u WHERE lower(u.username) = lower($1)`, username, planID, maxClinics, maxDevices, days); err != nil {
+		e.t.Fatal(err)
 	}
 }
 
@@ -104,19 +138,19 @@ func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
 			Hostname:      "clinic-pc",
 			MacAddresses:  []string{"AA:BB:CC:DD:EE:FF"},
 		},
-		Clinic: &dentalv1.ClinicInfo{
+		Target: &dentalv1.RegisterRequest_Clinic{Clinic: &dentalv1.ClinicInfo{
 			Name:          "Clinic " + owner,
 			LicenseNumber: fmt.Sprintf("LIC-%d", machine),
 			Phone:         "02112345678",
 			City:          "Tehran",
 			Address:       "1 Test Street",
-		},
+		}},
 		Owner: &dentalv1.RegisterRequest_NewOwner{NewOwner: &dentalv1.NewOwner{
-			Username:   owner,
-			Password:   "Passw0rd-" + owner,
-			FullName:   "Dr. " + owner,
-			NationalId: nationalID(int(machine)),
-			Phone:      "09121234567",
+			Username: owner,
+			Password: "Passw0rd-" + owner,
+			FullName: "Dr. " + owner,
+			Identity: nationalIdentity(nationalID(int(machine))),
+			Phone:    "09121234567",
 		}},
 	}
 }
@@ -145,13 +179,18 @@ func nationalID(n int) string {
 	return fmt.Sprintf("%s%d", digits, check)
 }
 
-func (e *testEnv) signUp(username string) {
+// signUp creates the account `username` (password "Passw0rd-<username>") with a fresh national ID.
+func (e *testEnv) signUp(username string) *dentalv1.User {
 	e.t.Helper()
-	if _, err := e.auth.SignUp(context.Background(), &dentalv1.SignUpRequest{
+	e.nextPerson++
+	res, err := e.auth.SignUp(context.Background(), &dentalv1.SignUpRequest{
 		Username: username, Password: "Passw0rd-" + username, FullName: "Dr. " + username,
-	}); err != nil {
+		Identity: nationalIdentity(nationalID(e.nextPerson)), Phone: "09121234567",
+	})
+	if err != nil {
 		e.t.Fatal(err)
 	}
+	return res.GetUser()
 }
 
 type loginResult struct {
@@ -210,15 +249,27 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	}
 	again := registerRequest(1, "dentist")
 	again.GetClinic().LicenseNumber = "LIC-1-second"
-	again.GetNewOwner().NationalId = nationalID(1001)
+	again.GetNewOwner().Identity = nationalIdentity(nationalID(1001))
 	if res, err := e.installation.Register(ctx, again); err != nil || !res.GetKnownMachine() {
 		t.Errorf("second installation on the same machine not recognised (%v)", err)
 	}
 
-	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "DOCTOR", Password: "Another-passw0rd"})
-	wantCode(t, err, connect.CodeAlreadyExists, reasonUsernameTaken)
-	_, err = e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "x", Password: "short"})
+	signUp := func(username, id string) error {
+		_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{
+			Username: username, Password: "Another-passw0rd", FullName: "Someone", Identity: nationalIdentity(id), Phone: "09121234567",
+		})
+		return err
+	}
+	wantCode(t, signUp("DOCTOR", nationalID(2001)), connect.CodeAlreadyExists, reasonUsernameTaken)
+	wantCode(t, signUp("someone", nationalID(1)), connect.CodeAlreadyExists, reasonIdentityTaken)
+	wantCode(t, signUp("someone", "0013542418"), connect.CodeInvalidArgument, reasonInvalidNationalID)
+	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "x", Password: "short"})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+
+	// Nobody can log in until the clinic owner has a subscription.
+	_, err = e.login(inst, "doctor", "Passw0rd-doctor")
+	wantCode(t, err, connect.CodePermissionDenied, reasonSubscriptionInactive)
+	e.subscribe("doctor", 1, 2, 30)
 
 	// First login: the doctor is already owner, the database does not exist yet.
 	first, err := e.login(inst, "doctor", "Passw0rd-doctor")
@@ -278,19 +329,25 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidInstallation)
 
 	// A user who is not a member cannot get the keys.
-	e.signUp("secretary")
+	secretaryUser := e.signUp("secretary")
 	_, err = e.login(inst, "secretary", "Passw0rd-secretary")
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAMember)
 
-	// The admin adds them; then they get the same database key.
+	// The admin finds them by national ID and adds them; then they get the same database key.
 	owner := e.members(second.res.GetSessionToken())
-	added, err := owner.AddMember(ctx, &dentalv1.AddMemberRequest{Username: "Secretary"})
-	if err != nil || added.GetMember().GetIsAdmin() {
+	found, err := owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(e.nextPerson))})
+	if err != nil || !bytes.Equal(found.GetUser().GetId(), secretaryUser.GetId()) {
+		t.Fatalf("find user = %v, %v", found, err)
+	}
+	_, err = owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(9999))})
+	wantCode(t, err, connect.CodeNotFound, reasonUserNotFound)
+	added, err := owner.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: found.GetUser().GetId()})
+	if err != nil || added.GetMember().GetIsAdmin() || added.GetMember().GetUser().GetUsername() != "secretary" {
 		t.Fatalf("add member = %v, %v", added, err)
 	}
-	_, err = owner.AddMember(ctx, &dentalv1.AddMemberRequest{Username: "secretary"})
+	_, err = owner.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: found.GetUser().GetId()})
 	wantCode(t, err, connect.CodeAlreadyExists, reasonAlreadyMember)
-	_, err = owner.AddMember(ctx, &dentalv1.AddMemberRequest{Username: "ghost"})
+	_, err = owner.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: bytes.Repeat([]byte{7}, 16)})
 	wantCode(t, err, connect.CodeNotFound, reasonUserNotFound)
 
 	sec, err := e.login(inst, "secretary", "Passw0rd-secretary")
@@ -304,7 +361,9 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 
 	// A non-admin cannot manage members; nobody can remove the owner.
 	secretary := e.members(sec.res.GetSessionToken())
-	_, err = secretary.AddMember(ctx, &dentalv1.AddMemberRequest{Username: "doctor"})
+	_, err = secretary.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: second.res.GetUser().GetId()})
+	wantCode(t, err, connect.CodePermissionDenied, reasonNotAdmin)
+	_, err = secretary.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(1))})
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAdmin)
 	list, err := secretary.ListMembers(ctx, &dentalv1.ListMembersRequest{})
 	if err != nil || len(list.GetMembers()) != 2 {
@@ -342,6 +401,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 func TestKeysAreEncryptedAtRest(t *testing.T) {
 	e := newTestEnv(t)
 	inst := e.register(2, "doctor")
+	e.subscribe("doctor", 1, 1, 30)
 	res, err := e.login(inst, "doctor", "Passw0rd-doctor")
 	if err != nil {
 		t.Fatal(err)
@@ -356,4 +416,9 @@ func TestKeysAreEncryptedAtRest(t *testing.T) {
 	if bytes.Contains(stored, res.keys.GetNextKey()) {
 		t.Error("database key stored in plain form")
 	}
+}
+
+// nationalIdentity is the identity of an Iranian citizen with national ID id.
+func nationalIdentity(id string) *dentalv1.PersonIdentity {
+	return &dentalv1.PersonIdentity{Type: dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL, Number: id, Nationality: "IR"}
 }

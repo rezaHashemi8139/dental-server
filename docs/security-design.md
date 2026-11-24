@@ -11,26 +11,49 @@ for message formats and the crypto scheme.
 
 | Where | What |
 |---|---|
-| Server (PostgreSQL) | users (+ national ID), clinics (+ unique license number, owner), installations (+ machine info, clinic), membership + admin flag, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions |
+| Server (PostgreSQL) | users (+ identity: national ID or FIDA code, and nationality), clinics (+ unique license number, owner), installations (+ machine info, clinic), clinic membership + admin flag, subscriptions of clinic owners, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions; administrators and their sessions, kept apart from users |
 | Desktop app (Rust) | installation id + secret (DPAPI), per-user offline vault, roles and permissions (inside the encrypted local DB) |
 | Both | server Ed25519 public key built into the app, to verify offline grants |
 
 ## First start
 
 1. App generates nothing secret yet; it collects `MachineInfo` (MachineGuid hash, hostname, OS, CPU, RAM, MAC addresses).
-2. The user fills in the clinic (name, unique license number, phone, address) and its owner:
-   a new account (with a unique national ID) or an existing one (username + password + national ID).
+2. The user fills in either a new clinic (name, unique license number, phone, address) and
+   its owner — a new account (with a unique identity: national ID, or FIDA code for foreign
+   nationals) or an existing one (username + password + identity) — or the license number of
+   an existing clinic and its owner's credentials, to add another installation to it.
 3. `InstallationService.Register` → `installation_id` + `installation_secret`. The owner is
-   already a member and admin of the installation.
+   already a member and admin of the clinic.
 4. App stores both, the secret encrypted with DPAPI.
+
+Registering needs no subscription, but logging in does (below).
+
+## Accounts, clinics and subscriptions
+
+- An account belongs to a person, unique by identity across the whole system. A clinic admin
+  can create one for someone with a temporary password (`MemberService.CreateUser`; if the
+  person already has an account, that one is returned). The temporary password must be
+  changed with `AuthService.ChangePassword` before the first login.
+- Membership is per clinic: a member may log in on every installation of the clinic. Roles
+  (doctor, secretary...) stay in the local database.
+- Only the clinic owner buys a subscription (from the admin panel for now). It limits how many
+  clinics the owner may have and how many installations (not revoked) each clinic may have;
+  when there are more, the oldest ones are covered.
+- Without a subscription in force, nobody can use the owner's clinics: logins fail, sessions
+  stop working at once, and offline grants never last past the end of the paid time.
+- Administrators (`AdminService`) have their own accounts and sessions. A user session never
+  works on the admin panel and an admin session never works anywhere else. The first
+  administrator is created on the server with `dental-server create-admin`.
 
 ## Online login
 
 1. App makes a one-time X25519 key pair and calls `AuthService.Login` with
    installation id + secret, username + password and the public key.
-2. Server checks the secret, the password and membership.
+2. Server checks the secret, the password, membership of the installation's clinic and the
+   clinic owner's subscription (in force, and covering this clinic and installation).
 3. Server returns a session token, the `DatabaseKeys` sealed to the one-time key,
-   and a signed `OfflineGrant` (expiry = now + `installations.offline_access`).
+   and a signed `OfflineGrant` (expiry = now + `installations.offline_access`, but never
+   later than the end of the owner's paid time).
 4. App opens the database (current key, or next key if a previous rotation was not
    confirmed), rekeys to the next key, verifies, then `ConfirmKeyRotation`.
 5. App updates the offline vault (below) with the new key for every user in it.
@@ -62,7 +85,8 @@ An offline session keeps the user's password in memory (wiped on drop) so it can
 log in online by itself when the server is back. That login rekeys the
 already-open database in place, refreshes the vault and confirms the rotation,
 exactly like a normal online login, and the user keeps working. If the server
-now refuses the user (`not_a_member`, `user_disabled`, `installation_revoked`),
+now refuses the user (`not_a_member`, `user_disabled`, `installation_revoked`,
+`subscription_inactive`, `clinic_limit_exceeded`, `device_limit_exceeded`, `no_clinic`),
 the session ends at once and offline access is removed.
 
 After every online login the app also calls `MemberService.ListMembers` and

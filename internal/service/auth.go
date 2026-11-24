@@ -7,7 +7,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -33,23 +32,63 @@ const databaseKeyLength = 32
 // ValidateInterceptor against the rules in proto/dental/v1/auth.proto.
 
 func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (*dentalv1.SignUpResponse, error) {
-	var id pgtype.UUID
-	err := s.d.DB.QueryRow(ctx,
-		`INSERT INTO users (username, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id`,
-		req.GetUsername(), secure.HashPassword(req.GetPassword()), req.GetFullName(),
-	).Scan(&id)
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
-		return nil, fail(connect.CodeAlreadyExists, reasonUsernameTaken)
+	if err := checkPersonIdentity(req.GetIdentity()); err != nil {
+		return nil, err
 	}
-	if err != nil {
-		return nil, internal(err)
-	}
-
-	return &dentalv1.SignUpResponse{User: &dentalv1.User{
-		Id:       uuidBytes(id),
+	user, _, err := insertUser(ctx, s.d.DB, account{
 		Username: req.GetUsername(),
+		Password: req.GetPassword(),
 		FullName: req.GetFullName(),
-	}}, nil
+		Identity: req.GetIdentity(),
+		Phone:    req.GetPhone(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &dentalv1.SignUpResponse{User: user}, nil
+}
+
+// checkPersonIdentity checks what the validation rules in person.proto cannot: a
+// national ID's check digit. Fails with invalid_national_id.
+func checkPersonIdentity(identity *dentalv1.PersonIdentity) error {
+	if identity.GetType() == dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL && !validNationalID(identity.GetNumber()) {
+		return fail(connect.CodeInvalidArgument, reasonInvalidNationalID)
+	}
+	return nil
+}
+
+// account is a new user account. Its fields are already checked.
+type account struct {
+	Username string
+	Password string
+	FullName string
+	Identity *dentalv1.PersonIdentity
+	Phone    string
+	// Set when someone else creates the account: the password is then temporary
+	// and must be changed before the first login.
+	CreatedBy pgtype.UUID
+}
+
+// insertUser creates an account. Fails with username_taken or identity_taken.
+func insertUser(ctx context.Context, q querier, a account) (*dentalv1.User, pgtype.UUID, error) {
+	var id pgtype.UUID
+	err := q.QueryRow(ctx, `
+		INSERT INTO users (username, password_hash, full_name, identity_type, identity, nationality, phone,
+		                   must_change_password, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+		a.Username, secure.HashPassword(a.Password), a.FullName,
+		identityTypeNames[a.Identity.GetType()], a.Identity.GetNumber(), a.Identity.GetNationality(), a.Phone,
+		a.CreatedBy.Valid, a.CreatedBy,
+	).Scan(&id)
+	switch {
+	case uniqueViolation(err, "users_username_key"):
+		return nil, id, fail(connect.CodeAlreadyExists, reasonUsernameTaken)
+	case uniqueViolation(err, "users_identity_key"):
+		return nil, id, fail(connect.CodeAlreadyExists, reasonIdentityTaken)
+	case err != nil:
+		return nil, id, internal(err)
+	}
+	return &dentalv1.User{Id: uuidBytes(id), Username: a.Username, FullName: a.FullName}, id, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*dentalv1.LoginResponse, error) {
@@ -65,15 +104,16 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	}
 	defer tx.Rollback(ctx)
 
-	// The installation, locked so two first logins cannot both become owner.
+	// The installation and its clinic, locked so two first logins cannot both create the keys.
 	var secretHash []byte
-	var owner pgtype.UUID
+	var clinicID, ownerID pgtype.UUID
 	var offlineSeconds int64
 	var revokedAt pgtype.Timestamptz
 	err = tx.QueryRow(ctx, `
-		SELECT secret_hash, owner_id, extract(epoch FROM offline_access)::bigint, revoked_at
-		FROM installations WHERE id = $1 FOR UPDATE`, installationID,
-	).Scan(&secretHash, &owner, &offlineSeconds, &revokedAt)
+		SELECT i.secret_hash, i.clinic_id, c.owner_id, extract(epoch FROM i.offline_access)::bigint, i.revoked_at
+		FROM installations i LEFT JOIN clinics c ON c.id = i.clinic_id
+		WHERE i.id = $1 FOR UPDATE OF i`, installationID,
+	).Scan(&secretHash, &clinicID, &ownerID, &offlineSeconds, &revokedAt)
 	if errors.Is(err, pgx.ErrNoRows) || (err == nil && !secure.SecretMatches(req.GetInstallationSecret(), secretHash)) {
 		return nil, fail(connect.CodeUnauthenticated, reasonInvalidInstallation)
 	}
@@ -83,16 +123,20 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	if revokedAt.Valid {
 		return nil, fail(connect.CodePermissionDenied, reasonInstallationRevoked)
 	}
+	if !clinicID.Valid {
+		return nil, fail(connect.CodeFailedPrecondition, reasonNoClinic)
+	}
 
 	// The user. Unknown users are checked against a dummy hash so timing does not reveal them.
 	var user dentalv1.User
 	var userID pgtype.UUID
 	var passwordHash string
 	var disabledAt pgtype.Timestamptz
+	var mustChangePassword bool
 	err = tx.QueryRow(ctx, `
-		SELECT id, username, full_name, password_hash, disabled_at
+		SELECT id, username, full_name, password_hash, disabled_at, must_change_password
 		FROM users WHERE lower(username) = lower($1)`, req.GetUsername(),
-	).Scan(&userID, &user.Username, &user.FullName, &passwordHash, &disabledAt)
+	).Scan(&userID, &user.Username, &user.FullName, &passwordHash, &disabledAt, &mustChangePassword)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, internal(err)
 	}
@@ -102,33 +146,31 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	if disabledAt.Valid {
 		return nil, fail(connect.CodePermissionDenied, reasonUserDisabled)
 	}
+	if mustChangePassword {
+		return nil, fail(connect.CodeFailedPrecondition, reasonPasswordChangeRequired)
+	}
 	user.Id = uuidBytes(userID)
 
-	// Membership. Register makes the clinic owner a member. Installations registered
-	// before clinics existed have no owner yet: the first user to log in becomes it.
-	isOwner := !owner.Valid || owner == userID
+	// Membership of the clinic (Register makes the owner a member), then the owner's subscription.
 	var isAdmin bool
-	if !owner.Valid {
-		if _, err := tx.Exec(ctx, `UPDATE installations SET owner_id = $2 WHERE id = $1`, installationID, userID); err != nil {
-			return nil, internal(err)
-		}
-		if _, err := tx.Exec(ctx, `
-			INSERT INTO installation_members (installation_id, user_id, is_admin, added_by)
-			VALUES ($1, $2, true, $2)`, installationID, userID); err != nil {
-			return nil, internal(err)
-		}
-		isAdmin = true
-	} else {
-		err := tx.QueryRow(ctx, `
-			SELECT is_admin FROM installation_members WHERE installation_id = $1 AND user_id = $2`,
-			installationID, userID,
-		).Scan(&isAdmin)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fail(connect.CodePermissionDenied, reasonNotAMember)
-		}
-		if err != nil {
-			return nil, internal(err)
-		}
+	err = tx.QueryRow(ctx, `
+		SELECT is_admin FROM clinic_members WHERE clinic_id = $1 AND user_id = $2`, clinicID, userID,
+	).Scan(&isAdmin)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fail(connect.CodePermissionDenied, reasonNotAMember)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+	paid, err := checkClinicAccess(ctx, tx, ownerID, clinicID, installationID, now)
+	if err != nil {
+		return nil, err
+	}
+
+	// Offline access never outlasts the paid time.
+	grantExpires := now.Add(time.Duration(offlineSeconds) * time.Second)
+	if paid.EndsAt.Before(grantExpires) {
+		grantExpires = paid.EndsAt
 	}
 
 	keys, err := s.prepareKeys(ctx, tx, installationID)
@@ -149,7 +191,7 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 		return nil, internal(err)
 	}
 
-	sealedKeys, grant, err := s.sealAndSign(installationID, &user, isAdmin, keys, now, time.Duration(offlineSeconds)*time.Second, req.GetClientPublicKey())
+	sealedKeys, grant, err := s.sealAndSign(installationID, &user, isAdmin, keys, now, grantExpires, req.GetClientPublicKey())
 	if err != nil {
 		return nil, err
 	}
@@ -159,15 +201,59 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	}
 
 	return &dentalv1.LoginResponse{
-		SessionToken:     token,
-		SessionExpiresAt: timestamppb.New(sessionExpires),
-		User:             &user,
-		IsOwner:          isOwner,
-		IsAdmin:          isAdmin,
-		DatabaseKeys:     sealedKeys,
-		OfflineGrant:     grant,
-		ServerTime:       timestamppb.New(now),
+		SessionToken:       token,
+		SessionExpiresAt:   timestamppb.New(sessionExpires),
+		User:               &user,
+		IsOwner:            ownerID == userID,
+		IsAdmin:            isAdmin,
+		DatabaseKeys:       sealedKeys,
+		OfflineGrant:       grant,
+		ServerTime:         timestamppb.New(now),
+		SubscriptionEndsAt: timestamppb.New(paid.EndsAt),
 	}, nil
+}
+
+func (s *AuthService) ChangePassword(ctx context.Context, req *dentalv1.ChangePasswordRequest) (*dentalv1.ChangePasswordResponse, error) {
+	tx, err := s.d.DB.Begin(ctx)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Unknown users are checked against a dummy hash so timing does not reveal them (as in Login).
+	var userID pgtype.UUID
+	var passwordHash string
+	var disabledAt pgtype.Timestamptz
+	err = tx.QueryRow(ctx, `
+		SELECT id, password_hash, disabled_at FROM users WHERE lower(username) = lower($1) FOR UPDATE`,
+		req.GetUsername(),
+	).Scan(&userID, &passwordHash, &disabledAt)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return nil, internal(err)
+	}
+	if !secure.VerifyPassword(req.GetCurrentPassword(), passwordHash) {
+		return nil, fail(connect.CodeUnauthenticated, reasonInvalidCredentials)
+	}
+	if disabledAt.Valid {
+		return nil, fail(connect.CodePermissionDenied, reasonUserDisabled)
+	}
+	if req.GetNewPassword() == req.GetCurrentPassword() {
+		return nil, fail(connect.CodeInvalidArgument, reasonPasswordUnchanged)
+	}
+
+	if _, err := tx.Exec(ctx, `
+		UPDATE users SET password_hash = $2, must_change_password = false, updated_at = now() WHERE id = $1`,
+		userID, secure.HashPassword(req.GetNewPassword())); err != nil {
+		return nil, internal(err)
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE sessions SET revoked_at = $2 WHERE user_id = $1 AND revoked_at IS NULL`, userID, s.d.Now()); err != nil {
+		return nil, internal(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.ChangePasswordResponse{}, nil
 }
 
 // prepareKeys returns the installation's current key and a pending next key,
@@ -217,7 +303,7 @@ func (s *AuthService) prepareKeys(ctx context.Context, tx pgx.Tx, installationID
 
 func (s *AuthService) sealAndSign(
 	installationID pgtype.UUID, user *dentalv1.User, isAdmin bool, keys *dentalv1.DatabaseKeys,
-	now time.Time, offlineAccess time.Duration, clientPublicKey []byte,
+	now, grantExpires time.Time, clientPublicKey []byte,
 ) (*dentalv1.SealedBox, *dentalv1.SignedOfflineGrant, error) {
 	plainKeys, err := proto.Marshal(keys)
 	if err != nil {
@@ -237,7 +323,7 @@ func (s *AuthService) sealAndSign(
 		FullName:       user.GetFullName(),
 		IsAdmin:        isAdmin,
 		IssuedAt:       timestamppb.New(now),
-		ExpiresAt:      timestamppb.New(now.Add(offlineAccess)),
+		ExpiresAt:      timestamppb.New(grantExpires),
 	})
 	if err != nil {
 		return nil, nil, internal(err)

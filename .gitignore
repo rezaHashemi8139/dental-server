@@ -21,3 +21,6 @@ coverage.out
 
 # Editor
 .idea/
+
+# Desktop app releases served to the updater (UPDATES_DIR)
+/updates/

@@ -4,23 +4,52 @@ package dental.v1;
 
 import "buf/validate/validate.proto";
 import "dental/v1/auth.proto";
+import "dental/v1/person.proto";
 import "google/protobuf/timestamp.proto";
 
-// Who may log in on an installation. Every call needs a session of an admin of
-// the session's installation, except ListMembers which any member may call.
+// Accounts and who may use a clinic's app. Membership is per clinic: a member may
+// log in on every installation of the clinic. Every call works on the clinic of
+// the session's installation and needs a session of an admin of that clinic,
+// except ListMembers which any member may call.
 //
-// The server only knows membership and the admin flag. Roles (doctor,
-// secretary, accountant...) and their permissions live in the local database.
+// The server only knows the owner, the members and the admin flag. Roles (doctor,
+// secretary, accountant...) and their permissions live in the local database, so
+// a clinic can also keep people who have an account but no access to its app,
+// e.g. a doctor who only treats patients there (FindUser / CreateUser give their id).
+//
+// Accounts are unique by identity (national ID, or FIDA code for foreign nationals):
+// the same person has one account in every clinic.
 service MemberService {
   rpc ListMembers(ListMembersRequest) returns (ListMembersResponse) {}
+
+  // Finds the account with an identity (type and number; the nationality is not
+  // compared). Fails with NOT_FOUND "user_not_found".
+  rpc FindUser(FindUserRequest) returns (FindUserResponse) {}
+
+  // Creates an account for someone who has none, with a temporary password they
+  // must change before their first login (AuthService.ChangePassword). If an
+  // account with this identity already exists, returns it instead (created =
+  // false) and changes nothing.
+  //
+  // Fails with "invalid_argument" / "weak_password", INVALID_ARGUMENT
+  // "invalid_national_id" or ALREADY_EXISTS "username_taken".
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+
+  // Gives an account access to the clinic's app. Fails with NOT_FOUND
+  // "user_not_found" or ALREADY_EXISTS "already_member".
   rpc AddMember(AddMemberRequest) returns (AddMemberResponse) {}
+
+  // Takes access away; the member's sessions in this clinic end at once.
   rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {}
+
   rpc SetMemberAdmin(SetMemberAdminRequest) returns (SetMemberAdminResponse) {}
 }
 
 message Member {
   User user = 1;
+  // Whether the member owns the clinic.
   bool is_owner = 2;
+  // Whether the member may manage the clinic's members. The owner always may.
   bool is_admin = 3;
   google.protobuf.Timestamp added_at = 4;
 }
@@ -31,13 +60,49 @@ message ListMembersResponse {
   repeated Member members = 1;
 }
 
-message AddMemberRequest {
-  // The account must already exist (AuthService.SignUp).
-  string username = 1 [(buf.validate.field).string = {
+message FindUserRequest {
+  PersonIdentity identity = 1 [(buf.validate.field).required = true];
+}
+
+message FindUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  PersonIdentity identity = 1 [(buf.validate.field).required = true];
+  // The fields below are only used when a new account is created.
+  // Same rules as SignUpRequest.username.
+  string username = 2 [(buf.validate.field).string.pattern = "^[A-Za-z0-9._-]{3,32}$"];
+  // Same rules as SignUpRequest.password.
+  string temporary_password = 3 [
+    (buf.validate.field).string.max_len = 256,
+    (buf.validate.field).cel = {
+      id: "weak_password"
+      message: "must have at least 8 characters, a lowercase letter, an uppercase letter and a digit"
+      expression: "size(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')"
+    }
+  ];
+  // 1–100 characters.
+  string full_name = 4 [(buf.validate.field).string = {
     min_len: 1
-    max_len: 64
+    max_len: 100
   }];
+  // Mobile number: 7–15 digits, optionally starting with '+'.
+  string phone = 5 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
+}
+
+message CreateUserResponse {
+  User user = 1;
+  // False when the account already existed.
+  bool created = 2;
+}
+
+message AddMemberRequest {
+  reserved 1;
+  reserved "username";
   bool is_admin = 2;
+  // 16 raw UUID bytes, from FindUser or CreateUser.
+  bytes user_id = 3 [(buf.validate.field).bytes.len = 16];
 }
 
 message AddMemberResponse {

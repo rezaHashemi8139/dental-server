@@ -36,6 +36,11 @@ const (
 	// MemberServiceListMembersProcedure is the fully-qualified name of the MemberService's ListMembers
 	// RPC.
 	MemberServiceListMembersProcedure = "/dental.v1.MemberService/ListMembers"
+	// MemberServiceFindUserProcedure is the fully-qualified name of the MemberService's FindUser RPC.
+	MemberServiceFindUserProcedure = "/dental.v1.MemberService/FindUser"
+	// MemberServiceCreateUserProcedure is the fully-qualified name of the MemberService's CreateUser
+	// RPC.
+	MemberServiceCreateUserProcedure = "/dental.v1.MemberService/CreateUser"
 	// MemberServiceAddMemberProcedure is the fully-qualified name of the MemberService's AddMember RPC.
 	MemberServiceAddMemberProcedure = "/dental.v1.MemberService/AddMember"
 	// MemberServiceRemoveMemberProcedure is the fully-qualified name of the MemberService's
@@ -49,7 +54,21 @@ const (
 // MemberServiceClient is a client for the dental.v1.MemberService service.
 type MemberServiceClient interface {
 	ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error)
+	// Finds the account with an identity (type and number; the nationality is not
+	// compared). Fails with NOT_FOUND "user_not_found".
+	FindUser(context.Context, *v1.FindUserRequest) (*v1.FindUserResponse, error)
+	// Creates an account for someone who has none, with a temporary password they
+	// must change before their first login (AuthService.ChangePassword). If an
+	// account with this identity already exists, returns it instead (created =
+	// false) and changes nothing.
+	//
+	// Fails with "invalid_argument" / "weak_password", INVALID_ARGUMENT
+	// "invalid_national_id" or ALREADY_EXISTS "username_taken".
+	CreateUser(context.Context, *v1.CreateUserRequest) (*v1.CreateUserResponse, error)
+	// Gives an account access to the clinic's app. Fails with NOT_FOUND
+	// "user_not_found" or ALREADY_EXISTS "already_member".
 	AddMember(context.Context, *v1.AddMemberRequest) (*v1.AddMemberResponse, error)
+	// Takes access away; the member's sessions in this clinic end at once.
 	RemoveMember(context.Context, *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error)
 	SetMemberAdmin(context.Context, *v1.SetMemberAdminRequest) (*v1.SetMemberAdminResponse, error)
 }
@@ -69,6 +88,18 @@ func NewMemberServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			httpClient,
 			baseURL+MemberServiceListMembersProcedure,
 			connect.WithSchema(memberServiceMethods.ByName("ListMembers")),
+			connect.WithClientOptions(opts...),
+		),
+		findUser: connect.NewClient[v1.FindUserRequest, v1.FindUserResponse](
+			httpClient,
+			baseURL+MemberServiceFindUserProcedure,
+			connect.WithSchema(memberServiceMethods.ByName("FindUser")),
+			connect.WithClientOptions(opts...),
+		),
+		createUser: connect.NewClient[v1.CreateUserRequest, v1.CreateUserResponse](
+			httpClient,
+			baseURL+MemberServiceCreateUserProcedure,
+			connect.WithSchema(memberServiceMethods.ByName("CreateUser")),
 			connect.WithClientOptions(opts...),
 		),
 		addMember: connect.NewClient[v1.AddMemberRequest, v1.AddMemberResponse](
@@ -95,6 +126,8 @@ func NewMemberServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 // memberServiceClient implements MemberServiceClient.
 type memberServiceClient struct {
 	listMembers    *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
+	findUser       *connect.Client[v1.FindUserRequest, v1.FindUserResponse]
+	createUser     *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
 	addMember      *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
 	removeMember   *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
 	setMemberAdmin *connect.Client[v1.SetMemberAdminRequest, v1.SetMemberAdminResponse]
@@ -103,6 +136,24 @@ type memberServiceClient struct {
 // ListMembers calls dental.v1.MemberService.ListMembers.
 func (c *memberServiceClient) ListMembers(ctx context.Context, req *v1.ListMembersRequest) (*v1.ListMembersResponse, error) {
 	response, err := c.listMembers.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// FindUser calls dental.v1.MemberService.FindUser.
+func (c *memberServiceClient) FindUser(ctx context.Context, req *v1.FindUserRequest) (*v1.FindUserResponse, error) {
+	response, err := c.findUser.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// CreateUser calls dental.v1.MemberService.CreateUser.
+func (c *memberServiceClient) CreateUser(ctx context.Context, req *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
+	response, err := c.createUser.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -139,7 +190,21 @@ func (c *memberServiceClient) SetMemberAdmin(ctx context.Context, req *v1.SetMem
 // MemberServiceHandler is an implementation of the dental.v1.MemberService service.
 type MemberServiceHandler interface {
 	ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error)
+	// Finds the account with an identity (type and number; the nationality is not
+	// compared). Fails with NOT_FOUND "user_not_found".
+	FindUser(context.Context, *v1.FindUserRequest) (*v1.FindUserResponse, error)
+	// Creates an account for someone who has none, with a temporary password they
+	// must change before their first login (AuthService.ChangePassword). If an
+	// account with this identity already exists, returns it instead (created =
+	// false) and changes nothing.
+	//
+	// Fails with "invalid_argument" / "weak_password", INVALID_ARGUMENT
+	// "invalid_national_id" or ALREADY_EXISTS "username_taken".
+	CreateUser(context.Context, *v1.CreateUserRequest) (*v1.CreateUserResponse, error)
+	// Gives an account access to the clinic's app. Fails with NOT_FOUND
+	// "user_not_found" or ALREADY_EXISTS "already_member".
 	AddMember(context.Context, *v1.AddMemberRequest) (*v1.AddMemberResponse, error)
+	// Takes access away; the member's sessions in this clinic end at once.
 	RemoveMember(context.Context, *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error)
 	SetMemberAdmin(context.Context, *v1.SetMemberAdminRequest) (*v1.SetMemberAdminResponse, error)
 }
@@ -155,6 +220,18 @@ func NewMemberServiceHandler(svc MemberServiceHandler, opts ...connect.HandlerOp
 		MemberServiceListMembersProcedure,
 		svc.ListMembers,
 		connect.WithSchema(memberServiceMethods.ByName("ListMembers")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memberServiceFindUserHandler := connect.NewUnaryHandlerSimple(
+		MemberServiceFindUserProcedure,
+		svc.FindUser,
+		connect.WithSchema(memberServiceMethods.ByName("FindUser")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memberServiceCreateUserHandler := connect.NewUnaryHandlerSimple(
+		MemberServiceCreateUserProcedure,
+		svc.CreateUser,
+		connect.WithSchema(memberServiceMethods.ByName("CreateUser")),
 		connect.WithHandlerOptions(opts...),
 	)
 	memberServiceAddMemberHandler := connect.NewUnaryHandlerSimple(
@@ -179,6 +256,10 @@ func NewMemberServiceHandler(svc MemberServiceHandler, opts ...connect.HandlerOp
 		switch r.URL.Path {
 		case MemberServiceListMembersProcedure:
 			memberServiceListMembersHandler.ServeHTTP(w, r)
+		case MemberServiceFindUserProcedure:
+			memberServiceFindUserHandler.ServeHTTP(w, r)
+		case MemberServiceCreateUserProcedure:
+			memberServiceCreateUserHandler.ServeHTTP(w, r)
 		case MemberServiceAddMemberProcedure:
 			memberServiceAddMemberHandler.ServeHTTP(w, r)
 		case MemberServiceRemoveMemberProcedure:
@@ -196,6 +277,14 @@ type UnimplementedMemberServiceHandler struct{}
 
 func (UnimplementedMemberServiceHandler) ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.MemberService.ListMembers is not implemented"))
+}
+
+func (UnimplementedMemberServiceHandler) FindUser(context.Context, *v1.FindUserRequest) (*v1.FindUserResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.MemberService.FindUser is not implemented"))
+}
+
+func (UnimplementedMemberServiceHandler) CreateUser(context.Context, *v1.CreateUserRequest) (*v1.CreateUserResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.MemberService.CreateUser is not implemented"))
 }
 
 func (UnimplementedMemberServiceHandler) AddMember(context.Context, *v1.AddMemberRequest) (*v1.AddMemberResponse, error) {

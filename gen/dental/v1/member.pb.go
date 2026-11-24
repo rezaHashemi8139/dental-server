@@ -24,9 +24,11 @@ const (
 )
 
 type Member struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	IsOwner       bool                   `protobuf:"varint,2,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	User  *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	// Whether the member owns the clinic.
+	IsOwner bool `protobuf:"varint,2,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
+	// Whether the member may manage the clinic's members. The owner always may.
 	IsAdmin       bool                   `protobuf:"varint,3,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
 	AddedAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=added_at,json=addedAt,proto3" json:"added_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -171,18 +173,240 @@ func (x *ListMembersResponse) GetMembers() []*Member {
 	return nil
 }
 
-type AddMemberRequest struct {
+type FindUserRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Identity      *PersonIdentity        `protobuf:"bytes,1,opt,name=identity,proto3" json:"identity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FindUserRequest) Reset() {
+	*x = FindUserRequest{}
+	mi := &file_dental_v1_member_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FindUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindUserRequest) ProtoMessage() {}
+
+func (x *FindUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindUserRequest.ProtoReflect.Descriptor instead.
+func (*FindUserRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *FindUserRequest) GetIdentity() *PersonIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+type FindUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FindUserResponse) Reset() {
+	*x = FindUserResponse{}
+	mi := &file_dental_v1_member_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FindUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindUserResponse) ProtoMessage() {}
+
+func (x *FindUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindUserResponse.ProtoReflect.Descriptor instead.
+func (*FindUserResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *FindUserResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+type CreateUserRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Identity *PersonIdentity        `protobuf:"bytes,1,opt,name=identity,proto3" json:"identity,omitempty"`
+	// The fields below are only used when a new account is created.
+	// Same rules as SignUpRequest.username.
+	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	// Same rules as SignUpRequest.password.
+	TemporaryPassword string `protobuf:"bytes,3,opt,name=temporary_password,json=temporaryPassword,proto3" json:"temporary_password,omitempty"`
+	// 1–100 characters.
+	FullName string `protobuf:"bytes,4,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	// Mobile number: 7–15 digits, optionally starting with '+'.
+	Phone         string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateUserRequest) Reset() {
+	*x = CreateUserRequest{}
+	mi := &file_dental_v1_member_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateUserRequest) ProtoMessage() {}
+
+func (x *CreateUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateUserRequest.ProtoReflect.Descriptor instead.
+func (*CreateUserRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateUserRequest) GetIdentity() *PersonIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+func (x *CreateUserRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetTemporaryPassword() string {
+	if x != nil {
+		return x.TemporaryPassword
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+type CreateUserResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The account must already exist (AuthService.SignUp).
-	Username      string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	IsAdmin       bool   `protobuf:"varint,2,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
+	User  *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	// False when the account already existed.
+	Created       bool `protobuf:"varint,2,opt,name=created,proto3" json:"created,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateUserResponse) Reset() {
+	*x = CreateUserResponse{}
+	mi := &file_dental_v1_member_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateUserResponse) ProtoMessage() {}
+
+func (x *CreateUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateUserResponse.ProtoReflect.Descriptor instead.
+func (*CreateUserResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreateUserResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *CreateUserResponse) GetCreated() bool {
+	if x != nil {
+		return x.Created
+	}
+	return false
+}
+
+type AddMemberRequest struct {
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	IsAdmin bool                   `protobuf:"varint,2,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
+	// 16 raw UUID bytes, from FindUser or CreateUser.
+	UserId        []byte `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AddMemberRequest) Reset() {
 	*x = AddMemberRequest{}
-	mi := &file_dental_v1_member_proto_msgTypes[3]
+	mi := &file_dental_v1_member_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -194,7 +418,7 @@ func (x *AddMemberRequest) String() string {
 func (*AddMemberRequest) ProtoMessage() {}
 
 func (x *AddMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[3]
+	mi := &file_dental_v1_member_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -207,14 +431,7 @@ func (x *AddMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMemberRequest.ProtoReflect.Descriptor instead.
 func (*AddMemberRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *AddMemberRequest) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AddMemberRequest) GetIsAdmin() bool {
@@ -222,6 +439,13 @@ func (x *AddMemberRequest) GetIsAdmin() bool {
 		return x.IsAdmin
 	}
 	return false
+}
+
+func (x *AddMemberRequest) GetUserId() []byte {
+	if x != nil {
+		return x.UserId
+	}
+	return nil
 }
 
 type AddMemberResponse struct {
@@ -233,7 +457,7 @@ type AddMemberResponse struct {
 
 func (x *AddMemberResponse) Reset() {
 	*x = AddMemberResponse{}
-	mi := &file_dental_v1_member_proto_msgTypes[4]
+	mi := &file_dental_v1_member_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -245,7 +469,7 @@ func (x *AddMemberResponse) String() string {
 func (*AddMemberResponse) ProtoMessage() {}
 
 func (x *AddMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[4]
+	mi := &file_dental_v1_member_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -258,7 +482,7 @@ func (x *AddMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddMemberResponse.ProtoReflect.Descriptor instead.
 func (*AddMemberResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{4}
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AddMemberResponse) GetMember() *Member {
@@ -278,7 +502,7 @@ type RemoveMemberRequest struct {
 
 func (x *RemoveMemberRequest) Reset() {
 	*x = RemoveMemberRequest{}
-	mi := &file_dental_v1_member_proto_msgTypes[5]
+	mi := &file_dental_v1_member_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -290,7 +514,7 @@ func (x *RemoveMemberRequest) String() string {
 func (*RemoveMemberRequest) ProtoMessage() {}
 
 func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[5]
+	mi := &file_dental_v1_member_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -303,7 +527,7 @@ func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveMemberRequest.ProtoReflect.Descriptor instead.
 func (*RemoveMemberRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{5}
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RemoveMemberRequest) GetUserId() []byte {
@@ -321,7 +545,7 @@ type RemoveMemberResponse struct {
 
 func (x *RemoveMemberResponse) Reset() {
 	*x = RemoveMemberResponse{}
-	mi := &file_dental_v1_member_proto_msgTypes[6]
+	mi := &file_dental_v1_member_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -333,7 +557,7 @@ func (x *RemoveMemberResponse) String() string {
 func (*RemoveMemberResponse) ProtoMessage() {}
 
 func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[6]
+	mi := &file_dental_v1_member_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -346,7 +570,7 @@ func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveMemberResponse.ProtoReflect.Descriptor instead.
 func (*RemoveMemberResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{6}
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{10}
 }
 
 type SetMemberAdminRequest struct {
@@ -360,7 +584,7 @@ type SetMemberAdminRequest struct {
 
 func (x *SetMemberAdminRequest) Reset() {
 	*x = SetMemberAdminRequest{}
-	mi := &file_dental_v1_member_proto_msgTypes[7]
+	mi := &file_dental_v1_member_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -372,7 +596,7 @@ func (x *SetMemberAdminRequest) String() string {
 func (*SetMemberAdminRequest) ProtoMessage() {}
 
 func (x *SetMemberAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[7]
+	mi := &file_dental_v1_member_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -385,7 +609,7 @@ func (x *SetMemberAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetMemberAdminRequest.ProtoReflect.Descriptor instead.
 func (*SetMemberAdminRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{7}
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SetMemberAdminRequest) GetUserId() []byte {
@@ -411,7 +635,7 @@ type SetMemberAdminResponse struct {
 
 func (x *SetMemberAdminResponse) Reset() {
 	*x = SetMemberAdminResponse{}
-	mi := &file_dental_v1_member_proto_msgTypes[8]
+	mi := &file_dental_v1_member_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -423,7 +647,7 @@ func (x *SetMemberAdminResponse) String() string {
 func (*SetMemberAdminResponse) ProtoMessage() {}
 
 func (x *SetMemberAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_member_proto_msgTypes[8]
+	mi := &file_dental_v1_member_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -436,7 +660,7 @@ func (x *SetMemberAdminResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetMemberAdminResponse.ProtoReflect.Descriptor instead.
 func (*SetMemberAdminResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_member_proto_rawDescGZIP(), []int{8}
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SetMemberAdminResponse) GetMember() *Member {
@@ -450,7 +674,7 @@ var File_dental_v1_member_proto protoreflect.FileDescriptor
 
 const file_dental_v1_member_proto_rawDesc = "" +
 	"\n" +
-	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
+	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
 	"\x06Member\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x12\x19\n" +
 	"\bis_owner\x18\x02 \x01(\bR\aisOwner\x12\x19\n" +
@@ -458,10 +682,24 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"\badded_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aaddedAt\"\x14\n" +
 	"\x12ListMembersRequest\"B\n" +
 	"\x13ListMembersResponse\x12+\n" +
-	"\amembers\x18\x01 \x03(\v2\x11.dental.v1.MemberR\amembers\"T\n" +
-	"\x10AddMemberRequest\x12%\n" +
-	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12\x19\n" +
-	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\">\n" +
+	"\amembers\x18\x01 \x03(\v2\x11.dental.v1.MemberR\amembers\"P\n" +
+	"\x0fFindUserRequest\x12=\n" +
+	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\"7\n" +
+	"\x10FindUserResponse\x12#\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\xe5\x03\n" +
+	"\x11CreateUserRequest\x12=\n" +
+	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\x129\n" +
+	"\busername\x18\x02 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xfe\x01\n" +
+	"\x12temporary_password\x18\x03 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\x11temporaryPassword\x12&\n" +
+	"\tfull_name\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12-\n" +
+	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\"S\n" +
+	"\x12CreateUserResponse\x12#\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x12\x18\n" +
+	"\acreated\x18\x02 \x01(\bR\acreated\"_\n" +
+	"\x10AddMemberRequest\x12\x19\n" +
+	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\x12 \n" +
+	"\auser_id\x18\x03 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userIdJ\x04\b\x01\x10\x02R\busername\">\n" +
 	"\x11AddMemberResponse\x12)\n" +
 	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member\"7\n" +
 	"\x13RemoveMemberRequest\x12 \n" +
@@ -471,9 +709,12 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\x12\x19\n" +
 	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\"C\n" +
 	"\x16SetMemberAdminResponse\x12)\n" +
-	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member2\xd5\x02\n" +
+	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member2\xe9\x03\n" +
 	"\rMemberService\x12N\n" +
-	"\vListMembers\x12\x1d.dental.v1.ListMembersRequest\x1a\x1e.dental.v1.ListMembersResponse\"\x00\x12H\n" +
+	"\vListMembers\x12\x1d.dental.v1.ListMembersRequest\x1a\x1e.dental.v1.ListMembersResponse\"\x00\x12E\n" +
+	"\bFindUser\x12\x1a.dental.v1.FindUserRequest\x1a\x1b.dental.v1.FindUserResponse\"\x00\x12K\n" +
+	"\n" +
+	"CreateUser\x12\x1c.dental.v1.CreateUserRequest\x1a\x1d.dental.v1.CreateUserResponse\"\x00\x12H\n" +
 	"\tAddMember\x12\x1b.dental.v1.AddMemberRequest\x1a\x1c.dental.v1.AddMemberResponse\"\x00\x12Q\n" +
 	"\fRemoveMember\x12\x1e.dental.v1.RemoveMemberRequest\x1a\x1f.dental.v1.RemoveMemberResponse\"\x00\x12W\n" +
 	"\x0eSetMemberAdmin\x12 .dental.v1.SetMemberAdminRequest\x1a!.dental.v1.SetMemberAdminResponse\"\x00B\x87\x01\n" +
@@ -492,39 +733,52 @@ func file_dental_v1_member_proto_rawDescGZIP() []byte {
 	return file_dental_v1_member_proto_rawDescData
 }
 
-var file_dental_v1_member_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_dental_v1_member_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_dental_v1_member_proto_goTypes = []any{
 	(*Member)(nil),                 // 0: dental.v1.Member
 	(*ListMembersRequest)(nil),     // 1: dental.v1.ListMembersRequest
 	(*ListMembersResponse)(nil),    // 2: dental.v1.ListMembersResponse
-	(*AddMemberRequest)(nil),       // 3: dental.v1.AddMemberRequest
-	(*AddMemberResponse)(nil),      // 4: dental.v1.AddMemberResponse
-	(*RemoveMemberRequest)(nil),    // 5: dental.v1.RemoveMemberRequest
-	(*RemoveMemberResponse)(nil),   // 6: dental.v1.RemoveMemberResponse
-	(*SetMemberAdminRequest)(nil),  // 7: dental.v1.SetMemberAdminRequest
-	(*SetMemberAdminResponse)(nil), // 8: dental.v1.SetMemberAdminResponse
-	(*User)(nil),                   // 9: dental.v1.User
-	(*timestamppb.Timestamp)(nil),  // 10: google.protobuf.Timestamp
+	(*FindUserRequest)(nil),        // 3: dental.v1.FindUserRequest
+	(*FindUserResponse)(nil),       // 4: dental.v1.FindUserResponse
+	(*CreateUserRequest)(nil),      // 5: dental.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),     // 6: dental.v1.CreateUserResponse
+	(*AddMemberRequest)(nil),       // 7: dental.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),      // 8: dental.v1.AddMemberResponse
+	(*RemoveMemberRequest)(nil),    // 9: dental.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),   // 10: dental.v1.RemoveMemberResponse
+	(*SetMemberAdminRequest)(nil),  // 11: dental.v1.SetMemberAdminRequest
+	(*SetMemberAdminResponse)(nil), // 12: dental.v1.SetMemberAdminResponse
+	(*User)(nil),                   // 13: dental.v1.User
+	(*timestamppb.Timestamp)(nil),  // 14: google.protobuf.Timestamp
+	(*PersonIdentity)(nil),         // 15: dental.v1.PersonIdentity
 }
 var file_dental_v1_member_proto_depIdxs = []int32{
-	9,  // 0: dental.v1.Member.user:type_name -> dental.v1.User
-	10, // 1: dental.v1.Member.added_at:type_name -> google.protobuf.Timestamp
+	13, // 0: dental.v1.Member.user:type_name -> dental.v1.User
+	14, // 1: dental.v1.Member.added_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: dental.v1.ListMembersResponse.members:type_name -> dental.v1.Member
-	0,  // 3: dental.v1.AddMemberResponse.member:type_name -> dental.v1.Member
-	0,  // 4: dental.v1.SetMemberAdminResponse.member:type_name -> dental.v1.Member
-	1,  // 5: dental.v1.MemberService.ListMembers:input_type -> dental.v1.ListMembersRequest
-	3,  // 6: dental.v1.MemberService.AddMember:input_type -> dental.v1.AddMemberRequest
-	5,  // 7: dental.v1.MemberService.RemoveMember:input_type -> dental.v1.RemoveMemberRequest
-	7,  // 8: dental.v1.MemberService.SetMemberAdmin:input_type -> dental.v1.SetMemberAdminRequest
-	2,  // 9: dental.v1.MemberService.ListMembers:output_type -> dental.v1.ListMembersResponse
-	4,  // 10: dental.v1.MemberService.AddMember:output_type -> dental.v1.AddMemberResponse
-	6,  // 11: dental.v1.MemberService.RemoveMember:output_type -> dental.v1.RemoveMemberResponse
-	8,  // 12: dental.v1.MemberService.SetMemberAdmin:output_type -> dental.v1.SetMemberAdminResponse
-	9,  // [9:13] is the sub-list for method output_type
-	5,  // [5:9] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	15, // 3: dental.v1.FindUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	13, // 4: dental.v1.FindUserResponse.user:type_name -> dental.v1.User
+	15, // 5: dental.v1.CreateUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	13, // 6: dental.v1.CreateUserResponse.user:type_name -> dental.v1.User
+	0,  // 7: dental.v1.AddMemberResponse.member:type_name -> dental.v1.Member
+	0,  // 8: dental.v1.SetMemberAdminResponse.member:type_name -> dental.v1.Member
+	1,  // 9: dental.v1.MemberService.ListMembers:input_type -> dental.v1.ListMembersRequest
+	3,  // 10: dental.v1.MemberService.FindUser:input_type -> dental.v1.FindUserRequest
+	5,  // 11: dental.v1.MemberService.CreateUser:input_type -> dental.v1.CreateUserRequest
+	7,  // 12: dental.v1.MemberService.AddMember:input_type -> dental.v1.AddMemberRequest
+	9,  // 13: dental.v1.MemberService.RemoveMember:input_type -> dental.v1.RemoveMemberRequest
+	11, // 14: dental.v1.MemberService.SetMemberAdmin:input_type -> dental.v1.SetMemberAdminRequest
+	2,  // 15: dental.v1.MemberService.ListMembers:output_type -> dental.v1.ListMembersResponse
+	4,  // 16: dental.v1.MemberService.FindUser:output_type -> dental.v1.FindUserResponse
+	6,  // 17: dental.v1.MemberService.CreateUser:output_type -> dental.v1.CreateUserResponse
+	8,  // 18: dental.v1.MemberService.AddMember:output_type -> dental.v1.AddMemberResponse
+	10, // 19: dental.v1.MemberService.RemoveMember:output_type -> dental.v1.RemoveMemberResponse
+	12, // 20: dental.v1.MemberService.SetMemberAdmin:output_type -> dental.v1.SetMemberAdminResponse
+	15, // [15:21] is the sub-list for method output_type
+	9,  // [9:15] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_member_proto_init() }
@@ -533,13 +787,14 @@ func file_dental_v1_member_proto_init() {
 		return
 	}
 	file_dental_v1_auth_proto_init()
+	file_dental_v1_person_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_member_proto_rawDesc), len(file_dental_v1_member_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -25,7 +25,7 @@ func TestHealthCheckOverGRPC(t *testing.T) {
 	defer db.Close()
 
 	mux := http.NewServeMux()
-	mux.Handle(dentalv1connect.NewHealthServiceHandler(NewHealthService(db, "test", nil)))
+	mux.Handle(dentalv1connect.NewHealthServiceHandler(NewHealthService(db, "test", nil, nil)))
 	server := httptest.NewUnstartedServer(mux)
 	server.EnableHTTP2 = true
 	server.StartTLS()

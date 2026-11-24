@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 
 	dentalv1 "dental-server/gen/dental/v1"
+	"dental-server/internal/secure"
 )
 
 func TestValidNationalID(t *testing.T) {
@@ -59,16 +60,16 @@ func TestRegisterClinic(t *testing.T) {
 	_, err = e.installation.Register(ctx, taken)
 	wantCode(t, err, connect.CodeAlreadyExists, reasonUsernameTaken)
 	taken = registerRequest(3, "surgeon")
-	taken.GetNewOwner().NationalId = nationalID(1)
+	taken.GetNewOwner().Identity = nationalIdentity(nationalID(1))
 	_, err = e.installation.Register(ctx, taken)
-	wantCode(t, err, connect.CodeAlreadyExists, reasonNationalIDTaken)
+	wantCode(t, err, connect.CodeAlreadyExists, reasonIdentityTaken)
 
 	// The national ID needs a valid check digit and is always required.
 	bad := registerRequest(3, "surgeon")
-	bad.GetNewOwner().NationalId = "0013542418"
+	bad.GetNewOwner().Identity = nationalIdentity("0013542418")
 	_, err = e.installation.Register(ctx, bad)
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidNationalID)
-	bad.GetNewOwner().NationalId = ""
+	bad.GetNewOwner().Identity = nil
 	_, err = e.installation.Register(ctx, bad)
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
@@ -76,7 +77,7 @@ func TestRegisterClinic(t *testing.T) {
 	existing := func(machine byte, username, password, nationalID string) *dentalv1.RegisterRequest {
 		req := registerRequest(machine, "unused")
 		req.Owner = &dentalv1.RegisterRequest_ExistingOwner{ExistingOwner: &dentalv1.ExistingOwner{
-			Username: username, Password: password, NationalId: nationalID,
+			Username: username, Password: password, Identity: nationalIdentity(nationalID),
 		}}
 		return req
 	}
@@ -85,7 +86,7 @@ func TestRegisterClinic(t *testing.T) {
 	_, err = e.installation.Register(ctx, existing(4, "nobody", "Passw0rd-nobody", nationalID(1)))
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidCredentials)
 	_, err = e.installation.Register(ctx, existing(4, "doctor", "Passw0rd-doctor", nationalID(2)))
-	wantCode(t, err, connect.CodeFailedPrecondition, reasonNationalIDMismatch)
+	wantCode(t, err, connect.CodeFailedPrecondition, reasonIdentityMismatch)
 
 	second, err := e.installation.Register(ctx, existing(4, "DOCTOR", "Passw0rd-doctor", nationalID(1)))
 	if err != nil {
@@ -95,7 +96,8 @@ func TestRegisterClinic(t *testing.T) {
 		t.Fatalf("existing owner = %v", second.GetOwner())
 	}
 
-	// The owner is already a member and admin of both installations.
+	// The owner is already a member and admin of both clinics.
+	e.subscribe("doctor", 2, 1, 30)
 	for _, inst := range []*dentalv1.RegisterResponse{first, second} {
 		res, err := e.login(inst, "doctor", "Passw0rd-doctor")
 		if err != nil {
@@ -106,16 +108,20 @@ func TestRegisterClinic(t *testing.T) {
 		}
 	}
 
-	// An account made with SignUp has no national ID yet: the first clinic saves it,
-	// and it must then not belong to another account.
-	e.signUp("hygienist")
+	// An account made before national IDs were required has none: the first clinic
+	// saves it, and it must then not belong to another account.
+	if _, err := e.deps.DB.Exec(ctx, `
+		INSERT INTO users (username, password_hash, full_name) VALUES ('hygienist', $1, 'Old account')`,
+		secure.HashPassword("Passw0rd-hygienist")); err != nil {
+		t.Fatal(err)
+	}
 	_, err = e.installation.Register(ctx, existing(5, "hygienist", "Passw0rd-hygienist", nationalID(2)))
-	wantCode(t, err, connect.CodeAlreadyExists, reasonNationalIDTaken)
+	wantCode(t, err, connect.CodeAlreadyExists, reasonIdentityTaken)
 	if _, err := e.installation.Register(ctx, existing(5, "hygienist", "Passw0rd-hygienist", nationalID(5))); err != nil {
 		t.Fatal(err)
 	}
 	var saved string
-	if err := e.deps.DB.QueryRow(ctx, `SELECT national_id FROM users WHERE username = 'hygienist'`).Scan(&saved); err != nil || saved != nationalID(5) {
+	if err := e.deps.DB.QueryRow(ctx, `SELECT identity FROM users WHERE username = 'hygienist'`).Scan(&saved); err != nil || saved != nationalID(5) {
 		t.Fatalf("saved national ID = %q, %v", saved, err)
 	}
 

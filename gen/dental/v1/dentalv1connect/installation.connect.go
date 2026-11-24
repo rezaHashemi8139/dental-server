@@ -42,19 +42,25 @@ const (
 type InstallationServiceClient interface {
 	// Called once, the first time the app starts. No login needed.
 	//
-	// Also registers the clinic the installation belongs to, and its owner: the
-	// person responsible for the clinic, either a new account (created here) or an
-	// existing one (proven with its password). The owner is the installation's
-	// owner and admin from the start.
+	// Either registers a new clinic together with its owner (the person responsible
+	// for the clinic: a new account created here, or an existing one proven with its
+	// password), or adds the installation to an existing clinic, which only that
+	// clinic's owner can do. The owner is a member and admin of the clinic.
+	//
+	// Registering needs no subscription, but nobody can log in until the owner has
+	// one (see AuthService.Login).
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
-	// - ALREADY_EXISTS "username_taken" / "national_id_taken": a new owner's username
-	//   or national ID belongs to another account;
+	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
+	//   or identity (national ID or FIDA code) belongs to another account;
 	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
-	// - FAILED_PRECONDITION "national_id_mismatch": an existing owner has another national ID on file.
+	// - FAILED_PRECONDITION "identity_mismatch": an existing owner has another identity on file;
+	// - INVALID_ARGUMENT "invalid_argument": existing_clinic with a new_owner;
+	// - NOT_FOUND "clinic_not_found": no clinic has existing_clinic.license_number;
+	// - PERMISSION_DENIED "not_clinic_owner": the clinic belongs to someone else.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
 }
 
@@ -96,19 +102,25 @@ func (c *installationServiceClient) Register(ctx context.Context, req *v1.Regist
 type InstallationServiceHandler interface {
 	// Called once, the first time the app starts. No login needed.
 	//
-	// Also registers the clinic the installation belongs to, and its owner: the
-	// person responsible for the clinic, either a new account (created here) or an
-	// existing one (proven with its password). The owner is the installation's
-	// owner and admin from the start.
+	// Either registers a new clinic together with its owner (the person responsible
+	// for the clinic: a new account created here, or an existing one proven with its
+	// password), or adds the installation to an existing clinic, which only that
+	// clinic's owner can do. The owner is a member and admin of the clinic.
+	//
+	// Registering needs no subscription, but nobody can log in until the owner has
+	// one (see AuthService.Login).
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
-	// - ALREADY_EXISTS "username_taken" / "national_id_taken": a new owner's username
-	//   or national ID belongs to another account;
+	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
+	//   or identity (national ID or FIDA code) belongs to another account;
 	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
-	// - FAILED_PRECONDITION "national_id_mismatch": an existing owner has another national ID on file.
+	// - FAILED_PRECONDITION "identity_mismatch": an existing owner has another identity on file;
+	// - INVALID_ARGUMENT "invalid_argument": existing_clinic with a new_owner;
+	// - NOT_FOUND "clinic_not_found": no clinic has existing_clinic.license_number;
+	// - PERMISSION_DENIED "not_clinic_owner": the clinic belongs to someone else.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
 }
 
