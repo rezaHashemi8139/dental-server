@@ -153,14 +153,14 @@
     "logout": "Abmelden"
   },
   "identity": {
-    "title": "Identität bestätigen",
-    "description": "Geben Sie zum Fortfahren das Passwort des Kontos „{{username}}“ ein, damit wir sicher sind, dass Sie es sind.",
-    "submit": "Weiter",
-    "working": "Wird geprüft...",
+    "fields": {
+      "accountPassword": "Passwort Ihres Kontos"
+    },
+    "hint": "Damit wir sicher sind, dass Sie es sind. Nach {{max}} falschen Passwörtern werden Sie abgemeldet.",
     "errors": {
-      "wrongPassword": "Das Passwort ist falsch.",
+      "wrongPassword": "Das Kontopasswort ist falsch. Verbleibende Versuche bis zur Abmeldung: {{left}}",
       "unavailable": "Ihr Passwort kann auf diesem Computer nicht geprüft werden. Melden Sie sich ab und wieder an.",
-      "expired": "Ihre Bestätigung ist abgelaufen. Geben Sie Ihr Passwort erneut ein."
+      "tooManyAttempts": "Aus Sicherheitsgründen wurden Sie nach {{max}} falschen Passwörtern in Folge abgemeldet. Melden Sie sich erneut an."
     }
   },
   "database": {
@@ -169,13 +169,12 @@
     "clear": {
       "title": "Daten löschen",
       "summary": "Alle Praxisdaten auf diesem Computer endgültig löschen.",
-      "description": "Alle Praxisdaten auf diesem Computer werden gelöscht. Sie bleiben mit der Rolle Leitung in der App.",
+      "description": "Alle Praxisdaten auf diesem Computer werden gelöscht, danach werden Sie abgemeldet. Nach der erneuten Anmeldung haben Sie weiterhin die Rolle Leitung.",
       "warning": "Das lässt sich nicht rückgängig machen. Ohne Sicherung sind die gelöschten Daten endgültig verloren. Erstellen Sie bei Bedarf zuerst eine Sicherung.",
       "confirmLabel": "Geben Sie zur Bestätigung Ihren Benutzernamen ein: {{username}}",
       "submit": "Alle Daten löschen",
       "working": "Wird gelöscht...",
-      "success": "Die Praxisdaten auf diesem Computer wurden gelöscht.",
-      "close": "Schließen"
+      "loggedOut": "Die Praxisdaten auf diesem Computer wurden gelöscht und Sie wurden abgemeldet. Melden Sie sich erneut an, um fortzufahren."
     },
     "validation": {
       "confirmationMismatch": "Das ist nicht Ihr Benutzername."

@@ -153,14 +153,14 @@
     "logout": "Log out"
   },
   "identity": {
-    "title": "Confirm it's you",
-    "description": "To continue, enter the password of the account \"{{username}}\" so we know it's really you.",
-    "submit": "Continue",
-    "working": "Checking...",
+    "fields": {
+      "accountPassword": "Your account password"
+    },
+    "hint": "To make sure it's really you. After {{max}} wrong passwords you are logged out.",
     "errors": {
-      "wrongPassword": "The password is incorrect.",
+      "wrongPassword": "The account password is incorrect. Tries left before you are logged out: {{left}}",
       "unavailable": "Your password can't be checked on this computer. Log out and log in again.",
-      "expired": "Your confirmation has expired. Enter your password again."
+      "tooManyAttempts": "For security, you were logged out after {{max}} wrong passwords in a row. Log in again."
     }
   },
   "database": {
@@ -169,13 +169,12 @@
     "clear": {
       "title": "Clear data",
       "summary": "Permanently delete all clinic data on this computer.",
-      "description": "All clinic data on this computer is deleted. You stay in the app as manager.",
+      "description": "All clinic data on this computer is deleted, and then you are logged out. When you log in again, you are still the manager.",
       "warning": "This cannot be undone. Without a backup, the deleted data is gone for good. If needed, make a backup first.",
       "confirmLabel": "To confirm, type your username: {{username}}",
       "submit": "Delete all data",
       "working": "Deleting...",
-      "success": "The clinic data on this computer has been deleted.",
-      "close": "Close"
+      "loggedOut": "The clinic data on this computer has been deleted and you have been logged out. Log in again to continue."
     },
     "validation": {
       "confirmationMismatch": "This is not your username."
