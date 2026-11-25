@@ -17,8 +17,8 @@ First time only (never overwrite an existing `.env`: its keys can't be recovered
 .\scripts\dev.ps1   # creates .env with fresh random keys; then set DATABASE_URL and run it again
 ```
 
-Or by hand: copy `.env.example` to `.env`, generate `KEY_ENCRYPTION_KEY` and `SIGNING_KEY`
-with the command noted there, set `DATABASE_URL`, then `go run .`.
+Or by hand: copy `.env.example` to `.env`, generate `KEY_ENCRYPTION_KEY`, `SIGNING_KEY` and
+`ADMIN_TOKEN_KEY` with the command noted there, set `DATABASE_URL`, then `go run .`.
 
 Migrations in `internal/database/migrations/` are applied automatically on startup.
 If PostgreSQL is unreachable the server still starts, retries in the background and
@@ -44,6 +44,9 @@ go run . create-admin -username admin -full-name "Site Admin"
 ```
 
 Further administrators can then be created from the panel (`AdminService.CreateAdmin`).
+Admin sessions are a JWT in an HttpOnly cookie plus a CSRF token sent in the `X-CSRF-Token` header
+(see `AdminService` in `proto/dental/v1/admin.proto`). The session behind the JWT is checked on
+every call, so `AdminService.Logout` (or disabling the administrator) ends it at once.
 
 In VS Code the same commands are tasks (`.vscode/tasks.json`): `Ctrl+Shift+P` → **Tasks: Run Task**
 (`dev`, `generate`, `build`, `build: linux`, `test`, `vet`, `tidy`), or `Ctrl+Shift+B` for `build`.

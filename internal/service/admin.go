@@ -49,24 +49,46 @@ func (s *AdminService) Login(ctx context.Context, req *dentalv1.AdminServiceLogi
 	}
 	admin.Id = uuidBytes(id)
 
+	// The session row is what Logout revokes; the JWT (cookie) names it and the
+	// CSRF token (response) must come with it, so both are needed on every call.
 	now := s.d.Now()
-	token, tokenHash := secure.NewToken()
+	csrfToken, csrfHash := secure.NewToken()
 	expires := now.Add(s.d.SessionTTL)
-	if _, err := s.d.DB.Exec(ctx, `
-		INSERT INTO admin_sessions (token_hash, admin_id, created_at, expires_at)
-		VALUES ($1, $2, $3, $4)`, tokenHash, id, now, expires); err != nil {
+	var sessionID pgtype.UUID
+	if err := s.d.DB.QueryRow(ctx, `
+		INSERT INTO admin_sessions (csrf_hash, admin_id, created_at, expires_at)
+		VALUES ($1, $2, $3, $4) RETURNING id`, csrfHash, id, now, expires,
+	).Scan(&sessionID); err != nil {
+		return nil, internal(err)
+	}
+	token, err := s.d.AdminTokens.Sign(secure.TokenClaims{
+		Subject:   id.String(),
+		SessionID: sessionID.String(),
+		Audience:  adminTokenAudience,
+		IssuedAt:  now.Unix(),
+		ExpiresAt: expires.Unix(),
+	})
+	if err != nil {
+		return nil, internal(err)
+	}
+	if err := setCookie(ctx, adminCookie(token, int(s.d.SessionTTL/time.Second))); err != nil {
 		return nil, internal(err)
 	}
 	return &dentalv1.AdminServiceLoginResponse{
-		SessionToken:     token,
 		SessionExpiresAt: timestamppb.New(expires),
 		Admin:            admin,
+		CsrfToken:        csrfToken,
 	}, nil
 }
 
+// Logout revokes the session, so its JWT and CSRF token stop working at once
+// even though the JWT has not expired, and tells the browser to drop the cookie.
 func (s *AdminService) Logout(ctx context.Context, _ *dentalv1.AdminServiceLogoutRequest) (*dentalv1.AdminServiceLogoutResponse, error) {
 	session := adminSessionFrom(ctx)
 	if _, err := s.d.DB.Exec(ctx, `UPDATE admin_sessions SET revoked_at = $2 WHERE id = $1`, session.ID, s.d.Now()); err != nil {
+		return nil, internal(err)
+	}
+	if err := setCookie(ctx, adminCookie("", -1)); err != nil {
 		return nil, internal(err)
 	}
 	return &dentalv1.AdminServiceLogoutResponse{}, nil

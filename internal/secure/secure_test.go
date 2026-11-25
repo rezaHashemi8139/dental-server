@@ -5,8 +5,13 @@ import (
 	"crypto/ecdh"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestPassword(t *testing.T) {
@@ -104,5 +109,49 @@ func TestTokens(t *testing.T) {
 	secret := RandomBytes(32)
 	if !SecretMatches(secret, HashSecret(secret)) || SecretMatches(RandomBytes(32), HashSecret(secret)) {
 		t.Error("secret comparison wrong")
+	}
+}
+
+func TestTokenSigner(t *testing.T) {
+	signer, err := NewTokenSigner(RandomBytes(32))
+	if err != nil {
+		t.Fatal(err)
+	}
+	now := time.Unix(1_800_000_000, 0)
+	claims := TokenClaims{Subject: "admin", SessionID: "session", Audience: "panel", IssuedAt: now.Unix(), ExpiresAt: now.Add(time.Hour).Unix()}
+	token, err := signer.Sign(claims)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := signer.Verify(token, "panel", now)
+	if err != nil || got != claims {
+		t.Fatalf("verify = %+v, %v", got, err)
+	}
+
+	header, rest, _ := strings.Cut(token, ".")
+	payload, signature, _ := strings.Cut(rest, ".")
+	forged, _ := json.Marshal(TokenClaims{Subject: "other", SessionID: "session", Audience: "panel", ExpiresAt: now.Add(time.Hour).Unix()})
+	none := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none","typ":"JWT"}`))
+	other, _ := NewTokenSigner(RandomBytes(32))
+	otherToken, _ := other.Sign(claims)
+
+	for name, tc := range map[string]struct {
+		token, audience string
+		at              time.Time
+	}{
+		"expired":        {token, "panel", now.Add(time.Hour)},
+		"other audience": {token, "app", now},
+		"other key":      {otherToken, "panel", now},
+		"changed claims": {header + "." + base64.RawURLEncoding.EncodeToString(forged) + "." + signature, "panel", now},
+		"alg none":       {none + "." + payload + ".", "panel", now},
+		"no signature":   {header + "." + payload, "panel", now},
+		"bad signature":  {header + "." + payload + ".!!", "panel", now},
+		"empty":          {"", "panel", now},
+		"too many parts": {token + ".x", "panel", now},
+	} {
+		if _, err := signer.Verify(tc.token, tc.audience, tc.at); !errors.Is(err, ErrInvalidToken) {
+			t.Errorf("%s: err = %v, want ErrInvalidToken", name, err)
+		}
 	}
 }

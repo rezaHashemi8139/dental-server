@@ -10,13 +10,16 @@ import (
 	"crypto/ecdh"
 	"crypto/ed25519"
 	"crypto/hkdf"
+	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -238,4 +241,83 @@ func HashSecret(secret []byte) []byte {
 // SecretMatches compares a secret with its stored hash in constant time.
 func SecretMatches(secret, storedHash []byte) bool {
 	return subtle.ConstantTimeCompare(HashSecret(secret), storedHash) == 1
+}
+
+// ---------------------------------------------------------------------------
+// Admin tokens: JSON Web Tokens (RFC 7519) signed with HMAC-SHA256 (HS256).
+
+// ErrInvalidToken is returned for a token that is malformed, not signed with
+// this key, meant for another audience or expired.
+var ErrInvalidToken = errors.New("invalid token")
+
+// TokenClaims are the claims of a token issued by TokenSigner.
+type TokenClaims struct {
+	// Who the token is for, e.g. an administrator's id.
+	Subject string `json:"sub"`
+	// The server-side session the token belongs to, checked on every use so the
+	// token stops working as soon as that session is revoked.
+	SessionID string `json:"sid"`
+	Audience  string `json:"aud"`
+	// Seconds since the Unix epoch.
+	IssuedAt  int64 `json:"iat"`
+	ExpiresAt int64 `json:"exp"`
+}
+
+// TokenSigner issues and verifies HS256 JSON Web Tokens.
+type TokenSigner struct {
+	key []byte
+}
+
+// tokenHeader is the only header TokenSigner writes or accepts, so a token can
+// never choose its own algorithm (e.g. "none").
+var tokenHeader = base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+
+// NewTokenSigner takes a 32-byte HMAC key.
+func NewTokenSigner(key []byte) (*TokenSigner, error) {
+	if len(key) != 32 {
+		return nil, errors.New("token key must be 32 bytes")
+	}
+	return &TokenSigner{key: key}, nil
+}
+
+func (s *TokenSigner) mac(signingInput string) []byte {
+	m := hmac.New(sha256.New, s.key)
+	m.Write([]byte(signingInput))
+	return m.Sum(nil)
+}
+
+// Sign returns the token for claims.
+func (s *TokenSigner) Sign(claims TokenClaims) (string, error) {
+	payload, err := json.Marshal(claims)
+	if err != nil {
+		return "", err
+	}
+	signingInput := tokenHeader + "." + base64.RawURLEncoding.EncodeToString(payload)
+	return signingInput + "." + base64.RawURLEncoding.EncodeToString(s.mac(signingInput)), nil
+}
+
+// Verify checks the token's signature, audience and expiry at now, and returns its claims.
+func (s *TokenSigner) Verify(token, audience string, now time.Time) (TokenClaims, error) {
+	header, rest, ok1 := strings.Cut(token, ".")
+	payload, signature, ok2 := strings.Cut(rest, ".")
+	if !ok1 || !ok2 || header != tokenHeader {
+		return TokenClaims{}, ErrInvalidToken
+	}
+	got, err := base64.RawURLEncoding.DecodeString(signature)
+	if err != nil || !hmac.Equal(got, s.mac(header+"."+payload)) {
+		return TokenClaims{}, ErrInvalidToken
+	}
+
+	data, err := base64.RawURLEncoding.DecodeString(payload)
+	if err != nil {
+		return TokenClaims{}, ErrInvalidToken
+	}
+	var claims TokenClaims
+	if err := json.Unmarshal(data, &claims); err != nil {
+		return TokenClaims{}, ErrInvalidToken
+	}
+	if claims.Audience != audience || now.Unix() >= claims.ExpiresAt {
+		return TokenClaims{}, ErrInvalidToken
+	}
+	return claims, nil
 }

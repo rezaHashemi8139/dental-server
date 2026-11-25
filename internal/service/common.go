@@ -18,10 +18,12 @@ import (
 
 // Deps is what the services need from the outside world.
 type Deps struct {
-	DB         *pgxpool.Pool
-	Keys       *secure.KeyWrapper
-	Signer     *secure.Signer
-	SessionTTL time.Duration
+	DB     *pgxpool.Pool
+	Keys   *secure.KeyWrapper
+	Signer *secure.Signer
+	// Signs and verifies the admin panel's session tokens (JWT).
+	AdminTokens *secure.TokenSigner
+	SessionTTL  time.Duration
 	// Now is the clock; tests replace it.
 	Now func() time.Time
 }

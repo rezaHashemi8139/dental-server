@@ -58,7 +58,8 @@ func newTestEnv(t *testing.T) *testEnv {
 
 	keys, _ := secure.NewKeyWrapper(secure.RandomBytes(32))
 	signer, _ := secure.NewSigner(secure.RandomBytes(32))
-	deps := &Deps{DB: db, Keys: keys, Signer: signer, SessionTTL: time.Hour, Now: time.Now}
+	adminTokens, _ := secure.NewTokenSigner(secure.RandomBytes(32))
+	deps := &Deps{DB: db, Keys: keys, Signer: signer, AdminTokens: adminTokens, SessionTTL: time.Hour, Now: time.Now}
 
 	interceptors := connect.WithInterceptors(ValidateInterceptor(), SessionInterceptor(deps))
 	mux := http.NewServeMux()
@@ -84,10 +85,51 @@ func newTestEnv(t *testing.T) *testEnv {
 	}
 }
 
-// admin returns an AdminService client that sends the given admin session token.
-func (e *testEnv) admin(token string) dentalv1connect.AdminServiceClient {
+// adminSession is what an AdminService client sends: the JWT that Login set as
+// a cookie and the CSRF token it returned. Empty values are not sent.
+type adminSession struct {
+	token, csrf string
+}
+
+// admin returns an AdminService client that sends the given admin session.
+func (e *testEnv) admin(s adminSession) dentalv1connect.AdminServiceClient {
 	return dentalv1connect.NewAdminServiceClient(e.server.Client(), e.server.URL, connect.WithGRPC(),
-		connect.WithInterceptors(bearer(token)))
+		connect.WithInterceptors(connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
+			return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+				if s.token != "" {
+					req.Header().Add("Cookie", (&http.Cookie{Name: adminTokenCookie, Value: s.token}).String())
+				}
+				if s.csrf != "" {
+					req.Header().Set(csrfTokenHeader, s.csrf)
+				}
+				return next(ctx, req)
+			}
+		})))
+}
+
+// adminLogin logs an administrator in. It returns the session as a browser would
+// keep it and the session cookie exactly as the server set it.
+func (e *testEnv) adminLogin(username, password string) (adminSession, *http.Cookie, error) {
+	e.t.Helper()
+	ctx, call := connect.NewClientContext(context.Background())
+	res, err := e.admin(adminSession{}).Login(ctx, &dentalv1.AdminServiceLoginRequest{Username: username, Password: password})
+	if err != nil {
+		return adminSession{}, nil, err
+	}
+	cookie := responseCookie(e.t, call.ResponseHeader(), adminTokenCookie)
+	return adminSession{token: cookie.Value, csrf: res.GetCsrfToken()}, cookie, nil
+}
+
+// responseCookie returns the cookie `name` set by a response; the test fails without one.
+func responseCookie(t *testing.T, h http.Header, name string) *http.Cookie {
+	t.Helper()
+	for _, line := range h.Values("Set-Cookie") {
+		if cookie, err := http.ParseSetCookie(line); err == nil && cookie.Name == name {
+			return cookie
+		}
+	}
+	t.Fatalf("no %s cookie in %q", name, h.Values("Set-Cookie"))
+	return nil
 }
 
 // subscribe gives the user `username` a subscription in force from an hour ago

@@ -69,6 +69,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	adminTokens, err := secure.NewTokenSigner(cfg.AdminTokenKey)
+	if err != nil {
+		return err
+	}
 	// Checked at startup: a broken language file must not ship.
 	langs, err := languages.Load()
 	if err != nil {
@@ -81,7 +85,9 @@ func run() error {
 		return err
 	}
 
-	deps := &service.Deps{DB: db.Pool, Keys: keys, Signer: signer, SessionTTL: cfg.SessionTTL, Now: time.Now}
+	deps := &service.Deps{
+		DB: db.Pool, Keys: keys, Signer: signer, AdminTokens: adminTokens, SessionTTL: cfg.SessionTTL, Now: time.Now,
+	}
 
 	// Outermost first: log everything, refuse desktop apps that must update first,
 	// reject invalid input (before any database work), refuse calls while the

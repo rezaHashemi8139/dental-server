@@ -32,16 +32,16 @@ func TestAdminPanelSellsSubscriptions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	anonymous := e.admin("")
+	anonymous := e.admin(adminSession{})
 	_, err = anonymous.ListPlans(ctx, &dentalv1.ListPlansRequest{})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 	_, err = anonymous.Login(ctx, &dentalv1.AdminServiceLoginRequest{Username: "root", Password: "wrong"})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonInvalidCredentials)
-	login, err := anonymous.Login(ctx, &dentalv1.AdminServiceLoginRequest{Username: "ROOT", Password: "Passw0rd-root"})
+	session, _, err := e.adminLogin("ROOT", "Passw0rd-root")
 	if err != nil {
 		t.Fatal(err)
 	}
-	admin := e.admin(login.GetSessionToken())
+	admin := e.admin(session)
 
 	created, err := admin.CreateAdmin(ctx, &dentalv1.CreateAdminRequest{Username: "sales", Password: "Passw0rd-sales", FullName: "Sales"})
 	if err != nil || created.GetAdmin().GetUsername() != "sales" {
@@ -100,9 +100,9 @@ func TestAdminPanelSellsSubscriptions(t *testing.T) {
 	}
 
 	// An admin session is not a user session, and the other way round.
-	_, err = e.members(login.GetSessionToken()).ListMembers(ctx, &dentalv1.ListMembersRequest{})
+	_, err = e.members(session.token).ListMembers(ctx, &dentalv1.ListMembersRequest{})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
-	_, err = e.admin(res.res.GetSessionToken()).ListPlans(ctx, &dentalv1.ListPlansRequest{})
+	_, err = e.admin(adminSession{token: res.res.GetSessionToken(), csrf: session.csrf}).ListPlans(ctx, &dentalv1.ListPlansRequest{})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 
 	// Canceling the subscription in force ends access at once: the renewal has not started yet.

@@ -60,6 +60,7 @@ const (
 type AdminServiceClient interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
 	Login(context.Context, *v1.AdminServiceLoginRequest) (*v1.AdminServiceLoginResponse, error)
+	// Ends the session at once and removes its cookie.
 	Logout(context.Context, *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error)
 	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateAdmin(context.Context, *v1.CreateAdminRequest) (*v1.CreateAdminResponse, error)
@@ -250,6 +251,7 @@ func (c *adminServiceClient) CancelSubscription(ctx context.Context, req *v1.Can
 type AdminServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
 	Login(context.Context, *v1.AdminServiceLoginRequest) (*v1.AdminServiceLoginResponse, error)
+	// Ends the session at once and removes its cookie.
 	Logout(context.Context, *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error)
 	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateAdmin(context.Context, *v1.CreateAdminRequest) (*v1.CreateAdminResponse, error)

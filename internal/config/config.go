@@ -21,6 +21,8 @@ type Config struct {
 	KeyEncryptionKey []byte
 	// Ed25519 seed that signs offline grants (32 bytes).
 	SigningKey []byte
+	// HMAC key that signs the admin panel's session tokens (JWT, 32 bytes).
+	AdminTokenKey []byte
 	// How long a login session lasts.
 	SessionTTL time.Duration
 	// TLS certificate and key. Both empty = plain HTTP (development only).
@@ -56,6 +58,9 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	if cfg.SigningKey, err = base64Key("SIGNING_KEY"); err != nil {
+		return Config{}, err
+	}
+	if cfg.AdminTokenKey, err = base64Key("ADMIN_TOKEN_KEY"); err != nil {
 		return Config{}, err
 	}
 	if cfg.SessionTTL, err = time.ParseDuration(getenv("SESSION_TTL", "12h")); err != nil || cfg.SessionTTL <= 0 {

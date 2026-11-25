@@ -45,6 +45,12 @@ Registering needs no subscription, but logging in does (below).
 - Administrators (`AdminService`) have their own accounts and sessions. A user session never
   works on the admin panel and an admin session never works anywhere else. The first
   administrator is created on the server with `dental-server create-admin`.
+- An admin session is proven by two things on every call: a JWT (HS256, signed with
+  `ADMIN_TOKEN_KEY`) in the `dental_admin_token` cookie — HttpOnly, Secure, SameSite=Strict,
+  sent only to `AdminService` paths, so scripts in the page cannot steal it — and the session's
+  CSRF token in the `X-CSRF-Token` header, which another site cannot know (stored only as a
+  SHA-256 hash). The JWT names its `admin_sessions` row, which is checked on every call, so
+  logging out or disabling the administrator ends the session at once, before the JWT expires.
 
 ## Online login
 

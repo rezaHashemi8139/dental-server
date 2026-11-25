@@ -450,13 +450,14 @@ func (x *AdminServiceLoginRequest) GetPassword() string {
 }
 
 type AdminServiceLoginResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Session token for every other call. Kept in memory only.
-	SessionToken     string                 `protobuf:"bytes,1,opt,name=session_token,json=sessionToken,proto3" json:"session_token,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
 	SessionExpiresAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=session_expires_at,json=sessionExpiresAt,proto3" json:"session_expires_at,omitempty"`
 	Admin            *Admin                 `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Sent as the header `X-CSRF-Token` on every other call of this session.
+	// Kept by the panel only for as long as the session (never in a cookie).
+	CsrfToken     string `protobuf:"bytes,4,opt,name=csrf_token,json=csrfToken,proto3" json:"csrf_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AdminServiceLoginResponse) Reset() {
@@ -489,13 +490,6 @@ func (*AdminServiceLoginResponse) Descriptor() ([]byte, []int) {
 	return file_dental_v1_admin_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AdminServiceLoginResponse) GetSessionToken() string {
-	if x != nil {
-		return x.SessionToken
-	}
-	return ""
-}
-
 func (x *AdminServiceLoginResponse) GetSessionExpiresAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.SessionExpiresAt
@@ -508,6 +502,13 @@ func (x *AdminServiceLoginResponse) GetAdmin() *Admin {
 		return x.Admin
 	}
 	return nil
+}
+
+func (x *AdminServiceLoginResponse) GetCsrfToken() string {
+	if x != nil {
+		return x.CsrfToken
+	}
+	return ""
 }
 
 type AdminServiceLogoutRequest struct {
@@ -1411,11 +1412,12 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"g\n" +
 	"\x18AdminServiceLoginRequest\x12%\n" +
 	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
-	"\bpassword\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\"\xb2\x01\n" +
-	"\x19AdminServiceLoginResponse\x12#\n" +
-	"\rsession_token\x18\x01 \x01(\tR\fsessionToken\x12H\n" +
+	"\bpassword\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\"\xc1\x01\n" +
+	"\x19AdminServiceLoginResponse\x12H\n" +
 	"\x12session_expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x10sessionExpiresAt\x12&\n" +
-	"\x05admin\x18\x03 \x01(\v2\x10.dental.v1.AdminR\x05admin\"\x1b\n" +
+	"\x05admin\x18\x03 \x01(\v2\x10.dental.v1.AdminR\x05admin\x12\x1d\n" +
+	"\n" +
+	"csrf_token\x18\x04 \x01(\tR\tcsrfTokenJ\x04\b\x01\x10\x02R\rsession_token\"\x1b\n" +
 	"\x19AdminServiceLogoutRequest\"\x1c\n" +
 	"\x1aAdminServiceLogoutResponse\"\xe5\x02\n" +
 	"\x12CreateAdminRequest\x129\n" +

@@ -74,7 +74,7 @@ try {
         # Fill the empty keys with fresh random ones; the rest (DATABASE_URL) still needs editing.
         $rng = [Security.Cryptography.RandomNumberGenerator]::Create()
         $content = (Get-Content .env.example) | ForEach-Object {
-            if ($_ -match '^(KEY_ENCRYPTION_KEY|SIGNING_KEY)=$') {
+            if ($_ -match '^(KEY_ENCRYPTION_KEY|SIGNING_KEY|ADMIN_TOKEN_KEY)=$') {
                 $bytes = New-Object byte[] 32
                 $rng.GetBytes($bytes)
                 $_ + [Convert]::ToBase64String($bytes)

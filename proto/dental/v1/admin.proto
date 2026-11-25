@@ -12,15 +12,26 @@ import "google/protobuf/timestamp.proto";
 // logins and sessions; a user session never works here and an admin session
 // never works anywhere else.
 //
-// Every call except Login needs an admin session: the token from Login as the
-// header `Authorization: Bearer <token>`. Without a valid one, calls fail with
-// UNAUTHENTICATED "unauthenticated".
+// Every call except Login needs an admin session, proven by both of:
+//
+//   - the cookie `dental_admin_token` that Login sets: a JSON Web Token (HS256)
+//     naming the session. It is HttpOnly (scripts in the page can never read it),
+//     Secure, SameSite=Strict and sent only to AdminService paths. Browsers send
+//     it by themselves; other clients send it back as received.
+//   - the header `X-CSRF-Token: <csrf_token from Login>`. Another site can make a
+//     browser send the cookie but cannot know this token, so it cannot act as the
+//     administrator (cross-site request forgery).
+//
+// The session behind the token is checked on every call, so Logout, its expiry
+// or disabling the administrator end it at once. Without a valid session and
+// CSRF token, calls fail with UNAUTHENTICATED "unauthenticated".
 //
 // The first administrator is created on the server with `dental-server create-admin`.
 service AdminService {
   // Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
   rpc Login(AdminServiceLoginRequest) returns (AdminServiceLoginResponse) {}
 
+  // Ends the session at once and removes its cookie.
   rpc Logout(AdminServiceLogoutRequest) returns (AdminServiceLogoutResponse) {}
 
   // Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
@@ -114,10 +125,14 @@ message AdminServiceLoginRequest {
 }
 
 message AdminServiceLoginResponse {
-  // Session token for every other call. Kept in memory only.
-  string session_token = 1;
+  // Was the opaque session token, now the `dental_admin_token` cookie.
+  reserved 1;
+  reserved "session_token";
   google.protobuf.Timestamp session_expires_at = 2;
   Admin admin = 3;
+  // Sent as the header `X-CSRF-Token` on every other call of this session.
+  // Kept by the panel only for as long as the session (never in a cookie).
+  string csrf_token = 4;
 }
 
 message AdminServiceLogoutRequest {}

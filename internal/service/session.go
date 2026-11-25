@@ -103,9 +103,56 @@ type AdminSession struct {
 
 type adminSessionKey struct{}
 
+// How an admin session is proven; see AdminService in proto/dental/v1/admin.proto.
+const (
+	// adminTokenCookie holds the session's JWT.
+	adminTokenCookie = "dental_admin_token"
+	// csrfTokenHeader carries the session's CSRF token.
+	csrfTokenHeader = "X-CSRF-Token"
+	// adminTokenAudience keeps admin tokens from being accepted for anything else.
+	adminTokenAudience = "dental-admin"
+)
+
+// adminCookie returns the cookie that holds an admin session's JWT for maxAge
+// seconds. A negative maxAge removes it.
+func adminCookie(token string, maxAge int) *http.Cookie {
+	return &http.Cookie{
+		Name:  adminTokenCookie,
+		Value: token,
+		// Sent only to AdminService, never to the other services.
+		Path:     "/" + dentalv1connect.AdminServiceName + "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+}
+
+// setCookie adds a cookie to the response of the current handler call.
+func setCookie(ctx context.Context, cookie *http.Cookie) error {
+	call, ok := connect.CallInfoForHandlerContext(ctx)
+	if !ok {
+		return errors.New("no handler call info: cannot set a cookie")
+	}
+	call.ResponseHeader().Add("Set-Cookie", cookie.String())
+	return nil
+}
+
+// cookieValue reads a cookie from the request headers.
+func cookieValue(h http.Header, name string) (string, bool) {
+	cookie, err := (&http.Request{Header: h}).Cookie(name)
+	if err != nil || cookie.Value == "" {
+		return "", false
+	}
+	return cookie.Value, true
+}
+
 // AdminSessionInterceptor guards AdminService, which is served with it instead of
-// SessionInterceptor. Every call except AdminService.Login needs the token of an
-// admin session that is not expired or revoked, of an administrator who is not disabled.
+// SessionInterceptor. Every call except AdminService.Login needs the session's JWT
+// (cookie `dental_admin_token`, signed by this server, not expired) and its CSRF
+// token (header `X-CSRF-Token`), of an admin session that is not expired or revoked,
+// of an administrator who is not disabled. The session is looked up on every call,
+// so a token stops working as soon as its session ends.
 func AdminSessionInterceptor(d *Deps) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
@@ -113,20 +160,30 @@ func AdminSessionInterceptor(d *Deps) connect.UnaryInterceptorFunc {
 				return next(ctx, req)
 			}
 
-			token, ok := bearerToken(req.Header())
-			if !ok {
+			token, ok := cookieValue(req.Header(), adminTokenCookie)
+			csrfToken := req.Header().Get(csrfTokenHeader)
+			if !ok || csrfToken == "" {
+				return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
+			}
+			now := d.Now()
+			claims, err := d.AdminTokens.Verify(token, adminTokenAudience, now)
+			if err != nil {
+				return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
+			}
+			var sessionID, adminID pgtype.UUID
+			if sessionID.Scan(claims.SessionID) != nil || adminID.Scan(claims.Subject) != nil {
 				return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
 			}
 
 			var s AdminSession
-			err := d.DB.QueryRow(ctx, `
+			err = d.DB.QueryRow(ctx, `
 				SELECT s.id, s.admin_id
 				FROM admin_sessions s
 				JOIN admins a ON a.id = s.admin_id
-				WHERE s.token_hash = $1
-				  AND s.revoked_at IS NULL AND s.expires_at > $2
+				WHERE s.id = $1 AND s.admin_id = $2 AND s.csrf_hash = $3
+				  AND s.revoked_at IS NULL AND s.expires_at > $4
 				  AND a.disabled_at IS NULL`,
-				secure.HashToken(token), d.Now(),
+				sessionID, adminID, secure.HashToken(csrfToken), now,
 			).Scan(&s.ID, &s.AdminID)
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
