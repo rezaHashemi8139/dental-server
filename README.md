@@ -1,6 +1,7 @@
 # Dental server
 
-Accounts, installations and local-database keys for the dental desktop app.
+Accounts, installations, local-database keys, synced patient records (never financial
+data) and app updates for the dental desktop app.
 
 - **Go** 1.27
 - **PostgreSQL** 18
@@ -72,6 +73,7 @@ gen/                    generated code — do not edit
 internal/config/        settings from environment / .env
 internal/database/      PostgreSQL connection + migrations
 internal/languages/     downloadable interface languages for the app (see its README)
+internal/releases/      desktop app updates: release.json + installer from UPDATES_DIR, forced updates
 internal/service/       RPC implementations
 internal/statuspage/    HTML status page at / (server + database health)
 main.go                 server setup, interceptors, graceful shutdown
@@ -82,3 +84,13 @@ createadmin.go          `create-admin` command: the first administrator of the a
 
 Set `TLS_CERT_FILE` and `TLS_KEY_FILE`: the desktop app only talks to the server over TLS.
 Without them the server runs plain HTTP/2 (h2c), which is for local development only.
+
+## Publishing a desktop app update
+
+1. In the desktop repository run `pnpm build`. It asks for the version and whether the
+   update is forced, and writes the signed release to its `build/update/` folder.
+2. Copy the files of that folder into `UPDATES_DIR` (default `updates/` next to the binary),
+   replacing the previous release. It is picked up without a restart.
+3. Installed apps find it within the hour (or at start) and offer it. If it is forced,
+   older apps stop until they install it. To force it later, raise `minimumVersion` in
+   `release.json` by hand.

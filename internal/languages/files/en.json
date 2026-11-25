@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 14,
+    "version": 16,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -35,11 +35,21 @@
       "submit": "Create account",
       "working": "Creating account..."
     },
+    "changePassword": {
+      "title": "Choose a new password",
+      "description": "This account has a temporary password. Before logging in, choose a new password that only you know.",
+      "submit": "Save password and log in",
+      "working": "Saving password...",
+      "back": "Back to login",
+      "changed": "Your password has been changed. From now on, log in with the new password."
+    },
     "fields": {
       "fullName": "Full name",
       "username": "Username",
       "password": "Password",
-      "confirmPassword": "Repeat password"
+      "confirmPassword": "Repeat password",
+      "newPassword": "New password",
+      "confirmNewPassword": "Repeat new password"
     },
     "hints": {
       "username": "3–32 characters: English letters, digits, dot, dash or underscore.",
@@ -80,7 +90,13 @@
       "clockTampered": "The computer's date and time are wrong. Correct them and try again.",
       "offlineExpired": "Offline access has expired. Connect to the internet to log in.",
       "offlineNotAvailable": "The server cannot be reached, and this user has not logged in on this computer with an internet connection before.",
-      "databaseUnavailable": "The clinic database could not be opened. Log in once with an internet connection."
+      "databaseUnavailable": "The clinic database could not be opened. Log in once with an internet connection.",
+      "noClinic": "This computer was set up before clinics were registered and must be set up again. Contact support.",
+      "passwordChangeRequired": "This account has a temporary password that must be changed before logging in.",
+      "subscriptionInactive": "The clinic owner's subscription is not active. Contact support to renew it.",
+      "clinicLimitExceeded": "The clinic owner has more clinics than their subscription allows. Upgrade the subscription.",
+      "deviceLimitExceeded": "This clinic has more computers than its subscription allows. Upgrade the subscription or block another computer.",
+      "passwordUnchanged": "The new password must be different from the current one."
     }
   },
   "setup": {
@@ -124,10 +140,7 @@
     "errors": {
       "required": "This computer has not been set up yet. Register the clinic first.",
       "alreadyDone": "This computer has already been set up.",
-      "licenseNumberTaken": "A clinic with this license number is already registered.",
-      "nationalIdTaken": "This national ID belongs to another account.",
-      "invalidNationalId": "This national ID is not valid. Check its 10 digits.",
-      "nationalIdMismatch": "This national ID does not match the one on file for this account."
+      "licenseNumberTaken": "A clinic with this license number is already registered."
     }
   },
   "connectivity": {
@@ -142,6 +155,74 @@
       "serverUnavailable": "The network is connected, but the server is not responding. The app works with the local database and keeps retrying."
     },
     "checkedAt": "Last checked: {{time}}"
+  },
+  "sync": {
+    "state": {
+      "offline": "Sync waiting for a connection",
+      "syncing": "Syncing...",
+      "idle": "Synced",
+      "error": "Sync failed"
+    },
+    "pending": "Changes waiting to be sent: {{count}}",
+    "upToDate": "All changes are saved on the server.",
+    "rejected": "Records the server refused, waiting to be fixed: {{count}}",
+    "lastSyncedAt": "Last synced: {{time}}",
+    "financialLocal": "Financial data is never synced and stays on this computer only."
+  },
+  "update": {
+    "button": "Update",
+    "available": "Version {{version}} is available",
+    "description": "You have version {{current}}. Installing closes and reopens the app, and you will need to log in again.",
+    "install": "Install update",
+    "installing": "Installing...",
+    "downloading": "Downloading...",
+    "downloadingPercent": "Downloading... {{percent}}%",
+    "checkAgain": "Check again",
+    "loggedOut": "You were logged out to install the update.",
+    "required": {
+      "title": "Update required",
+      "description": "This version of the app ({{current}}) can no longer be used. To continue, install version {{minimum}} or newer.",
+      "descriptionNoVersion": "This version of the app ({{current}}) can no longer be used. To continue, install the new version.",
+      "offline": "Connect to the internet to get the new version.",
+      "notFound": "The new version is not on the server yet. Check again a little later.",
+      "dataSafe": "The data on this computer is kept, and changes not sent yet are sent after the update."
+    },
+    "errors": {
+      "required": "This version of the app can no longer be used. Update the app first.",
+      "failed": "The update failed. ({{details}})",
+      "noUpdate": "No update found to install. Check again."
+    }
+  },
+  "person": {
+    "errors": {
+      "invalidNationalId": "This national ID is not valid. Check its 10 digits.",
+      "invalidForeignId": "This FIDA code is not valid. It must have 5 to 20 English letters or digits.",
+      "invalidNationality": "Choose the nationality. A foreign national's nationality cannot be Iran.",
+      "identityTaken": "This national ID or FIDA code belongs to another account.",
+      "identityMismatch": "This national ID or FIDA code does not match the one on file for this account."
+    }
+  },
+  "patients": {
+    "errors": {
+      "nameRequired": "Enter the patient's first and last name.",
+      "invalidGender": "This gender is not valid.",
+      "invalidBirthDate": "This date of birth is not valid.",
+      "invalidPhone": "The phone number must have 7 to 15 digits (optionally starting with +).",
+      "tooLong": "This text is too long. At most {{max}} characters are allowed.",
+      "notFound": "This patient was not found.",
+      "identityLocked": "The national ID or FIDA code of a patient already saved on the server cannot be changed.",
+      "identityTaken": "A patient with this national ID or FIDA code already exists.",
+      "historyNotFound": "No clinic has a patient with this national ID or FIDA code.",
+      "historyNeedsServer": "Seeing a patient's history in other clinics needs a connection to the server."
+    }
+  },
+  "treatments": {
+    "errors": {
+      "procedureRequired": "Describe the treatment.",
+      "invalidPerformer": "Who performed the treatment is not valid.",
+      "invalidDate": "The treatment date is not valid.",
+      "notFound": "This treatment was not found."
+    }
   },
   "home": {
     "welcome": "Welcome, {{name}}",
@@ -169,7 +250,7 @@
     "clear": {
       "title": "Clear data",
       "summary": "Permanently delete all clinic data on this computer.",
-      "description": "All clinic data on this computer is deleted, and then you are logged out. When you log in again, you are still the manager.",
+      "description": "All clinic data on this computer is deleted, and then you are logged out. When you log in again, you are still the manager. Patient records saved on the server are downloaded again at the next sync, but financial data exists only on this computer and is deleted for good.",
       "warning": "This cannot be undone. Without a backup, the deleted data is gone for good. If needed, make a backup first.",
       "confirmLabel": "To confirm, type your username: {{username}}",
       "submit": "Delete all data",
@@ -304,6 +385,7 @@
     "languageNotFound": "This language is no longer offered by the server.",
     "invalidLanguageFile": "The downloaded language file is not valid. ({{details}})",
     "invalidLanguageCode": "\"{{code}}\" is not a valid language code.",
-    "fileSystem": "Could not read or save the file. ({{details}})"
+    "fileSystem": "Could not read or save the file. ({{details}})",
+    "notLoggedIn": "Log in first."
   }
 }

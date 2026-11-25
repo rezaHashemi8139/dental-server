@@ -1,8 +1,9 @@
 # Security design: local database keys
 
-Each installation of the desktop app keeps patient data in a local SQLCipher
+Each installation of the desktop app keeps the clinic's data in a local SQLCipher
 database. Its key never stays on disk in a usable form: it comes from this
-server at login and is rotated on every online login.
+server at login and is rotated on every online login. Patient records (not
+financial data) are also synced to this server; see "Patient records" below.
 
 The API contract is in `proto/dental/v1/` — the comments there are the reference
 for message formats and the crypto scheme.
@@ -11,7 +12,7 @@ for message formats and the crypto scheme.
 
 | Where | What |
 |---|---|
-| Server (PostgreSQL) | users (+ identity: national ID or FIDA code, and nationality), clinics (+ unique license number, owner), installations (+ machine info, clinic), clinic membership + admin flag, subscriptions of clinic owners, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions; administrators and their sessions, kept apart from users |
+| Server (PostgreSQL) | users (+ identity: national ID or FIDA code, and nationality), clinics (+ unique license number, owner), installations (+ machine info, clinic), clinic membership + admin flag, subscriptions of clinic owners, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions; administrators and their sessions, kept apart from users; patients and their treatments (never financial data), and the log of who viewed a patient's history |
 | Desktop app (Rust) | installation id + secret (DPAPI), per-user offline vault, roles and permissions (inside the encrypted local DB) |
 | Both | server Ed25519 public key built into the app, to verify offline grants |
 
@@ -109,3 +110,44 @@ their own credentials.
 
 Set `installations.revoked_at`: no more logins or keys from the server. Offline
 logins keep working until their grant expires, so keep `offline_access` short.
+
+## Patient records
+
+The desktop app always works on its local database, online or offline. Patients
+and their treatments are also synced with this server (`SyncService`,
+`proto/dental/v1/sync.proto`):
+
+- Every synced row carries a `sync_state` in the local database: `new` (never stored
+  by the server), `changed` (waiting to be sent), `synced`, or `rejected` (refused by
+  the server; not sent again until it is fixed). Changes made offline wait there and
+  are pushed as soon as the session is online.
+- **Financial data never leaves the computer.** The API has no field for it, the app
+  only reads the tables listed in `SYNCED_TABLES` (src-tauri/src/localdb.rs), and a
+  test there fails when a table is added without being declared synced or local-only,
+  or when a synced table has a column that looks financial.
+- A patient is a person, unique across the system by identity (`PersonIdentity`). The
+  patient id is derived from the identity (SHA-256, see `Patient.id`), so installations
+  that add the same person offline agree on the id. Every clinic that sends a patient,
+  or records a treatment for them, is linked to them (`clinic_patients`) and receives
+  later changes to their details.
+- Treatments belong to the clinic that recorded them: only its installations receive
+  or change them. Deletions are kept as tombstones, so they sync too.
+- The latest change wins, record by record (`updated_at`, the client's clock, capped at
+  the server's time so a clock running ahead cannot win forever).
+- Pull returns changes after a revision (`sync_revision_seq`). Every synced write takes
+  its revision inside one global advisory lock, so revisions become visible in order
+  and an installation never skips a change.
+- Any member of any clinic can see a patient's history across clinics by identity
+  (`PatientService.GetPatientHistory`). Every view is logged in
+  `patient_history_views` (who, which clinic and installation, when), in the same
+  transaction as the read. Patient consent (an SMS code) is planned before this opens up.
+
+## Forced updates
+
+The server publishes the current desktop app release from `UPDATES_DIR`
+(`internal/releases`): the installer, signed with the release signing key (its
+public half is built into the app), and `release.json`. Apps update themselves from
+it. Its `minimumVersion` forces an update: `HealthService.Check` reports it, older
+apps stop working until they have updated (they remember it, so this holds offline
+too), and `AppVersionInterceptor` refuses their calls with `update_required`
+(apps send their version in the `Dental-App-Version` header).

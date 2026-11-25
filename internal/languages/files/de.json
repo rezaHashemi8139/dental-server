@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 14,
+    "version": 16,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -35,11 +35,21 @@
       "submit": "Konto erstellen",
       "working": "Konto wird erstellt..."
     },
+    "changePassword": {
+      "title": "Neues Passwort wählen",
+      "description": "Dieses Konto hat ein vorläufiges Passwort. Wählen Sie vor der Anmeldung ein neues Passwort, das nur Sie kennen.",
+      "submit": "Passwort speichern und anmelden",
+      "working": "Passwort wird gespeichert...",
+      "back": "Zurück zur Anmeldung",
+      "changed": "Ihr Passwort wurde geändert. Melden Sie sich ab jetzt mit dem neuen Passwort an."
+    },
     "fields": {
       "fullName": "Vollständiger Name",
       "username": "Benutzername",
       "password": "Passwort",
-      "confirmPassword": "Passwort wiederholen"
+      "confirmPassword": "Passwort wiederholen",
+      "newPassword": "Neues Passwort",
+      "confirmNewPassword": "Neues Passwort wiederholen"
     },
     "hints": {
       "username": "3–32 Zeichen: englische Buchstaben, Ziffern, Punkt, Bindestrich oder Unterstrich.",
@@ -80,7 +90,13 @@
       "clockTampered": "Datum und Uhrzeit des Computers sind falsch. Korrigieren Sie sie und versuchen Sie es erneut.",
       "offlineExpired": "Der Offline-Zugang ist abgelaufen. Verbinden Sie sich mit dem Internet, um sich anzumelden.",
       "offlineNotAvailable": "Der Server ist nicht erreichbar, und dieser Benutzer hat sich auf diesem Computer noch nie mit Internetverbindung angemeldet.",
-      "databaseUnavailable": "Die Praxisdatenbank konnte nicht geöffnet werden. Melden Sie sich einmal mit Internetverbindung an."
+      "databaseUnavailable": "Die Praxisdatenbank konnte nicht geöffnet werden. Melden Sie sich einmal mit Internetverbindung an.",
+      "noClinic": "Dieser Computer wurde eingerichtet, bevor Praxen registriert wurden, und muss neu eingerichtet werden. Wenden Sie sich an den Support.",
+      "passwordChangeRequired": "Dieses Konto hat ein vorläufiges Passwort, das vor der Anmeldung geändert werden muss.",
+      "subscriptionInactive": "Das Abonnement des Praxisinhabers ist nicht aktiv. Wenden Sie sich zur Verlängerung an den Support.",
+      "clinicLimitExceeded": "Der Praxisinhaber hat mehr Praxen, als sein Abonnement erlaubt. Erweitern Sie das Abonnement.",
+      "deviceLimitExceeded": "Diese Praxis hat mehr Computer, als ihr Abonnement erlaubt. Erweitern Sie das Abonnement oder sperren Sie einen anderen Computer.",
+      "passwordUnchanged": "Das neue Passwort muss sich vom aktuellen unterscheiden."
     }
   },
   "setup": {
@@ -124,10 +140,7 @@
     "errors": {
       "required": "Dieser Computer ist noch nicht eingerichtet. Registrieren Sie zuerst die Praxis.",
       "alreadyDone": "Dieser Computer ist bereits eingerichtet.",
-      "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert.",
-      "nationalIdTaken": "Diese Identifikationsnummer gehört zu einem anderen Konto.",
-      "invalidNationalId": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
-      "nationalIdMismatch": "Diese Identifikationsnummer stimmt nicht mit der für dieses Konto hinterlegten überein."
+      "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert."
     }
   },
   "connectivity": {
@@ -142,6 +155,74 @@
       "serverUnavailable": "Das Netzwerk ist verbunden, aber der Server antwortet nicht. Die App arbeitet mit der lokalen Datenbank und versucht es weiter."
     },
     "checkedAt": "Zuletzt geprüft: {{time}}"
+  },
+  "sync": {
+    "state": {
+      "offline": "Synchronisierung wartet auf Verbindung",
+      "syncing": "Wird synchronisiert...",
+      "idle": "Synchronisiert",
+      "error": "Synchronisierung fehlgeschlagen"
+    },
+    "pending": "Änderungen, die noch gesendet werden: {{count}}",
+    "upToDate": "Alle Änderungen sind auf dem Server gespeichert.",
+    "rejected": "Vom Server abgelehnte Einträge, die korrigiert werden müssen: {{count}}",
+    "lastSyncedAt": "Zuletzt synchronisiert: {{time}}",
+    "financialLocal": "Finanzdaten werden nie synchronisiert und bleiben nur auf diesem Computer."
+  },
+  "update": {
+    "button": "Aktualisieren",
+    "available": "Version {{version}} ist verfügbar",
+    "description": "Sie haben Version {{current}}. Bei der Installation wird die App geschlossen und neu gestartet; danach melden Sie sich erneut an.",
+    "install": "Update installieren",
+    "installing": "Wird installiert...",
+    "downloading": "Wird heruntergeladen...",
+    "downloadingPercent": "Wird heruntergeladen... {{percent}} %",
+    "checkAgain": "Erneut prüfen",
+    "loggedOut": "Sie wurden abgemeldet, um das Update zu installieren.",
+    "required": {
+      "title": "Update erforderlich",
+      "description": "Diese Version der App ({{current}}) kann nicht mehr verwendet werden. Installieren Sie Version {{minimum}} oder neuer, um fortzufahren.",
+      "descriptionNoVersion": "Diese Version der App ({{current}}) kann nicht mehr verwendet werden. Installieren Sie die neue Version, um fortzufahren.",
+      "offline": "Verbinden Sie sich mit dem Internet, um die neue Version zu erhalten.",
+      "notFound": "Die neue Version ist noch nicht auf dem Server. Prüfen Sie es etwas später erneut.",
+      "dataSafe": "Die Daten auf diesem Computer bleiben erhalten; noch nicht gesendete Änderungen werden nach dem Update gesendet."
+    },
+    "errors": {
+      "required": "Diese Version der App kann nicht mehr verwendet werden. Aktualisieren Sie zuerst die App.",
+      "failed": "Das Update ist fehlgeschlagen. ({{details}})",
+      "noUpdate": "Kein Update zum Installieren gefunden. Prüfen Sie erneut."
+    }
+  },
+  "person": {
+    "errors": {
+      "invalidNationalId": "Diese nationale Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
+      "invalidForeignId": "Dieser FIDA-Code ist ungültig. Er muss aus 5 bis 20 lateinischen Buchstaben oder Ziffern bestehen.",
+      "invalidNationality": "Wählen Sie die Staatsangehörigkeit. Bei ausländischen Staatsangehörigen kann sie nicht Iran sein.",
+      "identityTaken": "Diese Identifikationsnummer oder dieser FIDA-Code gehört zu einem anderen Konto.",
+      "identityMismatch": "Diese Identifikationsnummer oder dieser FIDA-Code stimmt nicht mit dem für dieses Konto hinterlegten überein."
+    }
+  },
+  "patients": {
+    "errors": {
+      "nameRequired": "Geben Sie Vor- und Nachnamen des Patienten ein.",
+      "invalidGender": "Dieses Geschlecht ist ungültig.",
+      "invalidBirthDate": "Dieses Geburtsdatum ist ungültig.",
+      "invalidPhone": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
+      "tooLong": "Dieser Text ist zu lang. Höchstens {{max}} Zeichen sind erlaubt.",
+      "notFound": "Dieser Patient wurde nicht gefunden.",
+      "identityLocked": "Die Identifikationsnummer oder der FIDA-Code eines bereits auf dem Server gespeicherten Patienten kann nicht geändert werden.",
+      "identityTaken": "Ein Patient mit dieser Identifikationsnummer oder diesem FIDA-Code existiert bereits.",
+      "historyNotFound": "Keine Praxis hat einen Patienten mit dieser Identifikationsnummer oder diesem FIDA-Code.",
+      "historyNeedsServer": "Für die Behandlungshistorie aus anderen Praxen ist eine Verbindung zum Server nötig."
+    }
+  },
+  "treatments": {
+    "errors": {
+      "procedureRequired": "Beschreiben Sie die Behandlung.",
+      "invalidPerformer": "Die Angabe, wer die Behandlung durchgeführt hat, ist ungültig.",
+      "invalidDate": "Das Behandlungsdatum ist ungültig.",
+      "notFound": "Diese Behandlung wurde nicht gefunden."
+    }
   },
   "home": {
     "welcome": "Willkommen, {{name}}",
@@ -169,7 +250,7 @@
     "clear": {
       "title": "Daten löschen",
       "summary": "Alle Praxisdaten auf diesem Computer endgültig löschen.",
-      "description": "Alle Praxisdaten auf diesem Computer werden gelöscht, danach werden Sie abgemeldet. Nach der erneuten Anmeldung haben Sie weiterhin die Rolle Leitung.",
+      "description": "Alle Praxisdaten auf diesem Computer werden gelöscht, danach werden Sie abgemeldet. Nach der erneuten Anmeldung haben Sie weiterhin die Rolle Leitung. Auf dem Server gespeicherte Patientendaten werden bei der nächsten Synchronisierung erneut geladen, Finanzdaten gibt es aber nur auf diesem Computer und sie werden endgültig gelöscht.",
       "warning": "Das lässt sich nicht rückgängig machen. Ohne Sicherung sind die gelöschten Daten endgültig verloren. Erstellen Sie bei Bedarf zuerst eine Sicherung.",
       "confirmLabel": "Geben Sie zur Bestätigung Ihren Benutzernamen ein: {{username}}",
       "submit": "Alle Daten löschen",
@@ -304,6 +385,7 @@
     "languageNotFound": "Diese Sprache wird vom Server nicht mehr angeboten.",
     "invalidLanguageFile": "Die heruntergeladene Sprachdatei ist ungültig. ({{details}})",
     "invalidLanguageCode": "„{{code}}“ ist kein gültiger Sprachcode.",
-    "fileSystem": "Die Datei konnte nicht gelesen oder gespeichert werden. ({{details}})"
+    "fileSystem": "Die Datei konnte nicht gelesen oder gespeichert werden. ({{details}})",
+    "notLoggedIn": "Melden Sie sich zuerst an."
   }
 }
