@@ -104,6 +104,110 @@ func (s *InstallationService) Register(ctx context.Context, req *dentalv1.Regist
 	}, nil
 }
 
+// ListMyClinics lists the clinics an account owns or administers, and whether it can
+// add this computer to each, by the same rules as Register and AuthService.Login.
+func (s *InstallationService) ListMyClinics(ctx context.Context, req *dentalv1.ListMyClinicsRequest) (*dentalv1.ListMyClinicsResponse, error) {
+	a, err := checkAccount(ctx, s.d.DB, req.GetUsername(), req.GetPassword(), false)
+	if err != nil {
+		return nil, err
+	}
+	now := s.d.Now()
+	res := &dentalv1.ListMyClinicsResponse{User: a.User, IdentityOnFile: a.Identity.Valid}
+
+	// Each clinic with its owner, its installations that are not revoked, and its
+	// position among the owner's clinics, oldest first (see checkClinicAccess).
+	type listed struct {
+		clinic  *dentalv1.MyClinic
+		ownerID pgtype.UUID
+		rank    int64
+	}
+	var clinics []listed
+	rows, err := s.d.DB.Query(ctx, `
+		SELECT c.id, c.name, c.license_number, c.city, c.address, c.owner_id, o.full_name,
+		       (SELECT count(*) FROM installations i WHERE i.clinic_id = c.id AND i.revoked_at IS NULL),
+		       (SELECT count(*) FROM clinics c2
+		        WHERE c2.owner_id = c.owner_id AND (c2.created_at, c2.id) <= (c.created_at, c.id))
+		FROM clinic_members m
+		JOIN clinics c ON c.id = m.clinic_id
+		JOIN users o ON o.id = c.owner_id
+		WHERE m.user_id = $1 AND m.is_admin
+		ORDER BY c.owner_id = $1 DESC, c.created_at, c.id`, a.ID)
+	if err != nil {
+		return nil, internal(err)
+	}
+	for rows.Next() {
+		var id pgtype.UUID
+		var installations int64
+		l := listed{clinic: &dentalv1.MyClinic{}}
+		if err := rows.Scan(&id, &l.clinic.Name, &l.clinic.LicenseNumber, &l.clinic.City, &l.clinic.Address,
+			&l.ownerID, &l.clinic.OwnerFullName, &installations, &l.rank); err != nil {
+			rows.Close()
+			return nil, internal(err)
+		}
+		l.clinic.Id, l.clinic.IsOwner, l.clinic.InstallationCount = uuidBytes(id), l.ownerID == a.ID, uint32(installations)
+		clinics = append(clinics, l)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, internal(err)
+	}
+
+	// What each owner's subscription in force allows; ok = false if none.
+	type paidStatus struct {
+		paid paidTime
+		ok   bool
+	}
+	paidByOwner := map[pgtype.UUID]paidStatus{}
+	paidOf := func(ownerID pgtype.UUID) (paidStatus, error) {
+		if p, found := paidByOwner[ownerID]; found {
+			return p, nil
+		}
+		p, ok, err := paidTimeAt(ctx, s.d.DB, ownerID, now)
+		if err != nil {
+			return paidStatus{}, internal(err)
+		}
+		paidByOwner[ownerID] = paidStatus{p, ok}
+		return paidStatus{p, ok}, nil
+	}
+
+	for _, l := range clinics {
+		p, err := paidOf(l.ownerID)
+		if err != nil {
+			return nil, err
+		}
+		c := l.clinic
+		if p.ok {
+			c.MaxInstallations, c.SubscriptionEndsAt = uint32(p.paid.MaxDevicesPerClinic), timestamppb.New(p.paid.EndsAt)
+		}
+		switch {
+		case !c.IsOwner:
+			c.CannotAddReason = reasonNotClinicOwner
+		case !p.ok:
+			c.CannotAddReason = reasonSubscriptionInactive
+		case l.rank > int64(p.paid.MaxClinics):
+			c.CannotAddReason = reasonClinicLimitExceeded
+		case int64(c.InstallationCount) >= int64(p.paid.MaxDevicesPerClinic):
+			c.CannotAddReason = reasonDeviceLimitExceeded
+		}
+		res.Clinics = append(res.Clinics, c)
+	}
+
+	// The account's own subscription, for a clinic it would add.
+	own, err := paidOf(a.ID)
+	if err != nil {
+		return nil, err
+	}
+	if own.ok {
+		res.SubscriptionEndsAt, res.MaxClinics = timestamppb.New(own.paid.EndsAt), uint32(own.paid.MaxClinics)
+	}
+	var owned int64
+	if err := s.d.DB.QueryRow(ctx, `SELECT count(*) FROM clinics WHERE owner_id = $1`, a.ID).Scan(&owned); err != nil {
+		return nil, internal(err)
+	}
+	res.OwnedClinicCount = uint32(owned)
+	return res, nil
+}
+
 // createOwner creates the account of a clinic owner who has none yet.
 func createOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.NewOwner) (*dentalv1.User, pgtype.UUID, error) {
 	return insertUser(ctx, tx, account{
@@ -119,10 +223,13 @@ func createOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.NewOwner) (*dentalv
 // so their first login needs nothing else.
 func createClinic(ctx context.Context, tx pgx.Tx, c *dentalv1.ClinicInfo, ownerID pgtype.UUID) (pgtype.UUID, error) {
 	var id pgtype.UUID
+	loc := c.GetLocation()
 	err := tx.QueryRow(ctx, `
-		INSERT INTO clinics (name, license_number, phone, city, address, postal_code, owner_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		c.GetName(), c.GetLicenseNumber(), c.GetPhone(), c.GetCity(), c.GetAddress(), c.GetPostalCode(), ownerID,
+		INSERT INTO clinics (name, license_number, phone, city, address, postal_code,
+		                     latitude, longitude, owner_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+		c.GetName(), c.GetLicenseNumber(), c.GetPhone(), c.GetCity(), c.GetAddress(), c.GetPostalCode(),
+		loc.GetLatitude(), loc.GetLongitude(), ownerID,
 	).Scan(&id)
 	if uniqueViolation(err, "clinics_license_number_key") {
 		return id, fail(connect.CodeAlreadyExists, reasonLicenseNumberTaken)
@@ -160,44 +267,73 @@ func ownedClinic(ctx context.Context, tx pgx.Tx, licenseNumber string, ownerID p
 // checkExistingOwner checks the credentials and identity of an existing account,
 // saving the identity if the account has none yet.
 func checkExistingOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.ExistingOwner) (*dentalv1.User, pgtype.UUID, error) {
-	// Unknown users are checked against a dummy hash so timing does not reveal them (as in Login).
-	user := &dentalv1.User{}
-	var id pgtype.UUID
-	var passwordHash, identityType string
-	var identity pgtype.Text
-	var disabledAt pgtype.Timestamptz
-	err := tx.QueryRow(ctx, `
-		SELECT id, username, full_name, password_hash, identity_type, identity, disabled_at
-		FROM users WHERE lower(username) = lower($1) FOR UPDATE`, o.GetUsername(),
-	).Scan(&id, &user.Username, &user.FullName, &passwordHash, &identityType, &identity, &disabledAt)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return nil, id, internal(err)
-	}
-	if !secure.VerifyPassword(o.GetPassword(), passwordHash) {
-		return nil, id, fail(connect.CodeUnauthenticated, reasonInvalidCredentials)
-	}
-	if disabledAt.Valid {
-		return nil, id, fail(connect.CodePermissionDenied, reasonUserDisabled)
+	a, err := checkAccount(ctx, tx, o.GetUsername(), o.GetPassword(), true)
+	if err != nil {
+		return nil, a.ID, err
 	}
 
 	given := o.GetIdentity()
 	switch {
-	case !identity.Valid:
+	case given == nil && !a.Identity.Valid:
+		return nil, a.ID, fail(connect.CodeFailedPrecondition, reasonIdentityRequired)
+	case given == nil:
+		// The identity on file stands.
+	case !a.Identity.Valid:
 		_, err := tx.Exec(ctx, `
 			UPDATE users SET identity_type = $2, identity = $3, nationality = $4, updated_at = now() WHERE id = $1`,
-			id, identityTypeNames[given.GetType()], given.GetNumber(), given.GetNationality())
+			a.ID, identityTypeNames[given.GetType()], given.GetNumber(), given.GetNationality())
 		if uniqueViolation(err, "users_identity_key") {
-			return nil, id, fail(connect.CodeAlreadyExists, reasonIdentityTaken)
+			return nil, a.ID, fail(connect.CodeAlreadyExists, reasonIdentityTaken)
 		}
 		if err != nil {
-			return nil, id, internal(err)
+			return nil, a.ID, internal(err)
 		}
-	case identityType != identityTypeNames[given.GetType()] || identity.String != given.GetNumber():
-		return nil, id, fail(connect.CodeFailedPrecondition, reasonIdentityMismatch)
+	case a.IdentityType != identityTypeNames[given.GetType()] || a.Identity.String != given.GetNumber():
+		return nil, a.ID, fail(connect.CodeFailedPrecondition, reasonIdentityMismatch)
 	}
+	return a.User, a.ID, nil
+}
 
-	user.Id = uuidBytes(id)
-	return user, id, nil
+// checkedAccount is an account whose password was verified.
+type checkedAccount struct {
+	ID   pgtype.UUID
+	User *dentalv1.User
+	// identity_type and identity; Identity is NULL for accounts made before identities were required.
+	IdentityType string
+	Identity     pgtype.Text
+}
+
+// checkAccount proves an account with its password, as AuthService.Login does, and
+// fails with invalid_credentials, user_disabled or password_change_required.
+// forUpdate locks the account's row until the transaction ends.
+func checkAccount(ctx context.Context, q querier, username, password string, forUpdate bool) (checkedAccount, error) {
+	query := `
+		SELECT id, username, full_name, password_hash, identity_type, identity, disabled_at, must_change_password
+		FROM users WHERE lower(username) = lower($1)`
+	if forUpdate {
+		query += ` FOR UPDATE`
+	}
+	// Unknown users are checked against a dummy hash so timing does not reveal them (as in Login).
+	a := checkedAccount{User: &dentalv1.User{}}
+	var passwordHash string
+	var disabledAt pgtype.Timestamptz
+	var mustChangePassword bool
+	err := q.QueryRow(ctx, query, username).Scan(&a.ID, &a.User.Username, &a.User.FullName, &passwordHash,
+		&a.IdentityType, &a.Identity, &disabledAt, &mustChangePassword)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return a, internal(err)
+	}
+	if !secure.VerifyPassword(password, passwordHash) {
+		return a, fail(connect.CodeUnauthenticated, reasonInvalidCredentials)
+	}
+	if disabledAt.Valid {
+		return a, fail(connect.CodePermissionDenied, reasonUserDisabled)
+	}
+	if mustChangePassword {
+		return a, fail(connect.CodeFailedPrecondition, reasonPasswordChangeRequired)
+	}
+	a.User.Id = uuidBytes(a.ID)
+	return a, nil
 }
 
 // uniqueViolation reports whether err is a unique violation of the named constraint or index.

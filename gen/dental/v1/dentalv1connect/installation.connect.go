@@ -36,6 +36,9 @@ const (
 	// InstallationServiceRegisterProcedure is the fully-qualified name of the InstallationService's
 	// Register RPC.
 	InstallationServiceRegisterProcedure = "/dental.v1.InstallationService/Register"
+	// InstallationServiceListMyClinicsProcedure is the fully-qualified name of the
+	// InstallationService's ListMyClinics RPC.
+	InstallationServiceListMyClinicsProcedure = "/dental.v1.InstallationService/ListMyClinics"
 )
 
 // InstallationServiceClient is a client for the dental.v1.InstallationService service.
@@ -50,6 +53,8 @@ type InstallationServiceClient interface {
 	// Registering needs no subscription, but nobody can log in until the owner has
 	// one (see AuthService.Login).
 	//
+	// A new clinic needs its license number, phone, address and location (ClinicInfo).
+	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
@@ -57,11 +62,24 @@ type InstallationServiceClient interface {
 	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
+	// - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary
+	//   password (see AuthService.ChangePassword);
 	// - FAILED_PRECONDITION "identity_mismatch": an existing owner has another identity on file;
+	// - FAILED_PRECONDITION "identity_required": an existing owner has no identity on file
+	//   and none was sent (ExistingOwner.identity);
 	// - INVALID_ARGUMENT "invalid_argument": existing_clinic with a new_owner;
 	// - NOT_FOUND "clinic_not_found": no clinic has existing_clinic.license_number;
 	// - PERMISSION_DENIED "not_clinic_owner": the clinic belongs to someone else.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
+	// The clinics an account owns or administers, for a first start where the person
+	// logs in before this computer is registered: with none, the app offers to add a
+	// clinic; otherwise the person picks the clinic this computer belongs to (Register
+	// with existing_clinic and existing_owner) or adds another one. No login needed:
+	// the account is proven with its password, like ExistingOwner.
+	//
+	// Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
+	// FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
+	ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error)
 }
 
 // NewInstallationServiceClient constructs a client for the dental.v1.InstallationService service.
@@ -81,17 +99,33 @@ func NewInstallationServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(installationServiceMethods.ByName("Register")),
 			connect.WithClientOptions(opts...),
 		),
+		listMyClinics: connect.NewClient[v1.ListMyClinicsRequest, v1.ListMyClinicsResponse](
+			httpClient,
+			baseURL+InstallationServiceListMyClinicsProcedure,
+			connect.WithSchema(installationServiceMethods.ByName("ListMyClinics")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // installationServiceClient implements InstallationServiceClient.
 type installationServiceClient struct {
-	register *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
+	register      *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
+	listMyClinics *connect.Client[v1.ListMyClinicsRequest, v1.ListMyClinicsResponse]
 }
 
 // Register calls dental.v1.InstallationService.Register.
 func (c *installationServiceClient) Register(ctx context.Context, req *v1.RegisterRequest) (*v1.RegisterResponse, error) {
 	response, err := c.register.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ListMyClinics calls dental.v1.InstallationService.ListMyClinics.
+func (c *installationServiceClient) ListMyClinics(ctx context.Context, req *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error) {
+	response, err := c.listMyClinics.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -110,6 +144,8 @@ type InstallationServiceHandler interface {
 	// Registering needs no subscription, but nobody can log in until the owner has
 	// one (see AuthService.Login).
 	//
+	// A new clinic needs its license number, phone, address and location (ClinicInfo).
+	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
@@ -117,11 +153,24 @@ type InstallationServiceHandler interface {
 	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
+	// - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary
+	//   password (see AuthService.ChangePassword);
 	// - FAILED_PRECONDITION "identity_mismatch": an existing owner has another identity on file;
+	// - FAILED_PRECONDITION "identity_required": an existing owner has no identity on file
+	//   and none was sent (ExistingOwner.identity);
 	// - INVALID_ARGUMENT "invalid_argument": existing_clinic with a new_owner;
 	// - NOT_FOUND "clinic_not_found": no clinic has existing_clinic.license_number;
 	// - PERMISSION_DENIED "not_clinic_owner": the clinic belongs to someone else.
 	Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error)
+	// The clinics an account owns or administers, for a first start where the person
+	// logs in before this computer is registered: with none, the app offers to add a
+	// clinic; otherwise the person picks the clinic this computer belongs to (Register
+	// with existing_clinic and existing_owner) or adds another one. No login needed:
+	// the account is proven with its password, like ExistingOwner.
+	//
+	// Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
+	// FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
+	ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error)
 }
 
 // NewInstallationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -137,10 +186,18 @@ func NewInstallationServiceHandler(svc InstallationServiceHandler, opts ...conne
 		connect.WithSchema(installationServiceMethods.ByName("Register")),
 		connect.WithHandlerOptions(opts...),
 	)
+	installationServiceListMyClinicsHandler := connect.NewUnaryHandlerSimple(
+		InstallationServiceListMyClinicsProcedure,
+		svc.ListMyClinics,
+		connect.WithSchema(installationServiceMethods.ByName("ListMyClinics")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.InstallationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case InstallationServiceRegisterProcedure:
 			installationServiceRegisterHandler.ServeHTTP(w, r)
+		case InstallationServiceListMyClinicsProcedure:
+			installationServiceListMyClinicsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -152,4 +209,8 @@ type UnimplementedInstallationServiceHandler struct{}
 
 func (UnimplementedInstallationServiceHandler) Register(context.Context, *v1.RegisterRequest) (*v1.RegisterResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.InstallationService.Register is not implemented"))
+}
+
+func (UnimplementedInstallationServiceHandler) ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.InstallationService.ListMyClinics is not implemented"))
 }

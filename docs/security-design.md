@@ -19,10 +19,15 @@ for message formats and the crypto scheme.
 ## First start
 
 1. App generates nothing secret yet; it collects `MachineInfo` (MachineGuid hash, hostname, OS, CPU, RAM, MAC addresses).
-2. The user fills in either a new clinic (name, unique license number, phone, address) and
-   its owner — a new account (with a unique identity: national ID, or FIDA code for foreign
-   nationals) or an existing one (username + password + identity) — or the license number of
-   an existing clinic and its owner's credentials, to add another installation to it.
+2. The user fills in either a new clinic (name, unique license number, phone, address,
+   map location) and its owner — a new account (with a unique identity: national ID, or FIDA
+   code for foreign nationals) or an existing one (username + password; the identity only if
+   none is on file) — or the license number of an existing clinic and its owner's
+   credentials, to add another installation to it. Alternatively the person logs in (or signs
+   up) first: `InstallationService.ListMyClinics`, proven with the password like the existing
+   owner, lists the clinics they own or administer, and they pick the clinic this computer
+   belongs to (only its owner may) or add a new one. The app keeps the password in memory
+   only until the first login.
 3. `InstallationService.Register` → `installation_id` + `installation_secret`. The owner is
    already a member and admin of the clinic.
 4. App stores both, the secret encrypted with DPAPI.

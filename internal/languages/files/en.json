@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 16,
+    "version": 17,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -101,19 +101,41 @@
   },
   "setup": {
     "title": "Clinic setup",
-    "description": "The app is running on this computer for the first time. Enter the details of the clinic and the person responsible for it. This needs an internet connection.",
+    "notConnected": "This computer is not connected to a clinic yet. Log in (or sign up first if you have no account), then choose or add your clinic. An internet connection is needed for this.",
     "firstRun": {
       "title": "Before you start",
-      "subscription": "If you already had a subscription, choose \"Existing account\", log in with your account and choose your clinic from the subscription. Otherwise, add a new clinic.",
+      "onlyOne": "Each computer is connected to exactly one clinic, and this choice cannot be changed later.",
       "backup": "If you have a backup of the clinic's data, restore it from the Database page in the side menu after your first login. You will need that backup's password and recovery key."
     },
-    "clinic": "Clinic details",
-    "owner": "Person responsible",
-    "ownerDescription": "The clinic is linked to the account of the person responsible for it, who becomes its manager. If they already have an account, choose \"Existing account\".",
-    "ownerKind": {
-      "new": "New account",
-      "existing": "Existing account"
+    "pick": {
+      "title": "This computer's clinic",
+      "description": "{{name}}, choose the clinic this computer belongs to, or add a new clinic.",
+      "submit": "Connect to the selected clinic",
+      "working": "Connecting to the clinic...",
+      "addNew": "Add a new clinic"
     },
+    "add": {
+      "title": "Add your clinic",
+      "noClinic": "{{name}}, you do not own or manage any clinic yet. Add your clinic to use the app on this computer.",
+      "description": "{{name}}, enter the new clinic's details. This computer will be connected to it, and you will be its owner.",
+      "submit": "Register the clinic and log in",
+      "working": "Registering the clinic...",
+      "backToList": "Back to the list of clinics"
+    },
+    "otherAccount": "Log in with another account",
+    "clinics": {
+      "license": "License number:",
+      "owner": "Owner: {{owner}}",
+      "devices": "Computers: {{count}} of {{max}}",
+      "subscriptionUntil": "Subscription until {{date}}",
+      "noSubscription": "No active subscription",
+      "ownerOnly": "Only this clinic's owner ({{owner}}) can connect a computer to it. Ask them to set up this computer."
+    },
+    "subscription": {
+      "none": "You have no active subscription. The clinic will be registered, but nobody can log in to it until a subscription is active. Contact support to buy one.",
+      "clinicLimit": "Your subscription covers {{max}} clinics and you already have {{count}}. The new clinic will be registered, but you cannot log in to it until you upgrade your subscription."
+    },
+    "clinic": "Clinic details",
     "fields": {
       "clinicName": "Clinic name",
       "licenseNumber": "Clinic license number",
@@ -121,26 +143,29 @@
       "city": "City",
       "address": "Address",
       "postalCode": "Postal code (optional)",
+      "location": "Clinic location on the map",
       "nationalId": "National ID",
       "ownerPhone": "Mobile phone"
     },
     "hints": {
       "licenseNumber": "In Latin letters and digits, as printed on the license.",
-      "existingNationalId": "If this account has no national ID on file yet, this one is saved for it."
+      "location": "Click the clinic's place on the map. Zoom in with the mouse wheel.",
+      "existingNationalId": "This account has no national ID on file yet; it is saved together with the clinic."
     },
     "validation": {
       "licenseNumberFormat": "Use 3 to 32 Latin letters, digits, dots, dashes or slashes.",
       "phoneFormat": "The phone number must have 7 to 15 digits (optionally starting with +).",
       "postalCodeFormat": "The postal code must have 5 to 10 digits.",
-      "nationalIdFormat": "This national ID is not valid. Check its 10 digits."
+      "nationalIdFormat": "This national ID is not valid. Check its 10 digits.",
+      "locationRequired": "Mark the clinic's place on the map."
     },
-    "submit": "Register clinic",
-    "working": "Registering clinic...",
-    "success": "The clinic is registered. The person responsible can now log in.",
     "errors": {
-      "required": "This computer has not been set up yet. Register the clinic first.",
-      "alreadyDone": "This computer has already been set up.",
-      "licenseNumberTaken": "A clinic with this license number is already registered."
+      "required": "This computer is not connected to a clinic yet. Log in and choose its clinic.",
+      "alreadyDone": "This computer is already connected to a clinic.",
+      "licenseNumberTaken": "A clinic with this license number is already registered.",
+      "identityRequired": "This account has no national ID on file. Enter it.",
+      "clinicNotFound": "This clinic was not found.",
+      "notClinicOwner": "Only the clinic's owner can connect a computer to it."
     }
   },
   "connectivity": {

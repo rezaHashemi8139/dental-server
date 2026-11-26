@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -35,6 +36,30 @@ func TestPasswordPolicy(t *testing.T) {
 		err := protovalidate.Validate(signUpRequest(tt.password))
 		if got := err == nil; got != tt.want {
 			t.Errorf("password %q: valid = %v, want %v (%v)", tt.password, got, tt.want, err)
+		}
+	}
+}
+
+func TestClinicLocation(t *testing.T) {
+	tests := []struct {
+		location *dentalv1.GeoLocation
+		want     bool
+	}{
+		{&dentalv1.GeoLocation{Latitude: 35.6892, Longitude: 51.3890}, true},
+		{&dentalv1.GeoLocation{Latitude: -90, Longitude: 180}, true}, // the limits
+		{&dentalv1.GeoLocation{Latitude: 0, Longitude: 51.3890}, true},
+		{nil, false},                     // required
+		{&dentalv1.GeoLocation{}, false}, // 0, 0: never set
+		{&dentalv1.GeoLocation{Latitude: 90.1, Longitude: 51}, false},
+		{&dentalv1.GeoLocation{Latitude: 35, Longitude: -180.1}, false},
+		{&dentalv1.GeoLocation{Latitude: math.NaN(), Longitude: 51}, false},
+	}
+	for _, tt := range tests {
+		req := registerRequest(1, "doctor")
+		req.GetClinic().Location = tt.location
+		err := protovalidate.Validate(req)
+		if got := err == nil; got != tt.want {
+			t.Errorf("location %v: valid = %v, want %v (%v)", tt.location, got, tt.want, err)
 		}
 	}
 }

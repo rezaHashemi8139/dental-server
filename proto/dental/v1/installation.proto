@@ -22,6 +22,8 @@ service InstallationService {
   // Registering needs no subscription, but nobody can log in until the owner has
   // one (see AuthService.Login).
   //
+  // A new clinic needs its license number, phone, address and location (ClinicInfo).
+  //
   // Besides the usual "invalid_argument" / "weak_password", fails with:
   // - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
   // - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
@@ -29,11 +31,25 @@ service InstallationService {
   // - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
   // - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
   // - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
+  // - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary
+  //   password (see AuthService.ChangePassword);
   // - FAILED_PRECONDITION "identity_mismatch": an existing owner has another identity on file;
+  // - FAILED_PRECONDITION "identity_required": an existing owner has no identity on file
+  //   and none was sent (ExistingOwner.identity);
   // - INVALID_ARGUMENT "invalid_argument": existing_clinic with a new_owner;
   // - NOT_FOUND "clinic_not_found": no clinic has existing_clinic.license_number;
   // - PERMISSION_DENIED "not_clinic_owner": the clinic belongs to someone else.
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
+
+  // The clinics an account owns or administers, for a first start where the person
+  // logs in before this computer is registered: with none, the app offers to add a
+  // clinic; otherwise the person picks the clinic this computer belongs to (Register
+  // with existing_clinic and existing_owner) or adds another one. No login needed:
+  // the account is proven with its password, like ExistingOwner.
+  //
+  // Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
+  // FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
+  rpc ListMyClinics(ListMyClinicsRequest) returns (ListMyClinicsResponse) {}
 }
 
 // Describes the computer, so the server knows where an installation runs.
@@ -87,6 +103,29 @@ message ClinicInfo {
   }];
   // Optional: empty, or 5–10 digits.
   string postal_code = 6 [(buf.validate.field).string.pattern = "^([0-9]{5,10})?$"];
+  // Where the clinic is, e.g. picked on a map. Required.
+  GeoLocation location = 7 [(buf.validate.field).required = true];
+}
+
+// A point on the map: WGS 84 degrees, as GPS and web maps use them.
+message GeoLocation {
+  // An unset location arrives as 0, 0: almost certainly a client bug, not a clinic.
+  option (buf.validate.message).cel = {
+    id: "location_set"
+    message: "latitude and longitude must not both be 0"
+    expression: "this.latitude != 0.0 || this.longitude != 0.0"
+  };
+
+  // -90 (south) to 90 (north).
+  double latitude = 1 [(buf.validate.field).double = {
+    gte: -90
+    lte: 90
+  }];
+  // -180 (west) to 180 (east).
+  double longitude = 2 [(buf.validate.field).double = {
+    gte: -180
+    lte: 180
+  }];
 }
 
 // A clinic owner who has no account yet: the account is created by Register.
@@ -125,9 +164,10 @@ message ExistingOwner {
   string password = 2 [(buf.validate.field).string.max_bytes = 1024];
   reserved 3;
   reserved "national_id";
-  // Must match the identity on file (type and number). Saved if the account has
-  // none yet (accounts made before identities were required).
-  PersonIdentity identity = 4 [(buf.validate.field).required = true];
+  // Optional when the account has an identity on file (ListMyClinicsResponse.identity_on_file);
+  // if sent, it must match it (type and number). Required for accounts made before
+  // identities were required, and saved for them.
+  PersonIdentity identity = 4;
 }
 
 // A clinic registered earlier, to add another installation to it.
@@ -165,4 +205,59 @@ message RegisterResponse {
   User owner = 5;
   // 16 raw UUID bytes.
   bytes clinic_id = 6;
+}
+
+message ListMyClinicsRequest {
+  // Same rules as ExistingOwner.
+  string username = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 64
+  }];
+  string password = 2 [(buf.validate.field).string.max_bytes = 1024];
+}
+
+message ListMyClinicsResponse {
+  User user = 1;
+  // False only for accounts made before identities were required: Register then
+  // needs ExistingOwner.identity.
+  bool identity_on_file = 2;
+  // Clinics the account owns or administers: owned ones first, then oldest first.
+  repeated MyClinic clinics = 3;
+  // The account's own subscription in force, for a clinic it would add. Unset if none
+  // is in force; a new clinic can still be registered, but nobody can log in to it
+  // until there is one (AuthService.Login fails with "subscription_inactive").
+  google.protobuf.Timestamp subscription_ends_at = 4;
+  // How many clinics that subscription allows (0 if none is in force), and how many
+  // the account owns. Owning more is allowed, but logins to the newest ones fail
+  // with "clinic_limit_exceeded".
+  uint32 max_clinics = 5;
+  uint32 owned_clinic_count = 6;
+}
+
+// A clinic as ListMyClinics shows it to its owner or one of its admins.
+message MyClinic {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  // Identifies the clinic in ExistingClinic.
+  string license_number = 3;
+  string city = 4;
+  string address = 5;
+  // Whether the account owns the clinic. Otherwise it is one of its admins.
+  bool is_owner = 6;
+  string owner_full_name = 7;
+  // Installations that are not revoked.
+  uint32 installation_count = 8;
+  // How many installations the owner's subscription in force allows (0 if none).
+  uint32 max_installations = 9;
+  // When the owner's paid time ends. Unset if no subscription is in force.
+  google.protobuf.Timestamp subscription_ends_at = 10;
+  // Whether the account can register this computer to the clinic now and log in
+  // on it. Empty when it can; otherwise why not, with the same reasons Register and
+  // AuthService.Login fail with:
+  // - "not_clinic_owner": only the owner can add a computer;
+  // - "subscription_inactive": the owner has no subscription in force;
+  // - "clinic_limit_exceeded": the clinic is beyond the owner's clinic limit;
+  // - "device_limit_exceeded": the clinic already has max_installations.
+  string cannot_add_reason = 11;
 }

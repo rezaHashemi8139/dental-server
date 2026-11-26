@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 16,
+    "version": 17,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -101,19 +101,41 @@
   },
   "setup": {
     "title": "Praxis einrichten",
-    "description": "Die App wird auf diesem Computer zum ersten Mal gestartet. Geben Sie die Daten der Praxis und der verantwortlichen Person ein. Dafür ist eine Internetverbindung nötig.",
+    "notConnected": "Dieser Computer ist noch mit keiner Praxis verbunden. Melden Sie sich an (oder registrieren Sie sich zuerst, wenn Sie kein Konto haben) und wählen Sie dann Ihre Praxis aus oder fügen Sie sie hinzu. Dafür ist eine Internetverbindung nötig.",
     "firstRun": {
       "title": "Bevor Sie beginnen",
-      "subscription": "Wenn Sie bereits ein Abonnement hatten, wählen Sie „Bestehendes Konto“, melden Sie sich mit Ihrem Konto an und wählen Sie Ihre Praxis aus dem Abonnement. Andernfalls fügen Sie eine neue Praxis hinzu.",
+      "onlyOne": "Jeder Computer wird mit genau einer Praxis verbunden, und diese Wahl lässt sich später nicht ändern.",
       "backup": "Wenn Sie eine Sicherung der Praxisdaten haben, stellen Sie sie nach der ersten Anmeldung über die Seite „Datenbank“ im Seitenmenü wieder her. Dafür brauchen Sie das Passwort und den Wiederherstellungsschlüssel dieser Sicherung."
     },
-    "clinic": "Praxisdaten",
-    "owner": "Verantwortliche Person",
-    "ownerDescription": "Die Praxis wird mit dem Konto der verantwortlichen Person verknüpft, die sie verwaltet. Hat diese Person bereits ein Konto, wählen Sie „Bestehendes Konto“.",
-    "ownerKind": {
-      "new": "Neues Konto",
-      "existing": "Bestehendes Konto"
+    "pick": {
+      "title": "Praxis dieses Computers",
+      "description": "{{name}}, wählen Sie die Praxis, zu der dieser Computer gehört, oder fügen Sie eine neue Praxis hinzu.",
+      "submit": "Mit der gewählten Praxis verbinden",
+      "working": "Verbindung mit der Praxis wird hergestellt...",
+      "addNew": "Neue Praxis hinzufügen"
     },
+    "add": {
+      "title": "Ihre Praxis hinzufügen",
+      "noClinic": "{{name}}, Sie sind noch Inhaber oder Administrator keiner Praxis. Fügen Sie Ihre Praxis hinzu, um die App auf diesem Computer zu nutzen.",
+      "description": "{{name}}, geben Sie die Daten der neuen Praxis ein. Dieser Computer wird mit ihr verbunden, und Sie werden ihr Inhaber.",
+      "submit": "Praxis registrieren und anmelden",
+      "working": "Praxis wird registriert...",
+      "backToList": "Zurück zur Liste der Praxen"
+    },
+    "otherAccount": "Mit einem anderen Konto anmelden",
+    "clinics": {
+      "license": "Zulassungsnummer:",
+      "owner": "Inhaber: {{owner}}",
+      "devices": "Computer: {{count}} von {{max}}",
+      "subscriptionUntil": "Abonnement bis {{date}}",
+      "noSubscription": "Kein aktives Abonnement",
+      "ownerOnly": "Nur der Inhaber dieser Praxis ({{owner}}) kann einen Computer mit ihr verbinden. Bitten Sie ihn, diesen Computer einzurichten."
+    },
+    "subscription": {
+      "none": "Sie haben kein aktives Abonnement. Die Praxis wird registriert, aber niemand kann sich bei ihr anmelden, bis ein Abonnement aktiv ist. Wenden Sie sich an den Support, um eines zu erwerben.",
+      "clinicLimit": "Ihr Abonnement umfasst {{max}} Praxen, und Sie haben bereits {{count}}. Die neue Praxis wird registriert, aber Sie können sich erst nach einem Upgrade Ihres Abonnements bei ihr anmelden."
+    },
+    "clinic": "Praxisdaten",
     "fields": {
       "clinicName": "Name der Praxis",
       "licenseNumber": "Zulassungsnummer der Praxis",
@@ -121,26 +143,29 @@
       "city": "Ort",
       "address": "Adresse",
       "postalCode": "Postleitzahl (optional)",
+      "location": "Standort der Praxis auf der Karte",
       "nationalId": "Nationale Identifikationsnummer",
       "ownerPhone": "Mobiltelefon"
     },
     "hints": {
       "licenseNumber": "Mit lateinischen Buchstaben und Ziffern, wie auf der Zulassung angegeben.",
-      "existingNationalId": "Ist für dieses Konto noch keine Identifikationsnummer hinterlegt, wird diese gespeichert."
+      "location": "Klicken Sie auf der Karte auf den Standort der Praxis. Mit dem Mausrad vergrößern Sie die Ansicht.",
+      "existingNationalId": "Für dieses Konto ist noch keine Identifikationsnummer hinterlegt; sie wird zusammen mit der Praxis gespeichert."
     },
     "validation": {
       "licenseNumberFormat": "Verwenden Sie 3 bis 32 lateinische Buchstaben, Ziffern, Punkte, Bindestriche oder Schrägstriche.",
       "phoneFormat": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
       "postalCodeFormat": "Die Postleitzahl muss 5 bis 10 Ziffern haben.",
-      "nationalIdFormat": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern."
+      "nationalIdFormat": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
+      "locationRequired": "Markieren Sie den Standort der Praxis auf der Karte."
     },
-    "submit": "Praxis registrieren",
-    "working": "Praxis wird registriert...",
-    "success": "Die Praxis ist registriert. Die verantwortliche Person kann sich jetzt anmelden.",
     "errors": {
-      "required": "Dieser Computer ist noch nicht eingerichtet. Registrieren Sie zuerst die Praxis.",
-      "alreadyDone": "Dieser Computer ist bereits eingerichtet.",
-      "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert."
+      "required": "Dieser Computer ist noch mit keiner Praxis verbunden. Melden Sie sich an und wählen Sie seine Praxis.",
+      "alreadyDone": "Dieser Computer ist bereits mit einer Praxis verbunden.",
+      "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert.",
+      "identityRequired": "Für dieses Konto ist keine Identifikationsnummer hinterlegt. Geben Sie sie ein.",
+      "clinicNotFound": "Diese Praxis wurde nicht gefunden.",
+      "notClinicOwner": "Nur der Inhaber der Praxis kann einen Computer mit ihr verbinden."
     }
   },
   "connectivity": {

@@ -29,13 +29,14 @@ type sessionKey struct{}
 
 // publicProcedures can be called without a session.
 var publicProcedures = map[string]bool{
-	dentalv1connect.HealthServiceCheckProcedure:           true,
-	dentalv1connect.InstallationServiceRegisterProcedure:  true,
-	dentalv1connect.AuthServiceSignUpProcedure:            true,
-	dentalv1connect.AuthServiceLoginProcedure:             true,
-	dentalv1connect.AuthServiceChangePasswordProcedure:    true,
-	dentalv1connect.LanguageServiceListLanguagesProcedure: true,
-	dentalv1connect.LanguageServiceGetLanguageProcedure:   true,
+	dentalv1connect.HealthServiceCheckProcedure:               true,
+	dentalv1connect.InstallationServiceRegisterProcedure:      true,
+	dentalv1connect.InstallationServiceListMyClinicsProcedure: true,
+	dentalv1connect.AuthServiceSignUpProcedure:                true,
+	dentalv1connect.AuthServiceLoginProcedure:                 true,
+	dentalv1connect.AuthServiceChangePasswordProcedure:        true,
+	dentalv1connect.LanguageServiceListLanguagesProcedure:     true,
+	dentalv1connect.LanguageServiceGetLanguageProcedure:       true,
 }
 
 // SessionInterceptor checks the `Authorization: Bearer <token>` header on every

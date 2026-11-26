@@ -186,6 +186,7 @@ func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
 			Phone:         "02112345678",
 			City:          "Tehran",
 			Address:       "1 Test Street",
+			Location:      &dentalv1.GeoLocation{Latitude: 35.6892, Longitude: 51.3890},
 		}},
 		Owner: &dentalv1.RegisterRequest_NewOwner{NewOwner: &dentalv1.NewOwner{
 			Username: owner,

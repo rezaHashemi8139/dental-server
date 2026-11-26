@@ -42,6 +42,7 @@ const (
 	reasonIdentityTaken       = "identity_taken"
 	reasonInvalidNationalID   = "invalid_national_id"
 	reasonIdentityMismatch    = "identity_mismatch"
+	reasonIdentityRequired    = "identity_required"
 	reasonLicenseNumberTaken  = "license_number_taken"
 	reasonUnauthenticated     = "unauthenticated"
 	reasonNotAdmin            = "not_admin"
