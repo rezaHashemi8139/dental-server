@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 31,
+    "version": 32,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -227,7 +227,8 @@
       "buy": "خرید",
       "purchaseLimit": "دفعات خرید شما: {{used}} از {{max}}",
       "limitReached": "قبلاً استفاده کرده‌اید",
-      "activate": "فعال‌سازی رایگان"
+      "activate": "فعال‌سازی رایگان",
+      "active": "اشتراک فعلی شما"
     },
     "modes": {
       "extend": "پس از پایان اشتراک فعلی",

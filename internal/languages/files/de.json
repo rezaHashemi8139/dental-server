@@ -227,7 +227,8 @@
       "buy": "Kaufen",
       "purchaseLimit": "Ihre Käufe: {{used}} von {{max}}",
       "limitReached": "Bereits genutzt",
-      "activate": "Kostenlos aktivieren"
+      "activate": "Kostenlos aktivieren",
+      "active": "Ihr aktueller Tarif"
     },
     "modes": {
       "extend": "Nach dem aktuellen Abonnement",
