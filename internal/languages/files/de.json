@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 18,
+    "version": 21,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -16,7 +16,8 @@
   "nav": {
     "label": "Hauptmenü",
     "home": "Startseite",
-    "database": "Datenbank"
+    "database": "Datenbank",
+    "subscription": "Abonnement"
   },
   "auth": {
     "tabs": {
@@ -132,8 +133,8 @@
       "ownerOnly": "Nur der Inhaber dieser Praxis ({{owner}}) kann einen Computer mit ihr verbinden. Bitten Sie ihn, diesen Computer einzurichten."
     },
     "subscription": {
-      "none": "Sie haben kein aktives Abonnement. Die Praxis wird registriert, aber niemand kann sich bei ihr anmelden, bis ein Abonnement aktiv ist. Wenden Sie sich an den Support, um eines zu erwerben.",
-      "clinicLimit": "Ihr Abonnement umfasst {{max}} Praxen, und Sie haben bereits {{count}}. Die neue Praxis wird registriert, aber Sie können sich erst nach einem Upgrade Ihres Abonnements bei ihr anmelden."
+      "none": "Sie haben kein aktives Abonnement. Die Praxis wird registriert, und nach der Anmeldung gelangen Sie zur Abonnementseite, um eines zu kaufen. Die Praxis öffnet sich, sobald das Abonnement aktiv ist.",
+      "clinicLimit": "Ihr Abonnement umfasst {{max}} Praxen, und Sie haben bereits {{count}}. Die neue Praxis wird registriert, und nach der Anmeldung gelangen Sie zur Abonnementseite, um es zu erweitern."
     },
     "clinic": "Praxisdaten",
     "fields": {
@@ -175,6 +176,127 @@
       "clinicNotFound": "Diese Praxis wurde nicht gefunden.",
       "cityNotFound": "Dieser Ort wurde nicht gefunden. Wählen Sie Provinz und Ort erneut.",
       "notClinicOwner": "Nur der Inhaber der Praxis kann einen Computer mit ihr verbinden."
+    }
+  },
+  "billing": {
+    "title": "Abonnement",
+    "description": "Das Abonnement Ihrer Praxen, die Tarife und Ihre Zahlungen. Bezahlt wird vorerst per Karte-zu-Karte-Überweisung oder Banküberweisung; aktiv wird es, sobald der Support die Zahlung bestätigt.",
+    "refresh": "Aktualisieren",
+    "loading": "Abonnement wird geladen...",
+    "limits": "{{clinics}} Praxen, {{devices}} Computer pro Praxis",
+    "period": "Vom {{from}} bis {{to}}",
+    "restricted": {
+      "description": "Bis ein Abonnement aktiv ist, ist nur diese Seite verfügbar und die Daten der Praxis bleiben gesperrt. Wählen Sie einen Tarif, überweisen Sie den Betrag und melden Sie die Zahlung. Sobald sie bestätigt ist, melden Sie sich erneut an.",
+      "logInAgain": "Erneut anmelden"
+    },
+    "reasons": {
+      "subscriptionInactive": "Sie haben kein aktives Abonnement.",
+      "clinicLimitExceeded": "Sie haben mehr Praxen, als Ihr Abonnement erlaubt, und diese Praxis ist nicht abgedeckt.",
+      "deviceLimitExceeded": "Diese Praxis hat mehr Computer, als Ihr Abonnement erlaubt."
+    },
+    "decided": {
+      "approved": "Ihre Zahlung wurde bestätigt.",
+      "approvedLogIn": "Das Abonnement wurde hinzugefügt. Melden Sie sich erneut an, um die Praxis zu nutzen.",
+      "approvedActive": "Das Abonnement wurde hinzugefügt.",
+      "rejected": "Ihre Zahlung wurde abgelehnt.",
+      "noReason": "Es wurde kein Grund angegeben. Wenden Sie sich an den Support."
+    },
+    "current": {
+      "title": "Aktuelles Abonnement",
+      "none": "Sie haben kein aktives Abonnement.",
+      "upcoming": "Für spätere Zeiträume gekauft",
+      "paidUntil": "Bezahlt bis {{date}}"
+    },
+    "clinics": {
+      "title": "Ihre Praxen",
+      "devices": "Computer: {{devices}}",
+      "covered": "Abgedeckt",
+      "notCovered": "Nicht abgedeckt"
+    },
+    "plans": {
+      "title": "Tarife",
+      "description": "Wählen Sie einen Tarif, um Ihr Abonnement zu kaufen, zu verlängern oder zu erweitern.",
+      "pendingFirst": "Eine Zahlung wartet auf Bestätigung. Bis über sie entschieden ist oder Sie sie zurückziehen, können Sie keine weitere melden.",
+      "none": "Derzeit werden keine Tarife angeboten.",
+      "duration": "Laufzeit: {{days}} Tage",
+      "clinics": "Praxen: bis zu {{clinics}}",
+      "devices": "Computer pro Praxis: bis zu {{devices}}",
+      "buy": "Kaufen"
+    },
+    "modes": {
+      "extend": "Nach dem aktuellen Abonnement",
+      "upgradeNow": "Sofort erweitern",
+      "extendHint": "Der neue Zeitraum beginnt, wenn Ihre bezahlte Zeit endet, zum vollen Preis.",
+      "upgradeNowHint": "Der neue Tarif beginnt mit der Bestätigung, und der Wert der verbleibenden Tage Ihres aktuellen Abonnements wird vom Preis abgezogen."
+    },
+    "methods": {
+      "cardToCard": "Karte zu Karte",
+      "bankTransfer": "Banküberweisung (IBAN)"
+    },
+    "accounts": {
+      "card": "Karte:",
+      "iban": "IBAN:",
+      "copy": "Kopieren"
+    },
+    "purchase": {
+      "title": "Tarif {{plan}} kaufen",
+      "description": "Überweisen Sie den Betrag auf eines der Konten unten und melden Sie dann die Überweisung. Das Abonnement wird aktiv, sobald der Support sie bestätigt.",
+      "when": "Beginn des Abonnements",
+      "quoting": "Betrag wird berechnet...",
+      "price": "Preis des Tarifs",
+      "credit": "Restguthaben",
+      "amount": "Zu zahlender Betrag",
+      "period": "Zeitraum",
+      "payTo": "Überweisen an",
+      "noAccounts": "Es ist kein Konto für Überweisungen eingerichtet. Wenden Sie sich an den Support.",
+      "method": "Zahlungsart",
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "submit": "Zahlung melden",
+      "working": "Zahlung wird gemeldet...",
+      "cancel": "Abbrechen"
+    },
+    "fields": {
+      "reference": "Referenznummer",
+      "paidOn": "Datum der Überweisung",
+      "cardLast4": "Letzte 4 Ziffern Ihrer Karte"
+    },
+    "hints": {
+      "reference": "Die Nummer, die die Bank nach der Überweisung angezeigt hat (lateinische Buchstaben und Ziffern).",
+      "cardLast4": "Die Karte, mit der Sie bezahlt haben."
+    },
+    "validation": {
+      "accountRequired": "Wählen Sie das Konto, auf das Sie überwiesen haben.",
+      "referenceFormat": "Die Referenznummer muss aus 4 bis 40 lateinischen Buchstaben, Ziffern oder Bindestrichen bestehen.",
+      "cardLast4Format": "Geben Sie die letzten 4 Ziffern der Karte ein."
+    },
+    "pending": {
+      "title": "Zahlung wartet auf Bestätigung",
+      "description": "Der Support prüft die Überweisung. Diese Seite fragt das Ergebnis regelmäßig ab.",
+      "cancel": "Diese Zahlung zurückziehen"
+    },
+    "history": {
+      "title": "Ihre Zahlungen",
+      "plan": "Tarif",
+      "amount": "Betrag"
+    },
+    "statuses": {
+      "pending": "Wartet auf Bestätigung",
+      "approved": "Bestätigt",
+      "rejected": "Abgelehnt",
+      "canceled": "Zurückgezogen"
+    },
+    "errors": {
+      "ownerOnly": "Nur der Inhaber der Praxis kann ein Abonnement kaufen.",
+      "needsServer": "Für die Verwaltung des Abonnements ist eine Internetverbindung nötig.",
+      "subscriptionRequired": "Bis ein Abonnement aktiv ist, ist nur die Abonnementseite verfügbar.",
+      "planNotFound": "Dieser Tarif wurde nicht gefunden.",
+      "planInactive": "Dieser Tarif wird nicht mehr angeboten.",
+      "renewalQueued": "Sie haben den nächsten Zeitraum bereits gekauft, daher ist eine sofortige Erweiterung nicht möglich. Wählen Sie die Erweiterung nach dem aktuellen Abonnement.",
+      "paymentAccountNotFound": "Dieses Konto nimmt keine Überweisungen mehr an. Wählen Sie ein anderes.",
+      "paymentPending": "Eine Zahlung wartet auf Bestätigung. Warten Sie oder ziehen Sie sie zurück.",
+      "paymentNotFound": "Diese Zahlung wurde nicht gefunden.",
+      "paymentNotPending": "Über diese Zahlung wurde bereits entschieden."
     }
   },
   "connectivity": {

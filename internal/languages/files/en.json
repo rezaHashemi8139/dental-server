@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 18,
+    "version": 21,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -16,7 +16,8 @@
   "nav": {
     "label": "Main menu",
     "home": "Home",
-    "database": "Database"
+    "database": "Database",
+    "subscription": "Subscription"
   },
   "auth": {
     "tabs": {
@@ -132,8 +133,8 @@
       "ownerOnly": "Only this clinic's owner ({{owner}}) can connect a computer to it. Ask them to set up this computer."
     },
     "subscription": {
-      "none": "You have no active subscription. The clinic will be registered, but nobody can log in to it until a subscription is active. Contact support to buy one.",
-      "clinicLimit": "Your subscription covers {{max}} clinics and you already have {{count}}. The new clinic will be registered, but you cannot log in to it until you upgrade your subscription."
+      "none": "You have no active subscription. The clinic will be registered, and after logging in you will go to the subscription page to buy one. The clinic opens once the subscription is active.",
+      "clinicLimit": "Your subscription covers {{max}} clinics and you already have {{count}}. The new clinic will be registered, and after logging in you will go to the subscription page to upgrade."
     },
     "clinic": "Clinic details",
     "fields": {
@@ -175,6 +176,127 @@
       "clinicNotFound": "This clinic was not found.",
       "cityNotFound": "This city was not found. Choose the province and city again.",
       "notClinicOwner": "Only the clinic's owner can connect a computer to it."
+    }
+  },
+  "billing": {
+    "title": "Subscription",
+    "description": "Your clinics' subscription, the plans and your payments. For now, payment is by card-to-card or bank transfer, and it becomes active once support approves it.",
+    "refresh": "Refresh",
+    "loading": "Loading the subscription...",
+    "limits": "{{clinics}} clinics, {{devices}} computers per clinic",
+    "period": "From {{from}} to {{to}}",
+    "restricted": {
+      "description": "Until a subscription is active, only this page is available and the clinic's data stays locked. Choose a plan, transfer the amount and report the payment. Once the payment is approved, log in again.",
+      "logInAgain": "Log in again"
+    },
+    "reasons": {
+      "subscriptionInactive": "You have no active subscription.",
+      "clinicLimitExceeded": "You have more clinics than your subscription allows, and this clinic is not covered.",
+      "deviceLimitExceeded": "This clinic has more computers than your subscription allows."
+    },
+    "decided": {
+      "approved": "Your payment was approved.",
+      "approvedLogIn": "The subscription was added. Log in again to use the clinic.",
+      "approvedActive": "The subscription was added.",
+      "rejected": "Your payment was rejected.",
+      "noReason": "No reason was given. Contact support."
+    },
+    "current": {
+      "title": "Current subscription",
+      "none": "You have no active subscription.",
+      "upcoming": "Bought for later periods",
+      "paidUntil": "Paid until {{date}}"
+    },
+    "clinics": {
+      "title": "Your clinics",
+      "devices": "Computers: {{devices}}",
+      "covered": "Covered",
+      "notCovered": "Not covered"
+    },
+    "plans": {
+      "title": "Plans",
+      "description": "Choose a plan to buy, renew or upgrade your subscription.",
+      "pendingFirst": "You have a payment waiting for approval. You cannot report another one until it is decided or you cancel it.",
+      "none": "No plans are for sale right now.",
+      "duration": "Duration: {{days}} days",
+      "clinics": "Clinics: up to {{clinics}}",
+      "devices": "Computers per clinic: up to {{devices}}",
+      "buy": "Buy"
+    },
+    "modes": {
+      "extend": "After the current subscription",
+      "upgradeNow": "Upgrade now",
+      "extendHint": "The new period starts when your paid time ends, at the full price.",
+      "upgradeNowHint": "The new plan starts on approval, and the value of the days left on your current subscription is deducted from the price."
+    },
+    "methods": {
+      "cardToCard": "Card to card",
+      "bankTransfer": "Bank transfer (IBAN)"
+    },
+    "accounts": {
+      "card": "Card:",
+      "iban": "IBAN:",
+      "copy": "Copy"
+    },
+    "purchase": {
+      "title": "Buy the {{plan}} plan",
+      "description": "Transfer the amount to one of the accounts below, then report the transfer. The subscription becomes active once support approves it.",
+      "when": "Subscription start",
+      "quoting": "Calculating the amount...",
+      "price": "Plan price",
+      "credit": "Remaining credit",
+      "amount": "Amount to pay",
+      "period": "Period",
+      "payTo": "Transfer to",
+      "noAccounts": "No account to transfer to has been set up. Contact support.",
+      "method": "Payment method",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "submit": "Report payment",
+      "working": "Reporting the payment...",
+      "cancel": "Cancel"
+    },
+    "fields": {
+      "reference": "Reference number",
+      "paidOn": "Transfer date",
+      "cardLast4": "Last 4 digits of your card"
+    },
+    "hints": {
+      "reference": "The number the bank showed after the transfer (Latin letters and digits).",
+      "cardLast4": "The card you paid with."
+    },
+    "validation": {
+      "accountRequired": "Choose the account you transferred to.",
+      "referenceFormat": "The reference number must be 4 to 40 Latin letters, digits or dashes.",
+      "cardLast4Format": "Enter the last 4 digits of the card."
+    },
+    "pending": {
+      "title": "Payment waiting for approval",
+      "description": "Support is checking the transfer. This page checks for the result every little while.",
+      "cancel": "Cancel this payment"
+    },
+    "history": {
+      "title": "Your payments",
+      "plan": "Plan",
+      "amount": "Amount"
+    },
+    "statuses": {
+      "pending": "Waiting for approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "canceled": "Canceled"
+    },
+    "errors": {
+      "ownerOnly": "Only the clinic's owner can buy a subscription.",
+      "needsServer": "Managing the subscription needs an internet connection.",
+      "subscriptionRequired": "Until a subscription is active, only the subscription page is available.",
+      "planNotFound": "This plan was not found.",
+      "planInactive": "This plan is no longer for sale.",
+      "renewalQueued": "You have already bought the next period, so upgrading now is not possible. Choose to upgrade after the current subscription.",
+      "paymentAccountNotFound": "This account no longer takes transfers. Choose another one.",
+      "paymentPending": "You have a payment waiting for approval. Wait for it or cancel it.",
+      "paymentNotFound": "This payment was not found.",
+      "paymentNotPending": "This payment has already been decided."
     }
   },
   "connectivity": {
