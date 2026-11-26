@@ -42,11 +42,17 @@ Registering needs no subscription, but logging in does (below).
   changed with `AuthService.ChangePassword` before the first login.
 - Membership is per clinic: a member may log in on every installation of the clinic. Roles
   (doctor, secretary...) stay in the local database.
-- Only the clinic owner buys a subscription (from the admin panel for now). It limits how many
-  clinics the owner may have and how many installations (not revoked) each clinic may have;
-  when there are more, the oldest ones are covered.
-- Without a subscription in force, nobody can use the owner's clinics: logins fail, sessions
-  stop working at once, and offline grants never last past the end of the paid time.
+- Only the clinic owner buys a subscription: in the app (`BillingService`) or from the admin
+  panel. It limits how many clinics the owner may have and how many installations (not revoked)
+  each clinic may have; when there are more, the oldest ones are covered.
+- In the app, the owner transfers the quoted amount to an account listed in the admin panel and
+  reports it; an administrator checks the bank statement and approves the payment, which adds
+  the subscription, or rejects it. The price and limits are fixed when the payment is reported.
+- Without a subscription that covers the clinic and installation, nobody can use the owner's
+  clinics: other members' logins fail, sessions stop working at once, and offline grants never
+  last past the end of the paid time. The owner still logs in, to a billing-only session that
+  can only call `BillingService`, and gets neither the database keys nor an offline grant, so
+  the clinic's data stays closed until the payment is approved and they log in again.
 - Administrators (`AdminService`) have their own accounts and sessions. A user session never
   works on the admin panel and an admin session never works anywhere else. The first
   administrator is created on the server with `dental-server create-admin`.

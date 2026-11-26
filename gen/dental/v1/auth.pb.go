@@ -309,8 +309,17 @@ type LoginResponse struct {
 	// When the clinic owner's paid time ends (renewals already bought included).
 	// Nobody can use the clinic's app after it, online or offline.
 	SubscriptionEndsAt *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=subscription_ends_at,json=subscriptionEndsAt,proto3" json:"subscription_ends_at,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// Set when the clinic OWNER logs in while their subscription does not cover this
+	// clinic and installation: instead of failing, Login gives a session that can only
+	// buy one (BillingService). database_keys, offline_grant and subscription_ends_at
+	// are then unset, so the local database cannot be opened. Once a payment is
+	// approved, the owner logs in again. Other members still get the errors.
+	BillingOnly bool `protobuf:"varint,10,opt,name=billing_only,json=billingOnly,proto3" json:"billing_only,omitempty"`
+	// Why, when billing_only: "subscription_inactive", "clinic_limit_exceeded" or
+	// "device_limit_exceeded" (the reasons Login fails with otherwise).
+	BillingReason string `protobuf:"bytes,11,opt,name=billing_reason,json=billingReason,proto3" json:"billing_reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LoginResponse) Reset() {
@@ -404,6 +413,20 @@ func (x *LoginResponse) GetSubscriptionEndsAt() *timestamppb.Timestamp {
 		return x.SubscriptionEndsAt
 	}
 	return nil
+}
+
+func (x *LoginResponse) GetBillingOnly() bool {
+	if x != nil {
+		return x.BillingOnly
+	}
+	return false
+}
+
+func (x *LoginResponse) GetBillingReason() string {
+	if x != nil {
+		return x.BillingReason
+	}
+	return ""
 }
 
 type ChangePasswordRequest struct {
@@ -687,7 +710,7 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\x13installation_secret\x18\x02 \x01(\fB\a\xbaH\x04z\x02h R\x12installationSecret\x12%\n" +
 	"\busername\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
 	"\bpassword\x18\x04 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\x123\n" +
-	"\x11client_public_key\x18\x05 \x01(\fB\a\xbaH\x04z\x02h R\x0fclientPublicKey\"\xe3\x03\n" +
+	"\x11client_public_key\x18\x05 \x01(\fB\a\xbaH\x04z\x02h R\x0fclientPublicKey\"\xad\x04\n" +
 	"\rLoginResponse\x12#\n" +
 	"\rsession_token\x18\x01 \x01(\tR\fsessionToken\x12H\n" +
 	"\x12session_expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\x10sessionExpiresAt\x12#\n" +
@@ -698,7 +721,10 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\roffline_grant\x18\a \x01(\v2\x1d.dental.v1.SignedOfflineGrantR\fofflineGrant\x12;\n" +
 	"\vserver_time\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"serverTime\x12L\n" +
-	"\x14subscription_ends_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x12subscriptionEndsAt\"\xe8\x02\n" +
+	"\x14subscription_ends_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x12subscriptionEndsAt\x12!\n" +
+	"\fbilling_only\x18\n" +
+	" \x01(\bR\vbillingOnly\x12%\n" +
+	"\x0ebilling_reason\x18\v \x01(\tR\rbillingReason\"\xe8\x02\n" +
 	"\x15ChangePasswordRequest\x12%\n" +
 	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x123\n" +
 	"\x10current_password\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\x0fcurrentPassword\x12\xf2\x01\n" +

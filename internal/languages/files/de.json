@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 17,
+    "version": 18,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -140,6 +140,7 @@
       "clinicName": "Name der Praxis",
       "licenseNumber": "Zulassungsnummer der Praxis",
       "clinicPhone": "Telefon der Praxis",
+      "province": "Provinz",
       "city": "Ort",
       "address": "Adresse",
       "postalCode": "Postleitzahl (optional)",
@@ -152,12 +153,19 @@
       "location": "Klicken Sie auf der Karte auf den Standort der Praxis. Mit dem Mausrad vergrößern Sie die Ansicht.",
       "existingNationalId": "Für dieses Konto ist noch keine Identifikationsnummer hinterlegt; sie wird zusammen mit der Praxis gespeichert."
     },
+    "placeholders": {
+      "province": "Provinz auswählen",
+      "city": "Ort auswählen",
+      "loading": "Liste wird geladen..."
+    },
     "validation": {
       "licenseNumberFormat": "Verwenden Sie 3 bis 32 lateinische Buchstaben, Ziffern, Punkte, Bindestriche oder Schrägstriche.",
       "phoneFormat": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
       "postalCodeFormat": "Die Postleitzahl muss 5 bis 10 Ziffern haben.",
       "nationalIdFormat": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
-      "locationRequired": "Markieren Sie den Standort der Praxis auf der Karte."
+      "locationRequired": "Markieren Sie den Standort der Praxis auf der Karte.",
+      "provinceRequired": "Wählen Sie die Provinz der Praxis.",
+      "cityRequired": "Wählen Sie den Ort der Praxis."
     },
     "errors": {
       "required": "Dieser Computer ist noch mit keiner Praxis verbunden. Melden Sie sich an und wählen Sie seine Praxis.",
@@ -165,6 +173,7 @@
       "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert.",
       "identityRequired": "Für dieses Konto ist keine Identifikationsnummer hinterlegt. Geben Sie sie ein.",
       "clinicNotFound": "Diese Praxis wurde nicht gefunden.",
+      "cityNotFound": "Dieser Ort wurde nicht gefunden. Wählen Sie Provinz und Ort erneut.",
       "notClinicOwner": "Nur der Inhaber der Praxis kann einen Computer mit ihr verbinden."
     }
   },

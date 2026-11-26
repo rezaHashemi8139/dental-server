@@ -62,6 +62,34 @@ service AdminService {
   // subscription is in force. Canceling twice changes nothing.
   // Fails with NOT_FOUND "subscription_not_found".
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse) {}
+
+  // Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
+  // Pending ones oldest first (the queue to review), the others newest first.
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse) {}
+
+  // Approves a pending payment after checking the bank statement, and adds the
+  // subscription it pays for, as the payment says (PurchaseMode):
+  // - PURCHASE_MODE_EXTEND: like SellSubscription, from when the paid time ends;
+  // - PURCHASE_MODE_UPGRADE_NOW: from now; the subscription in force ends now.
+  // The limits, duration and price are the ones fixed when the payment was reported.
+  //
+  // Fails with NOT_FOUND "payment_not_found", FAILED_PRECONDITION "payment_not_pending"
+  // or, for an upgrade, FAILED_PRECONDITION "renewal_queued": a subscription was sold
+  // after the payment that starts after the one in force (reject the payment instead).
+  rpc ApprovePayment(ApprovePaymentRequest) returns (ApprovePaymentResponse) {}
+
+  // Rejects a pending payment; the owner sees the reason.
+  // Fails with NOT_FOUND "payment_not_found" or FAILED_PRECONDITION "payment_not_pending".
+  rpc RejectPayment(RejectPaymentRequest) returns (RejectPaymentResponse) {}
+
+  // Every payment account, the active ones first, in position order.
+  rpc ListPaymentAccounts(ListPaymentAccountsRequest) returns (ListPaymentAccountsResponse) {}
+
+  rpc CreatePaymentAccount(CreatePaymentAccountRequest) returns (CreatePaymentAccountResponse) {}
+
+  // Changes an account. Payments already reported keep pointing to it.
+  // Fails with NOT_FOUND "payment_account_not_found".
+  rpc UpdatePaymentAccount(UpdatePaymentAccountRequest) returns (UpdatePaymentAccountResponse) {}
 }
 
 message Admin {
@@ -206,6 +234,8 @@ message GetUserResponse {
   repeated ClinicSummary owned_clinics = 6;
   // Newest first, canceled ones included.
   repeated Subscription subscriptions = 7;
+  // Payments reported in the desktop app, newest first.
+  repeated Payment payments = 8;
 }
 
 message SellSubscriptionRequest {
@@ -228,4 +258,115 @@ message CancelSubscriptionRequest {
 
 message CancelSubscriptionResponse {
   Subscription subscription = 1;
+}
+
+message ListPaymentsRequest {
+  // Only payments with this status; PAYMENT_STATUS_UNSPECIFIED for all.
+  PaymentStatus status = 1 [(buf.validate.field).enum.defined_only = true];
+  // At most this many, up to 500; 0 means 100.
+  uint32 limit = 2 [(buf.validate.field).uint32.lte = 500];
+}
+
+message ListPaymentsResponse {
+  repeated PaymentReview payments = 1;
+}
+
+// A payment with what an administrator needs to check it.
+message PaymentReview {
+  Payment payment = 1;
+  // The clinic owner who reported it.
+  User user = 2;
+  PersonIdentity identity = 3;
+  string phone = 4;
+  // Where the money was sent; unset for payments without a manual transfer.
+  PaymentAccount account = 5;
+}
+
+message ApprovePaymentRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  // Saved as the subscription's note. At most 500 characters.
+  string note = 2 [(buf.validate.field).string.max_len = 500];
+}
+
+message ApprovePaymentResponse {
+  Payment payment = 1;
+  // The subscription added.
+  Subscription subscription = 2;
+}
+
+message RejectPaymentRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  // Shown to the owner. 1–500 characters.
+  string reason = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 500
+  }];
+}
+
+message RejectPaymentResponse {
+  Payment payment = 1;
+}
+
+message ListPaymentAccountsRequest {}
+
+message ListPaymentAccountsResponse {
+  repeated PaymentAccount accounts = 1;
+}
+
+message CreatePaymentAccountRequest {
+  option (buf.validate.message).cel = {
+    id: "destination_required"
+    message: "a card number or an IBAN is required"
+    expression: "this.card_number != '' || this.iban != ''"
+  };
+
+  // 1–100 characters.
+  string bank_name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // 1–100 characters.
+  string holder_name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // Empty, or 16 digits.
+  string card_number = 3 [(buf.validate.field).string.pattern = "^([0-9]{16})?$"];
+  // Empty, or "IR" and 24 digits.
+  string iban = 4 [(buf.validate.field).string.pattern = "^(IR[0-9]{24})?$"];
+  int32 position = 5;
+}
+
+message CreatePaymentAccountResponse {
+  PaymentAccount account = 1;
+}
+
+message UpdatePaymentAccountRequest {
+  option (buf.validate.message).cel = {
+    id: "destination_required"
+    message: "a card number or an IBAN is required"
+    expression: "this.card_number != '' || this.iban != ''"
+  };
+
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+  // The other fields replace the account's; same rules as CreatePaymentAccountRequest.
+  string bank_name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string holder_name = 3 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  string card_number = 4 [(buf.validate.field).string.pattern = "^([0-9]{16})?$"];
+  string iban = 5 [(buf.validate.field).string.pattern = "^(IR[0-9]{24})?$"];
+  int32 position = 6;
+  bool active = 7;
+}
+
+message UpdatePaymentAccountResponse {
+  PaymentAccount account = 1;
 }

@@ -107,6 +107,7 @@ func run() error {
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(service.NewMemberService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewSyncServiceHandler(service.NewSyncService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewPatientServiceHandler(service.NewPatientService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewBillingServiceHandler(service.NewBillingService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewLanguageServiceHandler(service.NewLanguageService(langs), interceptors))
 	// The desktop app's updater: release info and installers (plain HTTP, no session).
 	releases.Register(mux, appReleases)

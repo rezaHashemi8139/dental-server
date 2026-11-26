@@ -164,7 +164,12 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 	}
 	paid, err := checkClinicAccess(ctx, tx, ownerID, clinicID, installationID, now)
 	if err != nil {
-		return nil, err
+		// The owner can fix this by buying: they get a billing-only session instead.
+		reason, ok := subscriptionProblem(err)
+		if !ok || ownerID != userID {
+			return nil, err
+		}
+		return s.billingOnlyLogin(ctx, tx, &user, userID, installationID, isAdmin, reason, now)
 	}
 
 	// Offline access never outlasts the paid time.
@@ -210,6 +215,51 @@ func (s *AuthService) Login(ctx context.Context, req *dentalv1.LoginRequest) (*d
 		OfflineGrant:       grant,
 		ServerTime:         timestamppb.New(now),
 		SubscriptionEndsAt: timestamppb.New(paid.EndsAt),
+	}, nil
+}
+
+// subscriptionProblem reports whether err is a checkClinicAccess failure that a
+// purchase fixes, and its reason.
+func subscriptionProblem(err error) (string, bool) {
+	connectErr, ok := errors.AsType[*connect.Error](err)
+	if !ok || connectErr.Code() != connect.CodePermissionDenied {
+		return "", false
+	}
+	switch reason := connectErr.Message(); reason {
+	case reasonSubscriptionInactive, reasonClinicLimitExceeded, reasonDeviceLimitExceeded:
+		return reason, true
+	default:
+		return "", false
+	}
+}
+
+// billingOnlyLogin ends a login whose owner's subscription does not cover the clinic
+// and installation: a session for BillingService only, without the database keys
+// or an offline grant, so the clinic's data stays closed until they buy.
+func (s *AuthService) billingOnlyLogin(ctx context.Context, tx pgx.Tx, user *dentalv1.User, userID, installationID pgtype.UUID,
+	isAdmin bool, reason string, now time.Time) (*dentalv1.LoginResponse, error) {
+	token, tokenHash := secure.NewToken()
+	sessionExpires := now.Add(s.d.SessionTTL)
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO sessions (token_hash, user_id, installation_id, created_at, expires_at, billing_only)
+		VALUES ($1, $2, $3, $4, $5, true)`, tokenHash, userID, installationID, now, sessionExpires); err != nil {
+		return nil, internal(err)
+	}
+	if _, err := tx.Exec(ctx, `UPDATE installations SET last_seen_at = $2 WHERE id = $1`, installationID, now); err != nil {
+		return nil, internal(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.LoginResponse{
+		SessionToken:     token,
+		SessionExpiresAt: timestamppb.New(sessionExpires),
+		User:             user,
+		IsOwner:          true,
+		IsAdmin:          isAdmin,
+		ServerTime:       timestamppb.New(now),
+		BillingOnly:      true,
+		BillingReason:    reason,
 	}, nil
 }
 

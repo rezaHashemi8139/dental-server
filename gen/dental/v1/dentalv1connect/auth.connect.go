@@ -70,6 +70,8 @@ type AuthServiceClient interface {
 	//   existed and must be registered again;
 	// - FAILED_PRECONDITION "password_change_required": the account has a temporary
 	//   password (MemberService.CreateUser); call ChangePassword, then log in again;
+	// The next three are for members other than the owner; the owner gets a
+	// billing-only session instead (LoginResponse.billing_only):
 	// - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
 	// - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
 	//   subscription allows, and this one is not among the oldest that fit;
@@ -211,6 +213,8 @@ type AuthServiceHandler interface {
 	//   existed and must be registered again;
 	// - FAILED_PRECONDITION "password_change_required": the account has a temporary
 	//   password (MemberService.CreateUser); call ChangePassword, then log in again;
+	// The next three are for members other than the owner; the owner gets a
+	// billing-only session instead (LoginResponse.billing_only):
 	// - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
 	// - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
 	//   subscription allows, and this one is not among the oldest that fit;

@@ -54,6 +54,24 @@ const (
 	// AdminServiceCancelSubscriptionProcedure is the fully-qualified name of the AdminService's
 	// CancelSubscription RPC.
 	AdminServiceCancelSubscriptionProcedure = "/dental.v1.AdminService/CancelSubscription"
+	// AdminServiceListPaymentsProcedure is the fully-qualified name of the AdminService's ListPayments
+	// RPC.
+	AdminServiceListPaymentsProcedure = "/dental.v1.AdminService/ListPayments"
+	// AdminServiceApprovePaymentProcedure is the fully-qualified name of the AdminService's
+	// ApprovePayment RPC.
+	AdminServiceApprovePaymentProcedure = "/dental.v1.AdminService/ApprovePayment"
+	// AdminServiceRejectPaymentProcedure is the fully-qualified name of the AdminService's
+	// RejectPayment RPC.
+	AdminServiceRejectPaymentProcedure = "/dental.v1.AdminService/RejectPayment"
+	// AdminServiceListPaymentAccountsProcedure is the fully-qualified name of the AdminService's
+	// ListPaymentAccounts RPC.
+	AdminServiceListPaymentAccountsProcedure = "/dental.v1.AdminService/ListPaymentAccounts"
+	// AdminServiceCreatePaymentAccountProcedure is the fully-qualified name of the AdminService's
+	// CreatePaymentAccount RPC.
+	AdminServiceCreatePaymentAccountProcedure = "/dental.v1.AdminService/CreatePaymentAccount"
+	// AdminServiceUpdatePaymentAccountProcedure is the fully-qualified name of the AdminService's
+	// UpdatePaymentAccount RPC.
+	AdminServiceUpdatePaymentAccountProcedure = "/dental.v1.AdminService/UpdatePaymentAccount"
 )
 
 // AdminServiceClient is a client for the dental.v1.AdminService service.
@@ -83,6 +101,28 @@ type AdminServiceClient interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
+	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
+	// Pending ones oldest first (the queue to review), the others newest first.
+	ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error)
+	// Approves a pending payment after checking the bank statement, and adds the
+	// subscription it pays for, as the payment says (PurchaseMode):
+	// - PURCHASE_MODE_EXTEND: like SellSubscription, from when the paid time ends;
+	// - PURCHASE_MODE_UPGRADE_NOW: from now; the subscription in force ends now.
+	// The limits, duration and price are the ones fixed when the payment was reported.
+	//
+	// Fails with NOT_FOUND "payment_not_found", FAILED_PRECONDITION "payment_not_pending"
+	// or, for an upgrade, FAILED_PRECONDITION "renewal_queued": a subscription was sold
+	// after the payment that starts after the one in force (reject the payment instead).
+	ApprovePayment(context.Context, *v1.ApprovePaymentRequest) (*v1.ApprovePaymentResponse, error)
+	// Rejects a pending payment; the owner sees the reason.
+	// Fails with NOT_FOUND "payment_not_found" or FAILED_PRECONDITION "payment_not_pending".
+	RejectPayment(context.Context, *v1.RejectPaymentRequest) (*v1.RejectPaymentResponse, error)
+	// Every payment account, the active ones first, in position order.
+	ListPaymentAccounts(context.Context, *v1.ListPaymentAccountsRequest) (*v1.ListPaymentAccountsResponse, error)
+	CreatePaymentAccount(context.Context, *v1.CreatePaymentAccountRequest) (*v1.CreatePaymentAccountResponse, error)
+	// Changes an account. Payments already reported keep pointing to it.
+	// Fails with NOT_FOUND "payment_account_not_found".
+	UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error)
 }
 
 // NewAdminServiceClient constructs a client for the dental.v1.AdminService service. By default, it
@@ -150,20 +190,62 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
 			connect.WithClientOptions(opts...),
 		),
+		listPayments: connect.NewClient[v1.ListPaymentsRequest, v1.ListPaymentsResponse](
+			httpClient,
+			baseURL+AdminServiceListPaymentsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListPayments")),
+			connect.WithClientOptions(opts...),
+		),
+		approvePayment: connect.NewClient[v1.ApprovePaymentRequest, v1.ApprovePaymentResponse](
+			httpClient,
+			baseURL+AdminServiceApprovePaymentProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ApprovePayment")),
+			connect.WithClientOptions(opts...),
+		),
+		rejectPayment: connect.NewClient[v1.RejectPaymentRequest, v1.RejectPaymentResponse](
+			httpClient,
+			baseURL+AdminServiceRejectPaymentProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("RejectPayment")),
+			connect.WithClientOptions(opts...),
+		),
+		listPaymentAccounts: connect.NewClient[v1.ListPaymentAccountsRequest, v1.ListPaymentAccountsResponse](
+			httpClient,
+			baseURL+AdminServiceListPaymentAccountsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListPaymentAccounts")),
+			connect.WithClientOptions(opts...),
+		),
+		createPaymentAccount: connect.NewClient[v1.CreatePaymentAccountRequest, v1.CreatePaymentAccountResponse](
+			httpClient,
+			baseURL+AdminServiceCreatePaymentAccountProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("CreatePaymentAccount")),
+			connect.WithClientOptions(opts...),
+		),
+		updatePaymentAccount: connect.NewClient[v1.UpdatePaymentAccountRequest, v1.UpdatePaymentAccountResponse](
+			httpClient,
+			baseURL+AdminServiceUpdatePaymentAccountProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdatePaymentAccount")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // adminServiceClient implements AdminServiceClient.
 type adminServiceClient struct {
-	login              *connect.Client[v1.AdminServiceLoginRequest, v1.AdminServiceLoginResponse]
-	logout             *connect.Client[v1.AdminServiceLogoutRequest, v1.AdminServiceLogoutResponse]
-	createAdmin        *connect.Client[v1.CreateAdminRequest, v1.CreateAdminResponse]
-	listPlans          *connect.Client[v1.ListPlansRequest, v1.ListPlansResponse]
-	createPlan         *connect.Client[v1.CreatePlanRequest, v1.CreatePlanResponse]
-	updatePlan         *connect.Client[v1.UpdatePlanRequest, v1.UpdatePlanResponse]
-	getUser            *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
-	sellSubscription   *connect.Client[v1.SellSubscriptionRequest, v1.SellSubscriptionResponse]
-	cancelSubscription *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
+	login                *connect.Client[v1.AdminServiceLoginRequest, v1.AdminServiceLoginResponse]
+	logout               *connect.Client[v1.AdminServiceLogoutRequest, v1.AdminServiceLogoutResponse]
+	createAdmin          *connect.Client[v1.CreateAdminRequest, v1.CreateAdminResponse]
+	listPlans            *connect.Client[v1.ListPlansRequest, v1.ListPlansResponse]
+	createPlan           *connect.Client[v1.CreatePlanRequest, v1.CreatePlanResponse]
+	updatePlan           *connect.Client[v1.UpdatePlanRequest, v1.UpdatePlanResponse]
+	getUser              *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
+	sellSubscription     *connect.Client[v1.SellSubscriptionRequest, v1.SellSubscriptionResponse]
+	cancelSubscription   *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
+	listPayments         *connect.Client[v1.ListPaymentsRequest, v1.ListPaymentsResponse]
+	approvePayment       *connect.Client[v1.ApprovePaymentRequest, v1.ApprovePaymentResponse]
+	rejectPayment        *connect.Client[v1.RejectPaymentRequest, v1.RejectPaymentResponse]
+	listPaymentAccounts  *connect.Client[v1.ListPaymentAccountsRequest, v1.ListPaymentAccountsResponse]
+	createPaymentAccount *connect.Client[v1.CreatePaymentAccountRequest, v1.CreatePaymentAccountResponse]
+	updatePaymentAccount *connect.Client[v1.UpdatePaymentAccountRequest, v1.UpdatePaymentAccountResponse]
 }
 
 // Login calls dental.v1.AdminService.Login.
@@ -247,6 +329,60 @@ func (c *adminServiceClient) CancelSubscription(ctx context.Context, req *v1.Can
 	return nil, err
 }
 
+// ListPayments calls dental.v1.AdminService.ListPayments.
+func (c *adminServiceClient) ListPayments(ctx context.Context, req *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error) {
+	response, err := c.listPayments.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ApprovePayment calls dental.v1.AdminService.ApprovePayment.
+func (c *adminServiceClient) ApprovePayment(ctx context.Context, req *v1.ApprovePaymentRequest) (*v1.ApprovePaymentResponse, error) {
+	response, err := c.approvePayment.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// RejectPayment calls dental.v1.AdminService.RejectPayment.
+func (c *adminServiceClient) RejectPayment(ctx context.Context, req *v1.RejectPaymentRequest) (*v1.RejectPaymentResponse, error) {
+	response, err := c.rejectPayment.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ListPaymentAccounts calls dental.v1.AdminService.ListPaymentAccounts.
+func (c *adminServiceClient) ListPaymentAccounts(ctx context.Context, req *v1.ListPaymentAccountsRequest) (*v1.ListPaymentAccountsResponse, error) {
+	response, err := c.listPaymentAccounts.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// CreatePaymentAccount calls dental.v1.AdminService.CreatePaymentAccount.
+func (c *adminServiceClient) CreatePaymentAccount(ctx context.Context, req *v1.CreatePaymentAccountRequest) (*v1.CreatePaymentAccountResponse, error) {
+	response, err := c.createPaymentAccount.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// UpdatePaymentAccount calls dental.v1.AdminService.UpdatePaymentAccount.
+func (c *adminServiceClient) UpdatePaymentAccount(ctx context.Context, req *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error) {
+	response, err := c.updatePaymentAccount.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // AdminServiceHandler is an implementation of the dental.v1.AdminService service.
 type AdminServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
@@ -274,6 +410,28 @@ type AdminServiceHandler interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
+	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
+	// Pending ones oldest first (the queue to review), the others newest first.
+	ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error)
+	// Approves a pending payment after checking the bank statement, and adds the
+	// subscription it pays for, as the payment says (PurchaseMode):
+	// - PURCHASE_MODE_EXTEND: like SellSubscription, from when the paid time ends;
+	// - PURCHASE_MODE_UPGRADE_NOW: from now; the subscription in force ends now.
+	// The limits, duration and price are the ones fixed when the payment was reported.
+	//
+	// Fails with NOT_FOUND "payment_not_found", FAILED_PRECONDITION "payment_not_pending"
+	// or, for an upgrade, FAILED_PRECONDITION "renewal_queued": a subscription was sold
+	// after the payment that starts after the one in force (reject the payment instead).
+	ApprovePayment(context.Context, *v1.ApprovePaymentRequest) (*v1.ApprovePaymentResponse, error)
+	// Rejects a pending payment; the owner sees the reason.
+	// Fails with NOT_FOUND "payment_not_found" or FAILED_PRECONDITION "payment_not_pending".
+	RejectPayment(context.Context, *v1.RejectPaymentRequest) (*v1.RejectPaymentResponse, error)
+	// Every payment account, the active ones first, in position order.
+	ListPaymentAccounts(context.Context, *v1.ListPaymentAccountsRequest) (*v1.ListPaymentAccountsResponse, error)
+	CreatePaymentAccount(context.Context, *v1.CreatePaymentAccountRequest) (*v1.CreatePaymentAccountResponse, error)
+	// Changes an account. Payments already reported keep pointing to it.
+	// Fails with NOT_FOUND "payment_account_not_found".
+	UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -337,6 +495,42 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceListPaymentsHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceListPaymentsProcedure,
+		svc.ListPayments,
+		connect.WithSchema(adminServiceMethods.ByName("ListPayments")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceApprovePaymentHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceApprovePaymentProcedure,
+		svc.ApprovePayment,
+		connect.WithSchema(adminServiceMethods.ByName("ApprovePayment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceRejectPaymentHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceRejectPaymentProcedure,
+		svc.RejectPayment,
+		connect.WithSchema(adminServiceMethods.ByName("RejectPayment")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceListPaymentAccountsHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceListPaymentAccountsProcedure,
+		svc.ListPaymentAccounts,
+		connect.WithSchema(adminServiceMethods.ByName("ListPaymentAccounts")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceCreatePaymentAccountHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceCreatePaymentAccountProcedure,
+		svc.CreatePaymentAccount,
+		connect.WithSchema(adminServiceMethods.ByName("CreatePaymentAccount")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdatePaymentAccountHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceUpdatePaymentAccountProcedure,
+		svc.UpdatePaymentAccount,
+		connect.WithSchema(adminServiceMethods.ByName("UpdatePaymentAccount")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceLoginProcedure:
@@ -357,6 +551,18 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSellSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceCancelSubscriptionProcedure:
 			adminServiceCancelSubscriptionHandler.ServeHTTP(w, r)
+		case AdminServiceListPaymentsProcedure:
+			adminServiceListPaymentsHandler.ServeHTTP(w, r)
+		case AdminServiceApprovePaymentProcedure:
+			adminServiceApprovePaymentHandler.ServeHTTP(w, r)
+		case AdminServiceRejectPaymentProcedure:
+			adminServiceRejectPaymentHandler.ServeHTTP(w, r)
+		case AdminServiceListPaymentAccountsProcedure:
+			adminServiceListPaymentAccountsHandler.ServeHTTP(w, r)
+		case AdminServiceCreatePaymentAccountProcedure:
+			adminServiceCreatePaymentAccountHandler.ServeHTTP(w, r)
+		case AdminServiceUpdatePaymentAccountProcedure:
+			adminServiceUpdatePaymentAccountHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -400,4 +606,28 @@ func (UnimplementedAdminServiceHandler) SellSubscription(context.Context, *v1.Se
 
 func (UnimplementedAdminServiceHandler) CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.CancelSubscription is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListPayments is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ApprovePayment(context.Context, *v1.ApprovePaymentRequest) (*v1.ApprovePaymentResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ApprovePayment is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) RejectPayment(context.Context, *v1.RejectPaymentRequest) (*v1.RejectPaymentResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.RejectPayment is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListPaymentAccounts(context.Context, *v1.ListPaymentAccountsRequest) (*v1.ListPaymentAccountsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListPaymentAccounts is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) CreatePaymentAccount(context.Context, *v1.CreatePaymentAccountRequest) (*v1.CreatePaymentAccountResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.CreatePaymentAccount is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.UpdatePaymentAccount is not implemented"))
 }

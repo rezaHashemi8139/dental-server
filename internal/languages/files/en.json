@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 17,
+    "version": 18,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -140,6 +140,7 @@
       "clinicName": "Clinic name",
       "licenseNumber": "Clinic license number",
       "clinicPhone": "Clinic phone",
+      "province": "Province",
       "city": "City",
       "address": "Address",
       "postalCode": "Postal code (optional)",
@@ -152,12 +153,19 @@
       "location": "Click the clinic's place on the map. Zoom in with the mouse wheel.",
       "existingNationalId": "This account has no national ID on file yet; it is saved together with the clinic."
     },
+    "placeholders": {
+      "province": "Choose the province",
+      "city": "Choose the city",
+      "loading": "Loading the list..."
+    },
     "validation": {
       "licenseNumberFormat": "Use 3 to 32 Latin letters, digits, dots, dashes or slashes.",
       "phoneFormat": "The phone number must have 7 to 15 digits (optionally starting with +).",
       "postalCodeFormat": "The postal code must have 5 to 10 digits.",
       "nationalIdFormat": "This national ID is not valid. Check its 10 digits.",
-      "locationRequired": "Mark the clinic's place on the map."
+      "locationRequired": "Mark the clinic's place on the map.",
+      "provinceRequired": "Choose the clinic's province.",
+      "cityRequired": "Choose the clinic's city."
     },
     "errors": {
       "required": "This computer is not connected to a clinic yet. Log in and choose its clinic.",
@@ -165,6 +173,7 @@
       "licenseNumberTaken": "A clinic with this license number is already registered.",
       "identityRequired": "This account has no national ID on file. Enter it.",
       "clinicNotFound": "This clinic was not found.",
+      "cityNotFound": "This city was not found. Choose the province and city again.",
       "notClinicOwner": "Only the clinic's owner can connect a computer to it."
     }
   },

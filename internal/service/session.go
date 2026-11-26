@@ -23,16 +23,30 @@ type Session struct {
 	ClinicID pgtype.UUID
 	IsOwner  bool
 	IsAdmin  bool
+	// Set for an owner logged in without a subscription that covers the clinic
+	// (LoginResponse.billing_only): only billingOnlyProcedures are allowed.
+	BillingOnly bool
 }
 
 type sessionKey struct{}
+
+// billingOnlyProcedures are what a billing-only session may call, besides every
+// BillingService procedure.
+var billingOnlyProcedures = map[string]bool{
+	dentalv1connect.AuthServiceLogoutProcedure: true,
+}
+
+// allowedBillingOnly reports whether a billing-only session may call the procedure.
+func allowedBillingOnly(procedure string) bool {
+	return billingOnlyProcedures[procedure] || strings.HasPrefix(procedure, "/"+dentalv1connect.BillingServiceName+"/")
+}
 
 // publicProcedures can be called without a session.
 var publicProcedures = map[string]bool{
 	dentalv1connect.HealthServiceCheckProcedure:               true,
 	dentalv1connect.InstallationServiceRegisterProcedure:      true,
 	dentalv1connect.InstallationServiceListMyClinicsProcedure: true,
-	dentalv1connect.InstallationServiceListCitiesProcedure: true,
+	dentalv1connect.InstallationServiceListCitiesProcedure:    true,
 	dentalv1connect.AuthServiceSignUpProcedure:                true,
 	dentalv1connect.AuthServiceLoginProcedure:                 true,
 	dentalv1connect.AuthServiceChangePasswordProcedure:        true,
@@ -45,6 +59,8 @@ var publicProcedures = map[string]bool{
 // the user is not disabled, the installation is not revoked, the user is still a
 // member of its clinic and the clinic owner still has a subscription in force.
 // (The subscription's limits on clinics and installations are checked at login.)
+// A billing-only session needs no subscription, but may only buy one: other calls
+// fail with PERMISSION_DENIED "subscription_required".
 //
 // AdminService is not served with it: see AdminSessionInterceptor.
 func SessionInterceptor(d *Deps) connect.UnaryInterceptorFunc {
@@ -61,7 +77,7 @@ func SessionInterceptor(d *Deps) connect.UnaryInterceptorFunc {
 
 			var s Session
 			err := d.DB.QueryRow(ctx, `
-				SELECT s.id, s.user_id, s.installation_id, i.clinic_id, c.owner_id = s.user_id, m.is_admin
+				SELECT s.id, s.user_id, s.installation_id, i.clinic_id, c.owner_id = s.user_id, m.is_admin, s.billing_only
 				FROM sessions s
 				JOIN users u ON u.id = s.user_id
 				JOIN installations i ON i.id = s.installation_id
@@ -70,17 +86,20 @@ func SessionInterceptor(d *Deps) connect.UnaryInterceptorFunc {
 				WHERE s.token_hash = $1
 				  AND s.revoked_at IS NULL AND s.expires_at > $2
 				  AND u.disabled_at IS NULL AND i.revoked_at IS NULL
-				  AND EXISTS (
+				  AND (s.billing_only OR EXISTS (
 				      SELECT 1 FROM subscriptions p
 				      WHERE p.user_id = c.owner_id AND p.canceled_at IS NULL
-				        AND p.starts_at <= $2 AND p.ends_at > $2)`,
+				        AND p.starts_at <= $2 AND p.ends_at > $2))`,
 				secure.HashToken(token), d.Now(),
-			).Scan(&s.ID, &s.UserID, &s.InstallationID, &s.ClinicID, &s.IsOwner, &s.IsAdmin)
+			).Scan(&s.ID, &s.UserID, &s.InstallationID, &s.ClinicID, &s.IsOwner, &s.IsAdmin, &s.BillingOnly)
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
 			}
 			if err != nil {
 				return nil, internal(err)
+			}
+			if s.BillingOnly && !allowedBillingOnly(req.Spec().Procedure) {
+				return nil, fail(connect.CodePermissionDenied, reasonSubscriptionRequired)
 			}
 
 			return next(context.WithValue(ctx, sessionKey{}, s), req)

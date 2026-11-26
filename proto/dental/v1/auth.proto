@@ -34,6 +34,8 @@ service AuthService {
   //   existed and must be registered again;
   // - FAILED_PRECONDITION "password_change_required": the account has a temporary
   //   password (MemberService.CreateUser); call ChangePassword, then log in again;
+  // The next three are for members other than the owner; the owner gets a
+  // billing-only session instead (LoginResponse.billing_only):
   // - PERMISSION_DENIED "subscription_inactive": the clinic owner has no subscription in force;
   // - PERMISSION_DENIED "clinic_limit_exceeded": the owner has more clinics than the
   //   subscription allows, and this one is not among the oldest that fit;
@@ -125,6 +127,15 @@ message LoginResponse {
   // When the clinic owner's paid time ends (renewals already bought included).
   // Nobody can use the clinic's app after it, online or offline.
   google.protobuf.Timestamp subscription_ends_at = 9;
+  // Set when the clinic OWNER logs in while their subscription does not cover this
+  // clinic and installation: instead of failing, Login gives a session that can only
+  // buy one (BillingService). database_keys, offline_grant and subscription_ends_at
+  // are then unset, so the local database cannot be opened. Once a payment is
+  // approved, the owner logs in again. Other members still get the errors.
+  bool billing_only = 10;
+  // Why, when billing_only: "subscription_inactive", "clinic_limit_exceeded" or
+  // "device_limit_exceeded" (the reasons Login fails with otherwise).
+  string billing_reason = 11;
 }
 
 message ChangePasswordRequest {

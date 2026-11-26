@@ -1,0 +1,137 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+import "dental/v1/subscription.proto";
+import "google/protobuf/timestamp.proto";
+
+// Buying subscriptions in the desktop app: plans for sale, the owner's subscriptions
+// and their payments (see subscription.proto for how payments work).
+//
+// Every call needs a session of the clinic OWNER (the session's clinic is theirs);
+// anyone else gets PERMISSION_DENIED "not_clinic_owner". A billing-only session
+// (LoginResponse.billing_only) works here, and only here.
+service BillingService {
+  // Plans on sale, cheapest first.
+  rpc ListPlans(BillingServiceListPlansRequest) returns (BillingServiceListPlansResponse) {}
+
+  // The owner's subscriptions, clinics, where to pay and the payment waiting for review.
+  rpc GetBillingStatus(GetBillingStatusRequest) returns (GetBillingStatusResponse) {}
+
+  // What buying a plan would cost and the period it would buy. Show it before the
+  // owner transfers the money.
+  //
+  // Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive" or,
+  // for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a subscription
+  // already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
+  rpc QuotePayment(QuotePaymentRequest) returns (QuotePaymentResponse) {}
+
+  // Reports a transfer, priced as QuotePayment quotes it now. It waits for an
+  // administrator (PAYMENT_STATUS_PENDING).
+  //
+  // Fails like QuotePayment, and with NOT_FOUND "payment_account_not_found" (unknown
+  // or inactive account) or FAILED_PRECONDITION "payment_pending": the owner already
+  // has a payment waiting (cancel it first, or wait for the review).
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse) {}
+
+  // The owner's payments, newest first.
+  rpc ListMyPayments(ListMyPaymentsRequest) returns (ListMyPaymentsResponse) {}
+
+  // Withdraws a pending payment. Fails with NOT_FOUND "payment_not_found" or
+  // FAILED_PRECONDITION "payment_not_pending".
+  rpc CancelPayment(CancelPaymentRequest) returns (CancelPaymentResponse) {}
+}
+
+message BillingServiceListPlansRequest {}
+
+message BillingServiceListPlansResponse {
+  repeated Plan plans = 1;
+}
+
+message GetBillingStatusRequest {}
+
+message GetBillingStatusResponse {
+  // The subscription in force now; unset if none.
+  Subscription current = 1;
+  // Already bought, starting later, in order.
+  repeated Subscription upcoming = 2;
+  // When the paid time ends, the upcoming subscriptions that follow without a gap
+  // included. Unset if no subscription is in force.
+  google.protobuf.Timestamp paid_until = 3;
+  // The owner's clinics, oldest first.
+  repeated ClinicUsage clinics = 4;
+  // Where to transfer money, in order.
+  repeated PaymentAccount pay_to = 5;
+  // The payment waiting for review, if any.
+  Payment pending_payment = 6;
+}
+
+// One of the owner's clinics, and whether the subscription in force covers it.
+message ClinicUsage {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  string license_number = 3;
+  string city = 4;
+  // Installations that are not revoked.
+  uint32 installation_count = 5;
+  // Within the subscription's clinic limit (the oldest clinics are covered first).
+  bool covered = 6;
+}
+
+message QuotePaymentRequest {
+  // 16 raw UUID bytes.
+  bytes plan_id = 1 [(buf.validate.field).bytes.len = 16];
+  PurchaseMode mode = 2 [
+    (buf.validate.field).enum.defined_only = true,
+    (buf.validate.field).enum.not_in = 0
+  ];
+}
+
+message QuotePaymentResponse {
+  PaymentQuote quote = 1;
+}
+
+message CreatePaymentRequest {
+  option (buf.validate.message).cel = {
+    id: "card_last4_required"
+    message: "a card to card payment needs the last 4 digits of the payer's card"
+    expression: "this.method != 1 || (has(this.transfer) && this.transfer.payer_card_last4 != '')"
+  };
+
+  // 16 raw UUID bytes.
+  bytes plan_id = 1 [(buf.validate.field).bytes.len = 16];
+  PurchaseMode mode = 2 [
+    (buf.validate.field).enum.defined_only = true,
+    (buf.validate.field).enum.not_in = 0
+  ];
+  PaymentMethod method = 3 [
+    (buf.validate.field).enum.defined_only = true,
+    (buf.validate.field).enum.not_in = 0
+  ];
+  oneof details {
+    option (buf.validate.oneof).required = true;
+    // For PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
+    ManualTransfer transfer = 4;
+  }
+}
+
+message CreatePaymentResponse {
+  Payment payment = 1;
+}
+
+message ListMyPaymentsRequest {}
+
+message ListMyPaymentsResponse {
+  repeated Payment payments = 1;
+}
+
+message CancelPaymentRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message CancelPaymentResponse {
+  Payment payment = 1;
+}

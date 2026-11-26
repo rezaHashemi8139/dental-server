@@ -289,6 +289,10 @@ func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest
 	if err := subs.Err(); err != nil {
 		return nil, internal(err)
 	}
+
+	if res.Payments, err = paymentsOf(ctx, s.d.DB, id); err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -315,45 +319,14 @@ func (s *AdminService) SellSubscription(ctx context.Context, req *dentalv1.SellS
 		return nil, internal(err)
 	}
 
-	var maxClinics, maxDevices, days int32
-	var price int64
-	var active bool
-	err = tx.QueryRow(ctx, `
-		SELECT max_clinics, max_devices_per_clinic, duration_days, price_rials, active FROM plans WHERE id = $1`, planID,
-	).Scan(&maxClinics, &maxDevices, &days, &price, &active)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, fail(connect.CodeNotFound, reasonPlanNotFound)
-	}
-	if err != nil {
-		return nil, internal(err)
-	}
-	if !active {
-		return nil, fail(connect.CodeFailedPrecondition, reasonPlanInactive)
-	}
-
 	// Starts when the paid time already bought ends, or now.
-	var startsAt time.Time
-	if err := tx.QueryRow(ctx, `
-		SELECT greatest($2::timestamptz, max(ends_at)) FROM subscriptions
-		WHERE user_id = $1 AND canceled_at IS NULL`, userID, now,
-	).Scan(&startsAt); err != nil {
-		return nil, internal(err)
-	}
-	endsAt := startsAt.Add(time.Duration(days) * 24 * time.Hour)
-
-	var id pgtype.UUID
-	if err := tx.QueryRow(ctx, `
-		INSERT INTO subscriptions (user_id, plan_id, max_clinics, max_devices_per_clinic, price_rials,
-		                           starts_at, ends_at, note, sold_by, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
-		userID, planID, maxClinics, maxDevices, price, startsAt, endsAt, req.GetNote(), adminSessionFrom(ctx).AdminID, now,
-	).Scan(&id); err != nil {
-		return nil, internal(err)
-	}
-
-	sub, err := scanSubscription(tx.QueryRow(ctx, `SELECT`+subscriptionColumns+` WHERE s.id = $1`, id))
+	p, err := quotePurchase(ctx, tx, userID, planID, dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND, now)
 	if err != nil {
-		return nil, internal(err)
+		return nil, err
+	}
+	sub, err := insertSubscription(ctx, tx, userID, p, req.GetNote(), adminSessionFrom(ctx).AdminID, now)
+	if err != nil {
+		return nil, err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, internal(err)

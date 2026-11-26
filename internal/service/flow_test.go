@@ -51,7 +51,7 @@ func newTestEnv(t *testing.T) *testEnv {
 	}
 	t.Cleanup(db.Close)
 	if _, err := db.Exec(ctx, `TRUNCATE users, clinics, installations, clinic_members, installation_keys, sessions,
-		admins, admin_sessions, plans, subscriptions, patients, clinic_patients, treatments, patient_history_views
+		admins, admin_sessions, plans, subscriptions, payments, payment_accounts, patients, clinic_patients, treatments, patient_history_views
 		CASCADE`); err != nil {
 		t.Fatal(err)
 	}
@@ -68,6 +68,7 @@ func newTestEnv(t *testing.T) *testEnv {
 	mux.Handle(dentalv1connect.NewMemberServiceHandler(NewMemberService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewSyncServiceHandler(NewSyncService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewPatientServiceHandler(NewPatientService(deps), interceptors))
+	mux.Handle(dentalv1connect.NewBillingServiceHandler(NewBillingService(deps), interceptors))
 	mux.Handle(dentalv1connect.NewAdminServiceHandler(NewAdminService(deps),
 		connect.WithInterceptors(ValidateInterceptor(), AdminSessionInterceptor(deps))))
 
@@ -252,6 +253,11 @@ func (e *testEnv) login(inst *dentalv1.RegisterResponse, username, password stri
 	})
 	if err != nil {
 		return nil, err
+	}
+	// A billing-only login (the owner without a subscription that covers the clinic)
+	// has no keys: report it as its reason, the error any other member gets.
+	if res.GetBillingOnly() {
+		return nil, fail(connect.CodePermissionDenied, res.GetBillingReason())
 	}
 
 	plain, err := secure.OpenSealed(clientKey, res.GetDatabaseKeys(), inst.GetInstallationId())

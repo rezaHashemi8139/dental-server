@@ -69,6 +69,12 @@ const (
 	reasonSubscriptionNotFound   = "subscription_not_found"
 	reasonPatientNotFound        = "patient_not_found"
 	reasonUpdateRequired         = "update_required"
+	reasonSubscriptionRequired   = "subscription_required"
+	reasonPaymentPending         = "payment_pending"
+	reasonPaymentNotFound        = "payment_not_found"
+	reasonPaymentNotPending      = "payment_not_pending"
+	reasonPaymentAccountNotFound = "payment_account_not_found"
+	reasonRenewalQueued          = "renewal_queued"
 )
 
 // querier is what both a connection pool and a transaction offer, for helpers
