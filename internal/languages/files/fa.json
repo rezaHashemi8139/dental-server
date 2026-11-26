@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 30,
+    "version": 31,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -401,7 +401,11 @@
     "online": "آنلاین",
     "offline": "آفلاین",
     "offlineUntil": "ورود بدون اینترنت تا {{date}}",
-    "logout": "خروج"
+    "logout": "خروج",
+    "trial": {
+      "title": "دوره‌ی آزمایشی رایگان شما فعال شد",
+      "description": "تعرفه‌ی {{plan}} تا {{date}} رایگان فعال است. پس از آن می‌توانید از صفحه‌ی «اشتراک» اشتراک بخرید یا آن را ارتقا دهید."
+    }
   },
   "identity": {
     "fields": {

@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 25,
+    "version": 26,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -401,7 +401,11 @@
     "online": "Online",
     "offline": "Offline",
     "offlineUntil": "Offline-Zugang bis {{date}}",
-    "logout": "Abmelden"
+    "logout": "Abmelden",
+    "trial": {
+      "title": "Ihr kostenloser Testzeitraum ist aktiv",
+      "description": "Der Tarif {{plan}} ist bis {{date}} kostenlos aktiv. Danach können Sie auf der Seite „Abonnement“ ein Abonnement kaufen oder erweitern."
+    }
   },
   "identity": {
     "fields": {

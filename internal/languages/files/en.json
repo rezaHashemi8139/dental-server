@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 25,
+    "version": 26,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -401,7 +401,11 @@
     "online": "Online",
     "offline": "Offline",
     "offlineUntil": "Offline access until {{date}}",
-    "logout": "Log out"
+    "logout": "Log out",
+    "trial": {
+      "title": "Your free trial is active",
+      "description": "The {{plan}} plan is active for free until {{date}}. After that, you can buy or upgrade a subscription on the Subscription page."
+    }
   },
   "identity": {
     "fields": {
