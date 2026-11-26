@@ -186,6 +186,9 @@ message CreatePlanRequest {
   }];
   // Not negative.
   int64 price_rials = 5 [(buf.validate.field).int64.gte = 0];
+  // How many times each owner may buy it in the desktop app (BillingService), 0 for
+  // no limit, at most 1000. SellSubscription is not limited.
+  uint32 max_purchases_per_owner = 6 [(buf.validate.field).uint32.lte = 1000];
 }
 
 message CreatePlanResponse {
@@ -214,6 +217,7 @@ message UpdatePlanRequest {
   }];
   int64 price_rials = 6 [(buf.validate.field).int64.gte = 0];
   bool active = 7;
+  uint32 max_purchases_per_owner = 8 [(buf.validate.field).uint32.lte = 1000];
 }
 
 message UpdatePlanResponse {

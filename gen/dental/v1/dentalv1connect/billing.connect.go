@@ -62,16 +62,27 @@ type BillingServiceClient interface {
 	// What buying a plan would cost and the period it would buy. Show it before the
 	// owner transfers the money.
 	//
-	// Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive" or,
-	// for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a subscription
-	// already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
+	// Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive",
+	// FAILED_PRECONDITION "purchase_limit_reached" (the owner already bought the plan
+	// Plan.max_purchases_per_owner times: see BillingServiceListPlansResponse.purchases)
+	// or, for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a
+	// subscription already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
 	QuotePayment(context.Context, *v1.QuotePaymentRequest) (*v1.QuotePaymentResponse, error)
-	// Reports a transfer, priced as QuotePayment quotes it now. It waits for an
-	// administrator (PAYMENT_STATUS_PENDING).
+	// Buys a plan, priced as QuotePayment quotes it now.
+	// - With something to pay, reports a transfer (PAYMENT_METHOD_CARD_TO_CARD or
+	//   PAYMENT_METHOD_BANK_TRANSFER) that waits for an administrator (PAYMENT_STATUS_PENDING).
+	// - With nothing to pay (a free plan, or an upgrade whose credit covers the price),
+	//   PAYMENT_METHOD_FREE without transfer details: approved at
+	//   once and the subscription added, as AdminService.ApprovePayment would. A
+	//   billing-only session stays so: log in again to use the clinic.
 	//
-	// Fails like QuotePayment, and with NOT_FOUND "payment_account_not_found" (unknown
-	// or inactive account) or FAILED_PRECONDITION "payment_pending": the owner already
-	// has a payment waiting (cancel it first, or wait for the review).
+	// Fails like QuotePayment, and with:
+	// - FAILED_PRECONDITION "payment_required": PAYMENT_METHOD_FREE but there is an amount to pay;
+	// - FAILED_PRECONDITION "payment_not_required": a transfer but there is nothing to pay
+	//   (use PAYMENT_METHOD_FREE);
+	// - NOT_FOUND "payment_account_not_found": unknown or inactive account;
+	// - FAILED_PRECONDITION "payment_pending": the owner already has a payment waiting
+	//   (cancel it first, or wait for the review).
 	CreatePayment(context.Context, *v1.CreatePaymentRequest) (*v1.CreatePaymentResponse, error)
 	// The owner's payments, newest first.
 	ListMyPayments(context.Context, *v1.ListMyPaymentsRequest) (*v1.ListMyPaymentsResponse, error)
@@ -203,16 +214,27 @@ type BillingServiceHandler interface {
 	// What buying a plan would cost and the period it would buy. Show it before the
 	// owner transfers the money.
 	//
-	// Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive" or,
-	// for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a subscription
-	// already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
+	// Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive",
+	// FAILED_PRECONDITION "purchase_limit_reached" (the owner already bought the plan
+	// Plan.max_purchases_per_owner times: see BillingServiceListPlansResponse.purchases)
+	// or, for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a
+	// subscription already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
 	QuotePayment(context.Context, *v1.QuotePaymentRequest) (*v1.QuotePaymentResponse, error)
-	// Reports a transfer, priced as QuotePayment quotes it now. It waits for an
-	// administrator (PAYMENT_STATUS_PENDING).
+	// Buys a plan, priced as QuotePayment quotes it now.
+	// - With something to pay, reports a transfer (PAYMENT_METHOD_CARD_TO_CARD or
+	//   PAYMENT_METHOD_BANK_TRANSFER) that waits for an administrator (PAYMENT_STATUS_PENDING).
+	// - With nothing to pay (a free plan, or an upgrade whose credit covers the price),
+	//   PAYMENT_METHOD_FREE without transfer details: approved at
+	//   once and the subscription added, as AdminService.ApprovePayment would. A
+	//   billing-only session stays so: log in again to use the clinic.
 	//
-	// Fails like QuotePayment, and with NOT_FOUND "payment_account_not_found" (unknown
-	// or inactive account) or FAILED_PRECONDITION "payment_pending": the owner already
-	// has a payment waiting (cancel it first, or wait for the review).
+	// Fails like QuotePayment, and with:
+	// - FAILED_PRECONDITION "payment_required": PAYMENT_METHOD_FREE but there is an amount to pay;
+	// - FAILED_PRECONDITION "payment_not_required": a transfer but there is nothing to pay
+	//   (use PAYMENT_METHOD_FREE);
+	// - NOT_FOUND "payment_account_not_found": unknown or inactive account;
+	// - FAILED_PRECONDITION "payment_pending": the owner already has a payment waiting
+	//   (cancel it first, or wait for the review).
 	CreatePayment(context.Context, *v1.CreatePaymentRequest) (*v1.CreatePaymentResponse, error)
 	// The owner's payments, newest first.
 	ListMyPayments(context.Context, *v1.ListMyPaymentsRequest) (*v1.ListMyPaymentsResponse, error)

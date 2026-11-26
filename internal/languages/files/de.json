@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 21,
+    "version": 25,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -186,7 +186,7 @@
     "limits": "{{clinics}} Praxen, {{devices}} Computer pro Praxis",
     "period": "Vom {{from}} bis {{to}}",
     "restricted": {
-      "description": "Bis ein Abonnement aktiv ist, ist nur diese Seite verfügbar und die Daten der Praxis bleiben gesperrt. Wählen Sie einen Tarif, überweisen Sie den Betrag und melden Sie die Zahlung. Sobald sie bestätigt ist, melden Sie sich erneut an.",
+      "description": "Bis ein Abonnement aktiv ist, ist nur diese Seite verfügbar und die Daten der Praxis bleiben gesperrt. Wählen Sie einen Tarif und kaufen Sie ihn; sobald das Abonnement aktiv ist, öffnet sich die Praxis von selbst.",
       "logInAgain": "Erneut anmelden"
     },
     "reasons": {
@@ -199,7 +199,10 @@
       "approvedLogIn": "Das Abonnement wurde hinzugefügt. Melden Sie sich erneut an, um die Praxis zu nutzen.",
       "approvedActive": "Das Abonnement wurde hinzugefügt.",
       "rejected": "Ihre Zahlung wurde abgelehnt.",
-      "noReason": "Es wurde kein Grund angegeben. Wenden Sie sich an den Support."
+      "noReason": "Es wurde kein Grund angegeben. Wenden Sie sich an den Support.",
+      "activated": "Das Abonnement ist aktiv.",
+      "opening": "Praxis wird geöffnet...",
+      "stillRestricted": "Das Abonnement ist aktiv, deckt diese Praxis oder diesen Computer aber noch nicht ab. Der Grund steht oben auf der Seite."
     },
     "current": {
       "title": "Aktuelles Abonnement",
@@ -221,7 +224,10 @@
       "duration": "Laufzeit: {{days}} Tage",
       "clinics": "Praxen: bis zu {{clinics}}",
       "devices": "Computer pro Praxis: bis zu {{devices}}",
-      "buy": "Kaufen"
+      "buy": "Kaufen",
+      "purchaseLimit": "Ihre Käufe: {{used}} von {{max}}",
+      "limitReached": "Bereits genutzt",
+      "activate": "Kostenlos aktivieren"
     },
     "modes": {
       "extend": "Nach dem aktuellen Abonnement",
@@ -254,7 +260,11 @@
       "yesterday": "Gestern",
       "submit": "Zahlung melden",
       "working": "Zahlung wird gemeldet...",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "freeDescription": "Es ist nichts zu bezahlen. Drücken Sie auf Aktivieren, und das Abonnement ist sofort aktiv, ohne Bestätigung.",
+      "activate": "Aktivieren",
+      "activating": "Wird aktiviert...",
+      "freeTitle": "Tarif {{plan}} aktivieren"
     },
     "fields": {
       "reference": "Referenznummer",
@@ -296,8 +306,12 @@
       "paymentAccountNotFound": "Dieses Konto nimmt keine Überweisungen mehr an. Wählen Sie ein anderes.",
       "paymentPending": "Eine Zahlung wartet auf Bestätigung. Warten Sie oder ziehen Sie sie zurück.",
       "paymentNotFound": "Diese Zahlung wurde nicht gefunden.",
-      "paymentNotPending": "Über diese Zahlung wurde bereits entschieden."
-    }
+      "paymentNotPending": "Über diese Zahlung wurde bereits entschieden.",
+      "purchaseLimitReached": "Sie können diesen Tarif nicht erneut kaufen: Sie haben alle erlaubten Käufe genutzt.",
+      "paymentRequired": "Dieser Kauf ist nicht kostenlos. Überweisen Sie den Betrag und melden Sie die Zahlung.",
+      "paymentNotRequired": "Für diesen Kauf ist nichts zu bezahlen. Verwenden Sie stattdessen Aktivieren."
+    },
+    "free": "Kostenlos"
   },
   "connectivity": {
     "checking": "Verbindung wird geprüft...",

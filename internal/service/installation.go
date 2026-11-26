@@ -62,8 +62,12 @@ func (s *InstallationService) Register(ctx context.Context, req *dentalv1.Regist
 	}
 
 	var clinicID pgtype.UUID
+	var freeSubscription *dentalv1.Subscription
 	if c := req.GetClinic(); c != nil {
 		clinicID, err = createClinic(ctx, tx, c, ownerID)
+		if err == nil {
+			freeSubscription, err = grantFreePlan(ctx, tx, ownerID, s.d.Now())
+		}
 	} else {
 		clinicID, err = ownedClinic(ctx, tx, req.GetExistingClinic().GetLicenseNumber(), ownerID)
 	}
@@ -101,6 +105,7 @@ func (s *InstallationService) Register(ctx context.Context, req *dentalv1.Regist
 		ServerTime:         timestamppb.New(s.d.Now()),
 		Owner:              owner,
 		ClinicId:           uuidBytes(clinicID),
+		FreeSubscription:   freeSubscription,
 	}, nil
 }
 

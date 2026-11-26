@@ -35,10 +35,13 @@ func ownerOf(ctx context.Context) (pgtype.UUID, error) {
 }
 
 func (s *BillingService) ListPlans(ctx context.Context, _ *dentalv1.BillingServiceListPlansRequest) (*dentalv1.BillingServiceListPlansResponse, error) {
-	if _, err := ownerOf(ctx); err != nil {
+	ownerID, err := ownerOf(ctx)
+	if err != nil {
 		return nil, err
 	}
-	rows, err := s.d.DB.Query(ctx, `SELECT `+planColumns+` FROM plans WHERE active ORDER BY price_rials, name, id`)
+	rows, err := s.d.DB.Query(ctx, `
+		SELECT `+planColumns+`, `+purchaseCountSQL+`
+		FROM plans p WHERE active ORDER BY price_rials, name, id`, ownerID)
 	if err != nil {
 		return nil, internal(err)
 	}
@@ -46,11 +49,15 @@ func (s *BillingService) ListPlans(ctx context.Context, _ *dentalv1.BillingServi
 
 	res := &dentalv1.BillingServiceListPlansResponse{}
 	for rows.Next() {
-		p, err := scanPlan(rows)
+		var count int64
+		p, err := scanPlan(rows, &count)
 		if err != nil {
 			return nil, internal(err)
 		}
 		res.Plans = append(res.Plans, p)
+		if p.GetMaxPurchasesPerOwner() > 0 {
+			res.Purchases = append(res.Purchases, &dentalv1.PlanPurchases{PlanId: p.GetId(), Count: uint32(count)})
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, internal(err)
@@ -170,6 +177,9 @@ func (s *BillingService) QuotePayment(ctx context.Context, req *dentalv1.QuotePa
 	if err != nil {
 		return nil, err
 	}
+	if err := checkPurchaseLimit(ctx, s.d.DB, ownerID, planID); err != nil {
+		return nil, err
+	}
 	return &dentalv1.QuotePaymentResponse{Quote: &dentalv1.PaymentQuote{
 		PriceRials:  p.PriceRials,
 		CreditRials: p.CreditRials,
@@ -185,9 +195,7 @@ func (s *BillingService) CreatePayment(ctx context.Context, req *dentalv1.Create
 		return nil, err
 	}
 	planID, ok := toUUID(req.GetPlanId())
-	transfer := req.GetTransfer()
-	accountID, ok2 := toUUID(transfer.GetPaymentAccountId())
-	if !ok || !ok2 {
+	if !ok {
 		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
 	}
 	now := s.d.Now()
@@ -205,6 +213,28 @@ func (s *BillingService) CreatePayment(ctx context.Context, req *dentalv1.Create
 	p, err := quotePurchase(ctx, tx, ownerID, planID, req.GetMode(), now)
 	if err != nil {
 		return nil, err
+	}
+	if err := checkPurchaseLimit(ctx, tx, ownerID, planID); err != nil {
+		return nil, err
+	}
+	free := req.GetMethod() == dentalv1.PaymentMethod_PAYMENT_METHOD_FREE
+	switch amount := p.PriceRials - p.CreditRials; {
+	case free && amount != 0:
+		return nil, fail(connect.CodeFailedPrecondition, reasonPaymentRequired)
+	case !free && amount == 0:
+		return nil, fail(connect.CodeFailedPrecondition, reasonPaymentNotRequired)
+	case free:
+		id, _, err := activateFree(ctx, tx, ownerID, req.GetMode(), p, now)
+		if err != nil {
+			return nil, err
+		}
+		return s.commitPayment(ctx, tx, id)
+	}
+
+	transfer := req.GetTransfer()
+	accountID, ok := toUUID(transfer.GetPaymentAccountId())
+	if !ok {
+		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
 	}
 	var active bool
 	err = tx.QueryRow(ctx, `SELECT active FROM payment_accounts WHERE id = $1`, accountID).Scan(&active)
@@ -232,6 +262,11 @@ func (s *BillingService) CreatePayment(ctx context.Context, req *dentalv1.Create
 	if err != nil {
 		return nil, internal(err)
 	}
+	return s.commitPayment(ctx, tx, id)
+}
+
+// commitPayment commits the transaction that saved a payment and returns the payment.
+func (s *BillingService) commitPayment(ctx context.Context, tx pgx.Tx, id pgtype.UUID) (*dentalv1.CreatePaymentResponse, error) {
 	payment, err := scanPayment(tx.QueryRow(ctx, `SELECT`+paymentColumns+` WHERE p.id = $1`, id))
 	if err != nil {
 		return nil, internal(err)
@@ -240,6 +275,28 @@ func (s *BillingService) CreatePayment(ctx context.Context, req *dentalv1.Create
 		return nil, internal(err)
 	}
 	return &dentalv1.CreatePaymentResponse{Payment: payment}, nil
+}
+
+// purchaseCountSQL counts an owner's ($1) purchases of a plan (p.id): subscriptions
+// not canceled, however they were sold, and a payment waiting for review.
+const purchaseCountSQL = `(
+	(SELECT count(*) FROM subscriptions s WHERE s.user_id = $1 AND s.plan_id = p.id AND s.canceled_at IS NULL) +
+	(SELECT count(*) FROM payments y WHERE y.user_id = $1 AND y.plan_id = p.id AND y.status = 'pending'))`
+
+// checkPurchaseLimit fails with purchase_limit_reached when the owner already bought
+// the plan as many times as it allows (Plan.max_purchases_per_owner; 0 is no limit).
+func checkPurchaseLimit(ctx context.Context, q querier, ownerID, planID pgtype.UUID) error {
+	var reached bool
+	if err := q.QueryRow(ctx, `
+		SELECT p.max_purchases_per_owner > 0 AND `+purchaseCountSQL+` >= p.max_purchases_per_owner
+		FROM plans p WHERE p.id = $2`, ownerID, planID,
+	).Scan(&reached); err != nil {
+		return internal(err)
+	}
+	if reached {
+		return fail(connect.CodeFailedPrecondition, reasonPurchaseLimitReached)
+	}
+	return nil
 }
 
 func (s *BillingService) ListMyPayments(ctx context.Context, _ *dentalv1.ListMyPaymentsRequest) (*dentalv1.ListMyPaymentsResponse, error) {

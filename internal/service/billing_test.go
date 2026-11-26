@@ -263,3 +263,275 @@ func TestBuySubscriptionInApp(t *testing.T) {
 	_, err = e.billing(nurse.res.GetSessionToken()).ListPlans(ctx, &dentalv1.BillingServiceListPlansRequest{})
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotClinicOwner)
 }
+
+func TestFreePlansAndPurchaseLimits(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+	// Registered before any free plan exists: nothing is granted by itself here (see TestFreePlanOnFirstClinic).
+	inst, inst2 := e.register(1, "doctor"), e.register(2, "dentist")
+	plan := func(name string, price int64, maxPurchases uint32) *dentalv1.Plan {
+		t.Helper()
+		res, err := admin.CreatePlan(ctx, &dentalv1.CreatePlanRequest{
+			Name: name, MaxClinics: 1, MaxDevicesPerClinic: 2, DurationDays: 14, PriceRials: price,
+			MaxPurchasesPerOwner: maxPurchases,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res.GetPlan()
+	}
+	trial, basic, limited := plan("Trial", 0, 1), plan("Basic", 30_000_000, 0), plan("Limited", 10_000_000, 2)
+	account, err := admin.CreatePaymentAccount(ctx, &dentalv1.CreatePaymentAccountRequest{
+		BankName: "Bank", HolderName: "Dental Ltd", Iban: "IR123456789012345678901234",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	login, err := e.rawLogin(inst, "doctor", "Passw0rd-doctor")
+	if err != nil || !login.GetBillingOnly() {
+		t.Fatalf("login = %v, %v", login, err)
+	}
+	owner := e.billing(login.GetSessionToken())
+
+	free := func(planID []byte, mode dentalv1.PurchaseMode) (*dentalv1.Payment, error) {
+		res, err := owner.CreatePayment(ctx, &dentalv1.CreatePaymentRequest{
+			PlanId: planID, Mode: mode, Method: dentalv1.PaymentMethod_PAYMENT_METHOD_FREE,
+		})
+		return res.GetPayment(), err
+	}
+	transfer := func(planID []byte) (*dentalv1.Payment, error) {
+		res, err := owner.CreatePayment(ctx, &dentalv1.CreatePaymentRequest{
+			PlanId: planID, Mode: dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND,
+			Method: dentalv1.PaymentMethod_PAYMENT_METHOD_BANK_TRANSFER,
+			Details: &dentalv1.CreatePaymentRequest_Transfer{Transfer: &dentalv1.ManualTransfer{
+				PaymentAccountId: account.GetAccount().GetId(), Reference: "PAYA-778899",
+				PaidAt: timestamppb.New(time.Now().Add(-time.Hour)),
+			}},
+		})
+		return res.GetPayment(), err
+	}
+	counts := func() map[string]uint32 {
+		t.Helper()
+		res, err := owner.ListPlans(ctx, &dentalv1.BillingServiceListPlansRequest{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		names := map[string]string{}
+		for _, p := range res.GetPlans() {
+			names[string(p.GetId())] = p.GetName()
+		}
+		got := map[string]uint32{}
+		for _, c := range res.GetPurchases() {
+			got[names[string(c.GetPlanId())]] = c.GetCount()
+		}
+		return got
+	}
+	quote := func(planID []byte) error {
+		_, err := owner.QuotePayment(ctx, &dentalv1.QuotePaymentRequest{PlanId: planID, Mode: dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND})
+		return err
+	}
+
+	// Only limited plans are counted.
+	if got := counts(); len(got) != 2 || got["Trial"] != 0 || got["Limited"] != 0 {
+		t.Fatalf("counts = %v", got)
+	}
+
+	// The method must match the amount; free needs no transfer details and takes none.
+	_, err = owner.CreatePayment(ctx, &dentalv1.CreatePaymentRequest{
+		PlanId: trial.GetId(), Mode: dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND, Method: dentalv1.PaymentMethod_PAYMENT_METHOD_BANK_TRANSFER,
+	})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	_, err = transfer(trial.GetId())
+	wantCode(t, err, connect.CodeFailedPrecondition, reasonPaymentNotRequired)
+	_, err = free(basic.GetId(), dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND)
+	wantCode(t, err, connect.CodeFailedPrecondition, reasonPaymentRequired)
+
+	// The trial starts at once, without an administrator; the owner logs in again to use it.
+	p, err := free(trial.GetId(), dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.GetStatus() != dentalv1.PaymentStatus_PAYMENT_STATUS_APPROVED || len(p.GetSubscriptionId()) != 16 ||
+		p.GetMethod() != dentalv1.PaymentMethod_PAYMENT_METHOD_FREE || p.GetTransfer() != nil ||
+		p.GetAmountRials() != 0 || p.GetReviewedAt() == nil {
+		t.Fatalf("free payment = %v", p)
+	}
+	if _, err := e.login(inst, "doctor", "Passw0rd-doctor"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Once only, unless an administrator lifts the limit.
+	_, err = free(trial.GetId(), dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND)
+	wantCode(t, err, connect.CodeFailedPrecondition, reasonPurchaseLimitReached)
+	wantCode(t, quote(trial.GetId()), connect.CodeFailedPrecondition, reasonPurchaseLimitReached)
+	if got := counts(); got["Trial"] != 1 {
+		t.Fatalf("counts = %v", got)
+	}
+
+	// A payment waiting for review counts; a rejected one does not.
+	first, err := transfer(limited.GetId())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := quote(limited.GetId()); err != nil {
+		t.Fatal(err) // one of two
+	}
+	if _, err := admin.ApprovePayment(ctx, &dentalv1.ApprovePaymentRequest{Id: first.GetId()}); err != nil {
+		t.Fatal(err)
+	}
+	second, err := transfer(limited.GetId())
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantCode(t, quote(limited.GetId()), connect.CodeFailedPrecondition, reasonPurchaseLimitReached)
+	if got := counts(); got["Limited"] != 2 {
+		t.Fatalf("counts = %v", got)
+	}
+	if _, err := admin.RejectPayment(ctx, &dentalv1.RejectPaymentRequest{Id: second.GetId(), Reason: "not found"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := quote(limited.GetId()); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = admin.UpdatePlan(ctx, &dentalv1.UpdatePlanRequest{
+		Id: trial.GetId(), Name: "Trial", MaxClinics: 1, MaxDevicesPerClinic: 2, DurationDays: 14, Active: true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := quote(trial.GetId()); err != nil {
+		t.Fatal(err) // no limit any more
+	}
+
+	// An upgrade whose credit covers the price costs nothing: free, at once.
+	if _, err := admin.SellSubscription(ctx, &dentalv1.SellSubscriptionRequest{
+		UserId: inst2.GetOwner().GetId(), PlanId: basic.GetId(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	dentist, err := e.login(inst2, "dentist", "Passw0rd-dentist")
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner = e.billing(dentist.res.GetSessionToken())
+	q, err := owner.QuotePayment(ctx, &dentalv1.QuotePaymentRequest{PlanId: limited.GetId(), Mode: dentalv1.PurchaseMode_PURCHASE_MODE_UPGRADE_NOW})
+	if err != nil || q.GetQuote().GetAmountRials() != 0 || q.GetQuote().GetCreditRials() != 10_000_000 {
+		t.Fatalf("upgrade quote = %v, %v", q, err)
+	}
+	if p, err := free(limited.GetId(), dentalv1.PurchaseMode_PURCHASE_MODE_UPGRADE_NOW); err != nil ||
+		p.GetStatus() != dentalv1.PaymentStatus_PAYMENT_STATUS_APPROVED {
+		t.Fatalf("free upgrade = %v, %v", p, err)
+	}
+	status, err := owner.GetBillingStatus(ctx, &dentalv1.GetBillingStatusRequest{})
+	if err != nil || status.GetCurrent().GetPlanName() != "Limited" || len(status.GetUpcoming()) != 0 {
+		t.Fatalf("status after free upgrade = %v, %v", status, err)
+	}
+}
+
+func TestFreePlanOnFirstClinic(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+	trial, err := admin.CreatePlan(ctx, &dentalv1.CreatePlanRequest{
+		Name: "Trial", MaxClinics: 1, MaxDevicesPerClinic: 1, DurationDays: 14, MaxPurchasesPerOwner: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	basic, err := admin.CreatePlan(ctx, &dentalv1.CreatePlanRequest{
+		Name: "Basic", MaxClinics: 2, MaxDevicesPerClinic: 2, DurationDays: 30, PriceRials: 30_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// A new owner's first clinic starts the free plan: they log in at once, not billing-only.
+	inst := e.register(1, "doctor")
+	sub := inst.GetFreeSubscription()
+	if sub.GetPlanName() != "Trial" || time.Since(sub.GetStartsAt().AsTime()) > time.Minute ||
+		sub.GetEndsAt().AsTime().Sub(sub.GetStartsAt().AsTime()) != 14*24*time.Hour {
+		t.Fatalf("free subscription = %v", sub)
+	}
+	doctor, err := e.login(inst, "doctor", "Passw0rd-doctor")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// It is a purchase like any other: in the owner's payments, counted against the plan's limit.
+	owner := e.billing(doctor.res.GetSessionToken())
+	payments, err := owner.ListMyPayments(ctx, &dentalv1.ListMyPaymentsRequest{})
+	if err != nil || len(payments.GetPayments()) != 1 ||
+		payments.GetPayments()[0].GetMethod() != dentalv1.PaymentMethod_PAYMENT_METHOD_FREE ||
+		payments.GetPayments()[0].GetStatus() != dentalv1.PaymentStatus_PAYMENT_STATUS_APPROVED {
+		t.Fatalf("payments = %v, %v", payments, err)
+	}
+	_, err = owner.QuotePayment(ctx, &dentalv1.QuotePaymentRequest{PlanId: trial.GetPlan().GetId(), Mode: dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND})
+	wantCode(t, err, connect.CodeFailedPrecondition, reasonPurchaseLimitReached)
+
+	// Only the first clinic: a second one starts nothing.
+	existingOwner := func(machine byte, username string) *dentalv1.RegisterRequest {
+		req := registerRequest(machine, "unused")
+		req.Owner = &dentalv1.RegisterRequest_ExistingOwner{ExistingOwner: &dentalv1.ExistingOwner{
+			Username: username, Password: "Passw0rd-" + username,
+		}}
+		return req
+	}
+	second, err := e.installation.Register(ctx, existingOwner(2, "doctor"))
+	if err != nil || second.GetFreeSubscription() != nil {
+		t.Fatalf("second clinic = %v, %v", second.GetFreeSubscription(), err)
+	}
+
+	// An existing account's first clinic counts too (signed up first, then logged in to add it).
+	e.signUp("nurse")
+	if res, err := e.installation.Register(ctx, existingOwner(3, "nurse")); err != nil || res.GetFreeSubscription() == nil {
+		t.Fatalf("existing account's first clinic = %v, %v", res.GetFreeSubscription(), err)
+	}
+
+	// Not for owners who already had a subscription.
+	hygienist := e.signUp("hygienist")
+	if _, err := admin.SellSubscription(ctx, &dentalv1.SellSubscriptionRequest{
+		UserId: hygienist.GetId(), PlanId: basic.GetPlan().GetId(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if res, err := e.installation.Register(ctx, existingOwner(4, "hygienist")); err != nil || res.GetFreeSubscription() != nil {
+		t.Fatalf("owner with a subscription = %v, %v", res.GetFreeSubscription(), err)
+	}
+
+	// Nor when no free plan is on sale: the owner gets a billing-only login, to buy one.
+	if _, err := admin.UpdatePlan(ctx, &dentalv1.UpdatePlanRequest{
+		Id: trial.GetPlan().GetId(), Name: "Trial", MaxClinics: 1, MaxDevicesPerClinic: 1, DurationDays: 14,
+		MaxPurchasesPerOwner: 1, Active: false,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	surgeon := e.register(5, "surgeon")
+	if surgeon.GetFreeSubscription() != nil {
+		t.Fatalf("free subscription without a free plan = %v", surgeon.GetFreeSubscription())
+	}
+	_, err = e.login(surgeon, "surgeon", "Passw0rd-surgeon")
+	wantCode(t, err, connect.CodePermissionDenied, reasonSubscriptionInactive)
+}

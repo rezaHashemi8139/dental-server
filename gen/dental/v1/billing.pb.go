@@ -60,8 +60,12 @@ func (*BillingServiceListPlansRequest) Descriptor() ([]byte, []int) {
 }
 
 type BillingServiceListPlansResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Plans         []*Plan                `protobuf:"bytes,1,rep,name=plans,proto3" json:"plans,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Plans []*Plan                `protobuf:"bytes,1,rep,name=plans,proto3" json:"plans,omitempty"`
+	// How many times the owner bought each plan that has a purchase limit
+	// (Plan.max_purchases_per_owner > 0); plans without a limit are left out. A plan
+	// can be bought again while count < max_purchases_per_owner.
+	Purchases     []*PlanPurchases `protobuf:"bytes,2,rep,name=purchases,proto3" json:"purchases,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,6 +107,67 @@ func (x *BillingServiceListPlansResponse) GetPlans() []*Plan {
 	return nil
 }
 
+func (x *BillingServiceListPlansResponse) GetPurchases() []*PlanPurchases {
+	if x != nil {
+		return x.Purchases
+	}
+	return nil
+}
+
+type PlanPurchases struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 raw UUID bytes: a Plan.id.
+	PlanId []byte `protobuf:"bytes,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
+	// Subscriptions bought, not canceled, and a payment waiting for review.
+	Count         uint32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanPurchases) Reset() {
+	*x = PlanPurchases{}
+	mi := &file_dental_v1_billing_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanPurchases) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanPurchases) ProtoMessage() {}
+
+func (x *PlanPurchases) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_billing_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanPurchases.ProtoReflect.Descriptor instead.
+func (*PlanPurchases) Descriptor() ([]byte, []int) {
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PlanPurchases) GetPlanId() []byte {
+	if x != nil {
+		return x.PlanId
+	}
+	return nil
+}
+
+func (x *PlanPurchases) GetCount() uint32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
 type GetBillingStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -111,7 +176,7 @@ type GetBillingStatusRequest struct {
 
 func (x *GetBillingStatusRequest) Reset() {
 	*x = GetBillingStatusRequest{}
-	mi := &file_dental_v1_billing_proto_msgTypes[2]
+	mi := &file_dental_v1_billing_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -123,7 +188,7 @@ func (x *GetBillingStatusRequest) String() string {
 func (*GetBillingStatusRequest) ProtoMessage() {}
 
 func (x *GetBillingStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[2]
+	mi := &file_dental_v1_billing_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -136,7 +201,7 @@ func (x *GetBillingStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBillingStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetBillingStatusRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{2}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{3}
 }
 
 type GetBillingStatusResponse struct {
@@ -160,7 +225,7 @@ type GetBillingStatusResponse struct {
 
 func (x *GetBillingStatusResponse) Reset() {
 	*x = GetBillingStatusResponse{}
-	mi := &file_dental_v1_billing_proto_msgTypes[3]
+	mi := &file_dental_v1_billing_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -172,7 +237,7 @@ func (x *GetBillingStatusResponse) String() string {
 func (*GetBillingStatusResponse) ProtoMessage() {}
 
 func (x *GetBillingStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[3]
+	mi := &file_dental_v1_billing_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -185,7 +250,7 @@ func (x *GetBillingStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBillingStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetBillingStatusResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{3}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetBillingStatusResponse) GetCurrent() *Subscription {
@@ -248,7 +313,7 @@ type ClinicUsage struct {
 
 func (x *ClinicUsage) Reset() {
 	*x = ClinicUsage{}
-	mi := &file_dental_v1_billing_proto_msgTypes[4]
+	mi := &file_dental_v1_billing_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -260,7 +325,7 @@ func (x *ClinicUsage) String() string {
 func (*ClinicUsage) ProtoMessage() {}
 
 func (x *ClinicUsage) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[4]
+	mi := &file_dental_v1_billing_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -273,7 +338,7 @@ func (x *ClinicUsage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClinicUsage.ProtoReflect.Descriptor instead.
 func (*ClinicUsage) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{4}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ClinicUsage) GetId() []byte {
@@ -329,7 +394,7 @@ type QuotePaymentRequest struct {
 
 func (x *QuotePaymentRequest) Reset() {
 	*x = QuotePaymentRequest{}
-	mi := &file_dental_v1_billing_proto_msgTypes[5]
+	mi := &file_dental_v1_billing_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -341,7 +406,7 @@ func (x *QuotePaymentRequest) String() string {
 func (*QuotePaymentRequest) ProtoMessage() {}
 
 func (x *QuotePaymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[5]
+	mi := &file_dental_v1_billing_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -354,7 +419,7 @@ func (x *QuotePaymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuotePaymentRequest.ProtoReflect.Descriptor instead.
 func (*QuotePaymentRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{5}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *QuotePaymentRequest) GetPlanId() []byte {
@@ -380,7 +445,7 @@ type QuotePaymentResponse struct {
 
 func (x *QuotePaymentResponse) Reset() {
 	*x = QuotePaymentResponse{}
-	mi := &file_dental_v1_billing_proto_msgTypes[6]
+	mi := &file_dental_v1_billing_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -392,7 +457,7 @@ func (x *QuotePaymentResponse) String() string {
 func (*QuotePaymentResponse) ProtoMessage() {}
 
 func (x *QuotePaymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[6]
+	mi := &file_dental_v1_billing_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -405,7 +470,7 @@ func (x *QuotePaymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuotePaymentResponse.ProtoReflect.Descriptor instead.
 func (*QuotePaymentResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{6}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QuotePaymentResponse) GetQuote() *PaymentQuote {
@@ -421,6 +486,9 @@ type CreatePaymentRequest struct {
 	PlanId []byte        `protobuf:"bytes,1,opt,name=plan_id,json=planId,proto3" json:"plan_id,omitempty"`
 	Mode   PurchaseMode  `protobuf:"varint,2,opt,name=mode,proto3,enum=dental.v1.PurchaseMode" json:"mode,omitempty"`
 	Method PaymentMethod `protobuf:"varint,3,opt,name=method,proto3,enum=dental.v1.PaymentMethod" json:"method,omitempty"`
+	// Required for PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER;
+	// must be unset for PAYMENT_METHOD_FREE.
+	//
 	// Types that are valid to be assigned to Details:
 	//
 	//	*CreatePaymentRequest_Transfer
@@ -431,7 +499,7 @@ type CreatePaymentRequest struct {
 
 func (x *CreatePaymentRequest) Reset() {
 	*x = CreatePaymentRequest{}
-	mi := &file_dental_v1_billing_proto_msgTypes[7]
+	mi := &file_dental_v1_billing_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -443,7 +511,7 @@ func (x *CreatePaymentRequest) String() string {
 func (*CreatePaymentRequest) ProtoMessage() {}
 
 func (x *CreatePaymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[7]
+	mi := &file_dental_v1_billing_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -456,7 +524,7 @@ func (x *CreatePaymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePaymentRequest.ProtoReflect.Descriptor instead.
 func (*CreatePaymentRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{7}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreatePaymentRequest) GetPlanId() []byte {
@@ -501,7 +569,6 @@ type isCreatePaymentRequest_Details interface {
 }
 
 type CreatePaymentRequest_Transfer struct {
-	// For PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
 	Transfer *ManualTransfer `protobuf:"bytes,4,opt,name=transfer,proto3,oneof"`
 }
 
@@ -516,7 +583,7 @@ type CreatePaymentResponse struct {
 
 func (x *CreatePaymentResponse) Reset() {
 	*x = CreatePaymentResponse{}
-	mi := &file_dental_v1_billing_proto_msgTypes[8]
+	mi := &file_dental_v1_billing_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -528,7 +595,7 @@ func (x *CreatePaymentResponse) String() string {
 func (*CreatePaymentResponse) ProtoMessage() {}
 
 func (x *CreatePaymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[8]
+	mi := &file_dental_v1_billing_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -541,7 +608,7 @@ func (x *CreatePaymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePaymentResponse.ProtoReflect.Descriptor instead.
 func (*CreatePaymentResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{8}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreatePaymentResponse) GetPayment() *Payment {
@@ -559,7 +626,7 @@ type ListMyPaymentsRequest struct {
 
 func (x *ListMyPaymentsRequest) Reset() {
 	*x = ListMyPaymentsRequest{}
-	mi := &file_dental_v1_billing_proto_msgTypes[9]
+	mi := &file_dental_v1_billing_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -571,7 +638,7 @@ func (x *ListMyPaymentsRequest) String() string {
 func (*ListMyPaymentsRequest) ProtoMessage() {}
 
 func (x *ListMyPaymentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[9]
+	mi := &file_dental_v1_billing_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -584,7 +651,7 @@ func (x *ListMyPaymentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyPaymentsRequest.ProtoReflect.Descriptor instead.
 func (*ListMyPaymentsRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{9}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{10}
 }
 
 type ListMyPaymentsResponse struct {
@@ -596,7 +663,7 @@ type ListMyPaymentsResponse struct {
 
 func (x *ListMyPaymentsResponse) Reset() {
 	*x = ListMyPaymentsResponse{}
-	mi := &file_dental_v1_billing_proto_msgTypes[10]
+	mi := &file_dental_v1_billing_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -608,7 +675,7 @@ func (x *ListMyPaymentsResponse) String() string {
 func (*ListMyPaymentsResponse) ProtoMessage() {}
 
 func (x *ListMyPaymentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[10]
+	mi := &file_dental_v1_billing_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -621,7 +688,7 @@ func (x *ListMyPaymentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyPaymentsResponse.ProtoReflect.Descriptor instead.
 func (*ListMyPaymentsResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{10}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ListMyPaymentsResponse) GetPayments() []*Payment {
@@ -641,7 +708,7 @@ type CancelPaymentRequest struct {
 
 func (x *CancelPaymentRequest) Reset() {
 	*x = CancelPaymentRequest{}
-	mi := &file_dental_v1_billing_proto_msgTypes[11]
+	mi := &file_dental_v1_billing_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -653,7 +720,7 @@ func (x *CancelPaymentRequest) String() string {
 func (*CancelPaymentRequest) ProtoMessage() {}
 
 func (x *CancelPaymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[11]
+	mi := &file_dental_v1_billing_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -666,7 +733,7 @@ func (x *CancelPaymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelPaymentRequest.ProtoReflect.Descriptor instead.
 func (*CancelPaymentRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{11}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CancelPaymentRequest) GetId() []byte {
@@ -685,7 +752,7 @@ type CancelPaymentResponse struct {
 
 func (x *CancelPaymentResponse) Reset() {
 	*x = CancelPaymentResponse{}
-	mi := &file_dental_v1_billing_proto_msgTypes[12]
+	mi := &file_dental_v1_billing_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -697,7 +764,7 @@ func (x *CancelPaymentResponse) String() string {
 func (*CancelPaymentResponse) ProtoMessage() {}
 
 func (x *CancelPaymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_billing_proto_msgTypes[12]
+	mi := &file_dental_v1_billing_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -710,7 +777,7 @@ func (x *CancelPaymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelPaymentResponse.ProtoReflect.Descriptor instead.
 func (*CancelPaymentResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_billing_proto_rawDescGZIP(), []int{12}
+	return file_dental_v1_billing_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CancelPaymentResponse) GetPayment() *Payment {
@@ -725,9 +792,13 @@ var File_dental_v1_billing_proto protoreflect.FileDescriptor
 const file_dental_v1_billing_proto_rawDesc = "" +
 	"\n" +
 	"\x17dental/v1/billing.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1cdental/v1/subscription.proto\x1a\x1fgoogle/protobuf/timestamp.proto\" \n" +
-	"\x1eBillingServiceListPlansRequest\"H\n" +
+	"\x1eBillingServiceListPlansRequest\"\x80\x01\n" +
 	"\x1fBillingServiceListPlansResponse\x12%\n" +
-	"\x05plans\x18\x01 \x03(\v2\x0f.dental.v1.PlanR\x05plans\"\x19\n" +
+	"\x05plans\x18\x01 \x03(\v2\x0f.dental.v1.PlanR\x05plans\x126\n" +
+	"\tpurchases\x18\x02 \x03(\v2\x18.dental.v1.PlanPurchasesR\tpurchases\">\n" +
+	"\rPlanPurchases\x12\x17\n" +
+	"\aplan_id\x18\x01 \x01(\fR\x06planId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\rR\x05count\"\x19\n" +
 	"\x17GetBillingStatusRequest\"\xde\x02\n" +
 	"\x18GetBillingStatusResponse\x121\n" +
 	"\acurrent\x18\x01 \x01(\v2\x17.dental.v1.SubscriptionR\acurrent\x123\n" +
@@ -749,16 +820,17 @@ const file_dental_v1_billing_proto_rawDesc = "" +
 	"\x04mode\x18\x02 \x01(\x0e2\x17.dental.v1.PurchaseModeB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04mode\"E\n" +
 	"\x14QuotePaymentResponse\x12-\n" +
-	"\x05quote\x18\x01 \x01(\v2\x17.dental.v1.PaymentQuoteR\x05quote\"\xaf\x03\n" +
+	"\x05quote\x18\x01 \x01(\v2\x17.dental.v1.PaymentQuoteR\x05quote\"\xc4\x04\n" +
 	"\x14CreatePaymentRequest\x12 \n" +
 	"\aplan_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06planId\x127\n" +
 	"\x04mode\x18\x02 \x01(\x0e2\x17.dental.v1.PurchaseModeB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x04mode\x12<\n" +
 	"\x06method\x18\x03 \x01(\x0e2\x18.dental.v1.PaymentMethodB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06method\x127\n" +
-	"\btransfer\x18\x04 \x01(\v2\x19.dental.v1.ManualTransferH\x00R\btransfer:\xb2\x01\xbaH\xae\x01\x1a\xab\x01\n" +
-	"\x13card_last4_required\x12Ba card to card payment needs the last 4 digits of the payer's card\x1aPthis.method != 1 || (has(this.transfer) && this.transfer.payer_card_last4 != '')B\x10\n" +
-	"\adetails\x12\x05\xbaH\x02\b\x01\"E\n" +
+	"\btransfer\x18\x04 \x01(\v2\x19.dental.v1.ManualTransferH\x00R\btransfer:\xce\x02\xbaH\xca\x02\x1a\xab\x01\n" +
+	"\x13card_last4_required\x12Ba card to card payment needs the last 4 digits of the payer's card\x1aPthis.method != 1 || (has(this.transfer) && this.transfer.payer_card_last4 != '')\x1a\x99\x01\n" +
+	"\x17transfer_matches_method\x12Sa transfer is required for card to card and bank transfer, and not allowed for free\x1a)(this.method == 3) == !has(this.transfer)B\t\n" +
+	"\adetails\"E\n" +
 	"\x15CreatePaymentResponse\x12,\n" +
 	"\apayment\x18\x01 \x01(\v2\x12.dental.v1.PaymentR\apayment\"\x17\n" +
 	"\x15ListMyPaymentsRequest\"H\n" +
@@ -790,64 +862,66 @@ func file_dental_v1_billing_proto_rawDescGZIP() []byte {
 	return file_dental_v1_billing_proto_rawDescData
 }
 
-var file_dental_v1_billing_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_dental_v1_billing_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_dental_v1_billing_proto_goTypes = []any{
 	(*BillingServiceListPlansRequest)(nil),  // 0: dental.v1.BillingServiceListPlansRequest
 	(*BillingServiceListPlansResponse)(nil), // 1: dental.v1.BillingServiceListPlansResponse
-	(*GetBillingStatusRequest)(nil),         // 2: dental.v1.GetBillingStatusRequest
-	(*GetBillingStatusResponse)(nil),        // 3: dental.v1.GetBillingStatusResponse
-	(*ClinicUsage)(nil),                     // 4: dental.v1.ClinicUsage
-	(*QuotePaymentRequest)(nil),             // 5: dental.v1.QuotePaymentRequest
-	(*QuotePaymentResponse)(nil),            // 6: dental.v1.QuotePaymentResponse
-	(*CreatePaymentRequest)(nil),            // 7: dental.v1.CreatePaymentRequest
-	(*CreatePaymentResponse)(nil),           // 8: dental.v1.CreatePaymentResponse
-	(*ListMyPaymentsRequest)(nil),           // 9: dental.v1.ListMyPaymentsRequest
-	(*ListMyPaymentsResponse)(nil),          // 10: dental.v1.ListMyPaymentsResponse
-	(*CancelPaymentRequest)(nil),            // 11: dental.v1.CancelPaymentRequest
-	(*CancelPaymentResponse)(nil),           // 12: dental.v1.CancelPaymentResponse
-	(*Plan)(nil),                            // 13: dental.v1.Plan
-	(*Subscription)(nil),                    // 14: dental.v1.Subscription
-	(*timestamppb.Timestamp)(nil),           // 15: google.protobuf.Timestamp
-	(*PaymentAccount)(nil),                  // 16: dental.v1.PaymentAccount
-	(*Payment)(nil),                         // 17: dental.v1.Payment
-	(PurchaseMode)(0),                       // 18: dental.v1.PurchaseMode
-	(*PaymentQuote)(nil),                    // 19: dental.v1.PaymentQuote
-	(PaymentMethod)(0),                      // 20: dental.v1.PaymentMethod
-	(*ManualTransfer)(nil),                  // 21: dental.v1.ManualTransfer
+	(*PlanPurchases)(nil),                   // 2: dental.v1.PlanPurchases
+	(*GetBillingStatusRequest)(nil),         // 3: dental.v1.GetBillingStatusRequest
+	(*GetBillingStatusResponse)(nil),        // 4: dental.v1.GetBillingStatusResponse
+	(*ClinicUsage)(nil),                     // 5: dental.v1.ClinicUsage
+	(*QuotePaymentRequest)(nil),             // 6: dental.v1.QuotePaymentRequest
+	(*QuotePaymentResponse)(nil),            // 7: dental.v1.QuotePaymentResponse
+	(*CreatePaymentRequest)(nil),            // 8: dental.v1.CreatePaymentRequest
+	(*CreatePaymentResponse)(nil),           // 9: dental.v1.CreatePaymentResponse
+	(*ListMyPaymentsRequest)(nil),           // 10: dental.v1.ListMyPaymentsRequest
+	(*ListMyPaymentsResponse)(nil),          // 11: dental.v1.ListMyPaymentsResponse
+	(*CancelPaymentRequest)(nil),            // 12: dental.v1.CancelPaymentRequest
+	(*CancelPaymentResponse)(nil),           // 13: dental.v1.CancelPaymentResponse
+	(*Plan)(nil),                            // 14: dental.v1.Plan
+	(*Subscription)(nil),                    // 15: dental.v1.Subscription
+	(*timestamppb.Timestamp)(nil),           // 16: google.protobuf.Timestamp
+	(*PaymentAccount)(nil),                  // 17: dental.v1.PaymentAccount
+	(*Payment)(nil),                         // 18: dental.v1.Payment
+	(PurchaseMode)(0),                       // 19: dental.v1.PurchaseMode
+	(*PaymentQuote)(nil),                    // 20: dental.v1.PaymentQuote
+	(PaymentMethod)(0),                      // 21: dental.v1.PaymentMethod
+	(*ManualTransfer)(nil),                  // 22: dental.v1.ManualTransfer
 }
 var file_dental_v1_billing_proto_depIdxs = []int32{
-	13, // 0: dental.v1.BillingServiceListPlansResponse.plans:type_name -> dental.v1.Plan
-	14, // 1: dental.v1.GetBillingStatusResponse.current:type_name -> dental.v1.Subscription
-	14, // 2: dental.v1.GetBillingStatusResponse.upcoming:type_name -> dental.v1.Subscription
-	15, // 3: dental.v1.GetBillingStatusResponse.paid_until:type_name -> google.protobuf.Timestamp
-	4,  // 4: dental.v1.GetBillingStatusResponse.clinics:type_name -> dental.v1.ClinicUsage
-	16, // 5: dental.v1.GetBillingStatusResponse.pay_to:type_name -> dental.v1.PaymentAccount
-	17, // 6: dental.v1.GetBillingStatusResponse.pending_payment:type_name -> dental.v1.Payment
-	18, // 7: dental.v1.QuotePaymentRequest.mode:type_name -> dental.v1.PurchaseMode
-	19, // 8: dental.v1.QuotePaymentResponse.quote:type_name -> dental.v1.PaymentQuote
-	18, // 9: dental.v1.CreatePaymentRequest.mode:type_name -> dental.v1.PurchaseMode
-	20, // 10: dental.v1.CreatePaymentRequest.method:type_name -> dental.v1.PaymentMethod
-	21, // 11: dental.v1.CreatePaymentRequest.transfer:type_name -> dental.v1.ManualTransfer
-	17, // 12: dental.v1.CreatePaymentResponse.payment:type_name -> dental.v1.Payment
-	17, // 13: dental.v1.ListMyPaymentsResponse.payments:type_name -> dental.v1.Payment
-	17, // 14: dental.v1.CancelPaymentResponse.payment:type_name -> dental.v1.Payment
-	0,  // 15: dental.v1.BillingService.ListPlans:input_type -> dental.v1.BillingServiceListPlansRequest
-	2,  // 16: dental.v1.BillingService.GetBillingStatus:input_type -> dental.v1.GetBillingStatusRequest
-	5,  // 17: dental.v1.BillingService.QuotePayment:input_type -> dental.v1.QuotePaymentRequest
-	7,  // 18: dental.v1.BillingService.CreatePayment:input_type -> dental.v1.CreatePaymentRequest
-	9,  // 19: dental.v1.BillingService.ListMyPayments:input_type -> dental.v1.ListMyPaymentsRequest
-	11, // 20: dental.v1.BillingService.CancelPayment:input_type -> dental.v1.CancelPaymentRequest
-	1,  // 21: dental.v1.BillingService.ListPlans:output_type -> dental.v1.BillingServiceListPlansResponse
-	3,  // 22: dental.v1.BillingService.GetBillingStatus:output_type -> dental.v1.GetBillingStatusResponse
-	6,  // 23: dental.v1.BillingService.QuotePayment:output_type -> dental.v1.QuotePaymentResponse
-	8,  // 24: dental.v1.BillingService.CreatePayment:output_type -> dental.v1.CreatePaymentResponse
-	10, // 25: dental.v1.BillingService.ListMyPayments:output_type -> dental.v1.ListMyPaymentsResponse
-	12, // 26: dental.v1.BillingService.CancelPayment:output_type -> dental.v1.CancelPaymentResponse
-	21, // [21:27] is the sub-list for method output_type
-	15, // [15:21] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	14, // 0: dental.v1.BillingServiceListPlansResponse.plans:type_name -> dental.v1.Plan
+	2,  // 1: dental.v1.BillingServiceListPlansResponse.purchases:type_name -> dental.v1.PlanPurchases
+	15, // 2: dental.v1.GetBillingStatusResponse.current:type_name -> dental.v1.Subscription
+	15, // 3: dental.v1.GetBillingStatusResponse.upcoming:type_name -> dental.v1.Subscription
+	16, // 4: dental.v1.GetBillingStatusResponse.paid_until:type_name -> google.protobuf.Timestamp
+	5,  // 5: dental.v1.GetBillingStatusResponse.clinics:type_name -> dental.v1.ClinicUsage
+	17, // 6: dental.v1.GetBillingStatusResponse.pay_to:type_name -> dental.v1.PaymentAccount
+	18, // 7: dental.v1.GetBillingStatusResponse.pending_payment:type_name -> dental.v1.Payment
+	19, // 8: dental.v1.QuotePaymentRequest.mode:type_name -> dental.v1.PurchaseMode
+	20, // 9: dental.v1.QuotePaymentResponse.quote:type_name -> dental.v1.PaymentQuote
+	19, // 10: dental.v1.CreatePaymentRequest.mode:type_name -> dental.v1.PurchaseMode
+	21, // 11: dental.v1.CreatePaymentRequest.method:type_name -> dental.v1.PaymentMethod
+	22, // 12: dental.v1.CreatePaymentRequest.transfer:type_name -> dental.v1.ManualTransfer
+	18, // 13: dental.v1.CreatePaymentResponse.payment:type_name -> dental.v1.Payment
+	18, // 14: dental.v1.ListMyPaymentsResponse.payments:type_name -> dental.v1.Payment
+	18, // 15: dental.v1.CancelPaymentResponse.payment:type_name -> dental.v1.Payment
+	0,  // 16: dental.v1.BillingService.ListPlans:input_type -> dental.v1.BillingServiceListPlansRequest
+	3,  // 17: dental.v1.BillingService.GetBillingStatus:input_type -> dental.v1.GetBillingStatusRequest
+	6,  // 18: dental.v1.BillingService.QuotePayment:input_type -> dental.v1.QuotePaymentRequest
+	8,  // 19: dental.v1.BillingService.CreatePayment:input_type -> dental.v1.CreatePaymentRequest
+	10, // 20: dental.v1.BillingService.ListMyPayments:input_type -> dental.v1.ListMyPaymentsRequest
+	12, // 21: dental.v1.BillingService.CancelPayment:input_type -> dental.v1.CancelPaymentRequest
+	1,  // 22: dental.v1.BillingService.ListPlans:output_type -> dental.v1.BillingServiceListPlansResponse
+	4,  // 23: dental.v1.BillingService.GetBillingStatus:output_type -> dental.v1.GetBillingStatusResponse
+	7,  // 24: dental.v1.BillingService.QuotePayment:output_type -> dental.v1.QuotePaymentResponse
+	9,  // 25: dental.v1.BillingService.CreatePayment:output_type -> dental.v1.CreatePaymentResponse
+	11, // 26: dental.v1.BillingService.ListMyPayments:output_type -> dental.v1.ListMyPaymentsResponse
+	13, // 27: dental.v1.BillingService.CancelPayment:output_type -> dental.v1.CancelPaymentResponse
+	22, // [22:28] is the sub-list for method output_type
+	16, // [16:22] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_billing_proto_init() }
@@ -856,7 +930,7 @@ func file_dental_v1_billing_proto_init() {
 		return
 	}
 	file_dental_v1_subscription_proto_init()
-	file_dental_v1_billing_proto_msgTypes[7].OneofWrappers = []any{
+	file_dental_v1_billing_proto_msgTypes[8].OneofWrappers = []any{
 		(*CreatePaymentRequest_Transfer)(nil),
 	}
 	type x struct{}
@@ -865,7 +939,7 @@ func file_dental_v1_billing_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_billing_proto_rawDesc), len(file_dental_v1_billing_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

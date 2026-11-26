@@ -75,6 +75,9 @@ const (
 	reasonPaymentNotPending      = "payment_not_pending"
 	reasonPaymentAccountNotFound = "payment_account_not_found"
 	reasonRenewalQueued          = "renewal_queued"
+	reasonPaymentRequired        = "payment_required"
+	reasonPaymentNotRequired     = "payment_not_required"
+	reasonPurchaseLimitReached   = "purchase_limit_reached"
 )
 
 // querier is what both a connection pool and a transaction offer, for helpers

@@ -31,6 +31,10 @@ message Plan {
   int64 price_rials = 6;
   // Only active plans can be sold.
   bool active = 7;
+  // How many times each owner may buy it in the desktop app, 0 for no limit (e.g. 1
+  // for a free trial). Subscriptions canceled by an administrator do not count; a
+  // payment waiting for review does. AdminService.SellSubscription is not limited.
+  uint32 max_purchases_per_owner = 8;
 }
 
 message Subscription {
@@ -77,6 +81,9 @@ enum PaymentMethod {
   PAYMENT_METHOD_CARD_TO_CARD = 1;
   // A bank transfer to the IBAN (Paya, Satna...).
   PAYMENT_METHOD_BANK_TRANSFER = 2;
+  // Nothing to pay (amount_rials 0): a free plan, or an upgrade whose credit covers
+  // the price. No transfer details; approved at once, without an administrator.
+  PAYMENT_METHOD_FREE = 3;
 }
 
 enum PaymentStatus {
@@ -156,7 +163,7 @@ message Payment {
   int64 credit_rials = 12;
   int64 amount_rials = 13;
   oneof details {
-    // PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
+    // PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER; unset for PAYMENT_METHOD_FREE.
     ManualTransfer transfer = 14;
   }
   // Why it was rejected; shown to the owner as written.
@@ -164,6 +171,6 @@ message Payment {
   // 16 raw UUID bytes: the subscription it bought, once approved.
   bytes subscription_id = 16;
   google.protobuf.Timestamp created_at = 17;
-  // When it was approved, rejected or canceled.
+  // When it was approved (at once for PAYMENT_METHOD_FREE), rejected or canceled.
   google.protobuf.Timestamp reviewed_at = 18;
 }

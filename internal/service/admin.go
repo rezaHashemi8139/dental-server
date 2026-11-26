@@ -132,17 +132,20 @@ func insertAdmin(ctx context.Context, q querier, req *dentalv1.CreateAdminReques
 	return &dentalv1.Admin{Id: uuidBytes(id), Username: req.GetUsername(), FullName: req.GetFullName()}, nil
 }
 
-const planColumns = `id, name, max_clinics, max_devices_per_clinic, duration_days, price_rials, active`
+const planColumns = `id, name, max_clinics, max_devices_per_clinic, duration_days, price_rials, active, max_purchases_per_owner`
 
-func scanPlan(row pgx.Row) (*dentalv1.Plan, error) {
+// scanPlan scans planColumns, then any extra destinations selected after them.
+func scanPlan(row pgx.Row, extra ...any) (*dentalv1.Plan, error) {
 	var id pgtype.UUID
-	var maxClinics, maxDevices, days int32
+	var maxClinics, maxDevices, days, maxPurchases int32
 	p := &dentalv1.Plan{}
-	if err := row.Scan(&id, &p.Name, &maxClinics, &maxDevices, &days, &p.PriceRials, &p.Active); err != nil {
+	dest := []any{&id, &p.Name, &maxClinics, &maxDevices, &days, &p.PriceRials, &p.Active, &maxPurchases}
+	if err := row.Scan(append(dest, extra...)...); err != nil {
 		return nil, err
 	}
 	p.Id = uuidBytes(id)
 	p.MaxClinics, p.MaxDevicesPerClinic, p.DurationDays = uint32(maxClinics), uint32(maxDevices), uint32(days)
+	p.MaxPurchasesPerOwner = uint32(maxPurchases)
 	return p, nil
 }
 
@@ -171,10 +174,10 @@ func (s *AdminService) ListPlans(ctx context.Context, _ *dentalv1.ListPlansReque
 
 func (s *AdminService) CreatePlan(ctx context.Context, req *dentalv1.CreatePlanRequest) (*dentalv1.CreatePlanResponse, error) {
 	plan, err := scanPlan(s.d.DB.QueryRow(ctx, `
-		INSERT INTO plans (name, max_clinics, max_devices_per_clinic, duration_days, price_rials)
-		VALUES ($1, $2, $3, $4, $5) RETURNING `+planColumns,
+		INSERT INTO plans (name, max_clinics, max_devices_per_clinic, duration_days, price_rials, max_purchases_per_owner)
+		VALUES ($1, $2, $3, $4, $5, $6) RETURNING `+planColumns,
 		req.GetName(), int32(req.GetMaxClinics()), int32(req.GetMaxDevicesPerClinic()),
-		int32(req.GetDurationDays()), req.GetPriceRials()))
+		int32(req.GetDurationDays()), req.GetPriceRials(), int32(req.GetMaxPurchasesPerOwner())))
 	if err != nil {
 		return nil, internal(err)
 	}
@@ -188,10 +191,10 @@ func (s *AdminService) UpdatePlan(ctx context.Context, req *dentalv1.UpdatePlanR
 	}
 	plan, err := scanPlan(s.d.DB.QueryRow(ctx, `
 		UPDATE plans SET name = $2, max_clinics = $3, max_devices_per_clinic = $4, duration_days = $5,
-		                 price_rials = $6, active = $7, updated_at = now()
+		                 price_rials = $6, active = $7, max_purchases_per_owner = $8, updated_at = now()
 		WHERE id = $1 RETURNING `+planColumns,
 		id, req.GetName(), int32(req.GetMaxClinics()), int32(req.GetMaxDevicesPerClinic()),
-		int32(req.GetDurationDays()), req.GetPriceRials(), req.GetActive()))
+		int32(req.GetDurationDays()), req.GetPriceRials(), req.GetActive(), int32(req.GetMaxPurchasesPerOwner())))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fail(connect.CodeNotFound, reasonPlanNotFound)
 	}

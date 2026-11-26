@@ -555,9 +555,12 @@ type CreatePlanRequest struct {
 	// 1–3650.
 	DurationDays uint32 `protobuf:"varint,4,opt,name=duration_days,json=durationDays,proto3" json:"duration_days,omitempty"`
 	// Not negative.
-	PriceRials    int64 `protobuf:"varint,5,opt,name=price_rials,json=priceRials,proto3" json:"price_rials,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	PriceRials int64 `protobuf:"varint,5,opt,name=price_rials,json=priceRials,proto3" json:"price_rials,omitempty"`
+	// How many times each owner may buy it in the desktop app (BillingService), 0 for
+	// no limit, at most 1000. SellSubscription is not limited.
+	MaxPurchasesPerOwner uint32 `protobuf:"varint,6,opt,name=max_purchases_per_owner,json=maxPurchasesPerOwner,proto3" json:"max_purchases_per_owner,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *CreatePlanRequest) Reset() {
@@ -625,6 +628,13 @@ func (x *CreatePlanRequest) GetPriceRials() int64 {
 	return 0
 }
 
+func (x *CreatePlanRequest) GetMaxPurchasesPerOwner() uint32 {
+	if x != nil {
+		return x.MaxPurchasesPerOwner
+	}
+	return 0
+}
+
 type CreatePlanResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Plan          *Plan                  `protobuf:"bytes,1,opt,name=plan,proto3" json:"plan,omitempty"`
@@ -674,14 +684,15 @@ type UpdatePlanRequest struct {
 	// 16 raw UUID bytes.
 	Id []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// The other fields replace the plan's; same rules as CreatePlanRequest.
-	Name                string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	MaxClinics          uint32 `protobuf:"varint,3,opt,name=max_clinics,json=maxClinics,proto3" json:"max_clinics,omitempty"`
-	MaxDevicesPerClinic uint32 `protobuf:"varint,4,opt,name=max_devices_per_clinic,json=maxDevicesPerClinic,proto3" json:"max_devices_per_clinic,omitempty"`
-	DurationDays        uint32 `protobuf:"varint,5,opt,name=duration_days,json=durationDays,proto3" json:"duration_days,omitempty"`
-	PriceRials          int64  `protobuf:"varint,6,opt,name=price_rials,json=priceRials,proto3" json:"price_rials,omitempty"`
-	Active              bool   `protobuf:"varint,7,opt,name=active,proto3" json:"active,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	Name                 string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	MaxClinics           uint32 `protobuf:"varint,3,opt,name=max_clinics,json=maxClinics,proto3" json:"max_clinics,omitempty"`
+	MaxDevicesPerClinic  uint32 `protobuf:"varint,4,opt,name=max_devices_per_clinic,json=maxDevicesPerClinic,proto3" json:"max_devices_per_clinic,omitempty"`
+	DurationDays         uint32 `protobuf:"varint,5,opt,name=duration_days,json=durationDays,proto3" json:"duration_days,omitempty"`
+	PriceRials           int64  `protobuf:"varint,6,opt,name=price_rials,json=priceRials,proto3" json:"price_rials,omitempty"`
+	Active               bool   `protobuf:"varint,7,opt,name=active,proto3" json:"active,omitempty"`
+	MaxPurchasesPerOwner uint32 `protobuf:"varint,8,opt,name=max_purchases_per_owner,json=maxPurchasesPerOwner,proto3" json:"max_purchases_per_owner,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *UpdatePlanRequest) Reset() {
@@ -761,6 +772,13 @@ func (x *UpdatePlanRequest) GetActive() bool {
 		return x.Active
 	}
 	return false
+}
+
+func (x *UpdatePlanRequest) GetMaxPurchasesPerOwner() uint32 {
+	if x != nil {
+		return x.MaxPurchasesPerOwner
+	}
+	return 0
 }
 
 type UpdatePlanResponse struct {
@@ -1910,7 +1928,7 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\x05admin\x18\x01 \x01(\v2\x10.dental.v1.AdminR\x05admin\"\x12\n" +
 	"\x10ListPlansRequest\":\n" +
 	"\x11ListPlansResponse\x12%\n" +
-	"\x05plans\x18\x01 \x03(\v2\x0f.dental.v1.PlanR\x05plans\"\xfb\x01\n" +
+	"\x05plans\x18\x01 \x03(\v2\x0f.dental.v1.PlanR\x05plans\"\xbc\x02\n" +
 	"\x11CreatePlanRequest\x12\x1d\n" +
 	"\x04name\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\x04name\x12+\n" +
 	"\vmax_clinics\x18\x02 \x01(\rB\n" +
@@ -1921,9 +1939,10 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\rduration_days\x18\x04 \x01(\rB\n" +
 	"\xbaH\a*\x05\x18\xc2\x1c(\x01R\fdurationDays\x12(\n" +
 	"\vprice_rials\x18\x05 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\n" +
-	"priceRials\"9\n" +
+	"priceRials\x12?\n" +
+	"\x17max_purchases_per_owner\x18\x06 \x01(\rB\b\xbaH\x05*\x03\x18\xe8\aR\x14maxPurchasesPerOwner\"9\n" +
 	"\x12CreatePlanResponse\x12#\n" +
-	"\x04plan\x18\x01 \x01(\v2\x0f.dental.v1.PlanR\x04plan\"\xac\x02\n" +
+	"\x04plan\x18\x01 \x01(\v2\x0f.dental.v1.PlanR\x04plan\"\xed\x02\n" +
 	"\x11UpdatePlanRequest\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\x12\x1d\n" +
 	"\x04name\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\x04name\x12+\n" +
@@ -1936,7 +1955,8 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\xbaH\a*\x05\x18\xc2\x1c(\x01R\fdurationDays\x12(\n" +
 	"\vprice_rials\x18\x06 \x01(\x03B\a\xbaH\x04\"\x02(\x00R\n" +
 	"priceRials\x12\x16\n" +
-	"\x06active\x18\a \x01(\bR\x06active\"9\n" +
+	"\x06active\x18\a \x01(\bR\x06active\x12?\n" +
+	"\x17max_purchases_per_owner\x18\b \x01(\rB\b\xbaH\x05*\x03\x18\xe8\aR\x14maxPurchasesPerOwner\"9\n" +
 	"\x12UpdatePlanResponse\x12#\n" +
 	"\x04plan\x18\x01 \x01(\v2\x0f.dental.v1.PlanR\x04plan\"O\n" +
 	"\x0eGetUserRequest\x12=\n" +

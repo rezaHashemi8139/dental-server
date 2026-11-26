@@ -54,7 +54,9 @@ type InstallationServiceClient interface {
 	// clinic's owner can do. The owner is a member and admin of the clinic.
 	//
 	// Registering needs no subscription, but nobody can log in until the owner has
-	// one (see AuthService.Login).
+	// one (see AuthService.Login). An owner registering their first clinic, who never
+	// had a subscription, gets a free plan at once if one is on sale
+	// (RegisterResponse.free_subscription).
 	//
 	// A new clinic needs its license number, phone, city, address and location (ClinicInfo).
 	//
@@ -165,7 +167,9 @@ type InstallationServiceHandler interface {
 	// clinic's owner can do. The owner is a member and admin of the clinic.
 	//
 	// Registering needs no subscription, but nobody can log in until the owner has
-	// one (see AuthService.Login).
+	// one (see AuthService.Login). An owner registering their first clinic, who never
+	// had a subscription, gets a free plan at once if one is on sale
+	// (RegisterResponse.free_subscription).
 	//
 	// A new clinic needs its license number, phone, city, address and location (ClinicInfo).
 	//

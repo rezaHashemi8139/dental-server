@@ -31,6 +31,9 @@ const (
 	PaymentMethod_PAYMENT_METHOD_CARD_TO_CARD PaymentMethod = 1
 	// A bank transfer to the IBAN (Paya, Satna...).
 	PaymentMethod_PAYMENT_METHOD_BANK_TRANSFER PaymentMethod = 2
+	// Nothing to pay (amount_rials 0): a free plan, or an upgrade whose credit covers
+	// the price. No transfer details; approved at once, without an administrator.
+	PaymentMethod_PAYMENT_METHOD_FREE PaymentMethod = 3
 )
 
 // Enum value maps for PaymentMethod.
@@ -39,11 +42,13 @@ var (
 		0: "PAYMENT_METHOD_UNSPECIFIED",
 		1: "PAYMENT_METHOD_CARD_TO_CARD",
 		2: "PAYMENT_METHOD_BANK_TRANSFER",
+		3: "PAYMENT_METHOD_FREE",
 	}
 	PaymentMethod_value = map[string]int32{
 		"PAYMENT_METHOD_UNSPECIFIED":   0,
 		"PAYMENT_METHOD_CARD_TO_CARD":  1,
 		"PAYMENT_METHOD_BANK_TRANSFER": 2,
+		"PAYMENT_METHOD_FREE":          3,
 	}
 )
 
@@ -200,9 +205,13 @@ type Plan struct {
 	// In Iranian rials.
 	PriceRials int64 `protobuf:"varint,6,opt,name=price_rials,json=priceRials,proto3" json:"price_rials,omitempty"`
 	// Only active plans can be sold.
-	Active        bool `protobuf:"varint,7,opt,name=active,proto3" json:"active,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Active bool `protobuf:"varint,7,opt,name=active,proto3" json:"active,omitempty"`
+	// How many times each owner may buy it in the desktop app, 0 for no limit (e.g. 1
+	// for a free trial). Subscriptions canceled by an administrator do not count; a
+	// payment waiting for review does. AdminService.SellSubscription is not limited.
+	MaxPurchasesPerOwner uint32 `protobuf:"varint,8,opt,name=max_purchases_per_owner,json=maxPurchasesPerOwner,proto3" json:"max_purchases_per_owner,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Plan) Reset() {
@@ -282,6 +291,13 @@ func (x *Plan) GetActive() bool {
 		return x.Active
 	}
 	return false
+}
+
+func (x *Plan) GetMaxPurchasesPerOwner() uint32 {
+	if x != nil {
+		return x.MaxPurchasesPerOwner
+	}
+	return 0
 }
 
 type Subscription struct {
@@ -698,7 +714,7 @@ type Payment struct {
 	// 16 raw UUID bytes: the subscription it bought, once approved.
 	SubscriptionId []byte                 `protobuf:"bytes,16,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// When it was approved, rejected or canceled.
+	// When it was approved (at once for PAYMENT_METHOD_FREE), rejected or canceled.
 	ReviewedAt    *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=reviewed_at,json=reviewedAt,proto3" json:"reviewed_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -874,7 +890,7 @@ type isPayment_Details interface {
 }
 
 type Payment_Transfer struct {
-	// PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
+	// PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER; unset for PAYMENT_METHOD_FREE.
 	Transfer *ManualTransfer `protobuf:"bytes,14,opt,name=transfer,proto3,oneof"`
 }
 
@@ -884,7 +900,7 @@ var File_dental_v1_subscription_proto protoreflect.FileDescriptor
 
 const file_dental_v1_subscription_proto_rawDesc = "" +
 	"\n" +
-	"\x1cdental/v1/subscription.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xde\x01\n" +
+	"\x1cdental/v1/subscription.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x95\x02\n" +
 	"\x04Plan\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
@@ -894,7 +910,8 @@ const file_dental_v1_subscription_proto_rawDesc = "" +
 	"\rduration_days\x18\x05 \x01(\rR\fdurationDays\x12\x1f\n" +
 	"\vprice_rials\x18\x06 \x01(\x03R\n" +
 	"priceRials\x12\x16\n" +
-	"\x06active\x18\a \x01(\bR\x06active\"\xa3\x03\n" +
+	"\x06active\x18\a \x01(\bR\x06active\x125\n" +
+	"\x17max_purchases_per_owner\x18\b \x01(\rR\x14maxPurchasesPerOwner\"\xa3\x03\n" +
 	"\fSubscription\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\fR\x06userId\x12\x17\n" +
@@ -957,11 +974,12 @@ const file_dental_v1_subscription_proto_rawDesc = "" +
 	"created_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12;\n" +
 	"\vreviewed_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"reviewedAtB\t\n" +
-	"\adetails*r\n" +
+	"\adetails*\x8b\x01\n" +
 	"\rPaymentMethod\x12\x1e\n" +
 	"\x1aPAYMENT_METHOD_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bPAYMENT_METHOD_CARD_TO_CARD\x10\x01\x12 \n" +
-	"\x1cPAYMENT_METHOD_BANK_TRANSFER\x10\x02*\xa2\x01\n" +
+	"\x1cPAYMENT_METHOD_BANK_TRANSFER\x10\x02\x12\x17\n" +
+	"\x13PAYMENT_METHOD_FREE\x10\x03*\xa2\x01\n" +
 	"\rPaymentStatus\x12\x1e\n" +
 	"\x1aPAYMENT_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16PAYMENT_STATUS_PENDING\x10\x01\x12\x1b\n" +

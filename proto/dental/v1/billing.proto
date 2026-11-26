@@ -22,17 +22,28 @@ service BillingService {
   // What buying a plan would cost and the period it would buy. Show it before the
   // owner transfers the money.
   //
-  // Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive" or,
-  // for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a subscription
-  // already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
+  // Fails with NOT_FOUND "plan_not_found", FAILED_PRECONDITION "plan_inactive",
+  // FAILED_PRECONDITION "purchase_limit_reached" (the owner already bought the plan
+  // Plan.max_purchases_per_owner times: see BillingServiceListPlansResponse.purchases)
+  // or, for PURCHASE_MODE_UPGRADE_NOW, FAILED_PRECONDITION "renewal_queued": a
+  // subscription already starts after the one in force (buy with PURCHASE_MODE_EXTEND instead).
   rpc QuotePayment(QuotePaymentRequest) returns (QuotePaymentResponse) {}
 
-  // Reports a transfer, priced as QuotePayment quotes it now. It waits for an
-  // administrator (PAYMENT_STATUS_PENDING).
+  // Buys a plan, priced as QuotePayment quotes it now.
+  // - With something to pay, reports a transfer (PAYMENT_METHOD_CARD_TO_CARD or
+  //   PAYMENT_METHOD_BANK_TRANSFER) that waits for an administrator (PAYMENT_STATUS_PENDING).
+  // - With nothing to pay (a free plan, or an upgrade whose credit covers the price),
+  //   PAYMENT_METHOD_FREE without transfer details: approved at
+  //   once and the subscription added, as AdminService.ApprovePayment would. A
+  //   billing-only session stays so: log in again to use the clinic.
   //
-  // Fails like QuotePayment, and with NOT_FOUND "payment_account_not_found" (unknown
-  // or inactive account) or FAILED_PRECONDITION "payment_pending": the owner already
-  // has a payment waiting (cancel it first, or wait for the review).
+  // Fails like QuotePayment, and with:
+  // - FAILED_PRECONDITION "payment_required": PAYMENT_METHOD_FREE but there is an amount to pay;
+  // - FAILED_PRECONDITION "payment_not_required": a transfer but there is nothing to pay
+  //   (use PAYMENT_METHOD_FREE);
+  // - NOT_FOUND "payment_account_not_found": unknown or inactive account;
+  // - FAILED_PRECONDITION "payment_pending": the owner already has a payment waiting
+  //   (cancel it first, or wait for the review).
   rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse) {}
 
   // The owner's payments, newest first.
@@ -47,6 +58,17 @@ message BillingServiceListPlansRequest {}
 
 message BillingServiceListPlansResponse {
   repeated Plan plans = 1;
+  // How many times the owner bought each plan that has a purchase limit
+  // (Plan.max_purchases_per_owner > 0); plans without a limit are left out. A plan
+  // can be bought again while count < max_purchases_per_owner.
+  repeated PlanPurchases purchases = 2;
+}
+
+message PlanPurchases {
+  // 16 raw UUID bytes: a Plan.id.
+  bytes plan_id = 1;
+  // Subscriptions bought, not canceled, and a payment waiting for review.
+  uint32 count = 2;
 }
 
 message GetBillingStatusRequest {}
@@ -99,6 +121,11 @@ message CreatePaymentRequest {
     message: "a card to card payment needs the last 4 digits of the payer's card"
     expression: "this.method != 1 || (has(this.transfer) && this.transfer.payer_card_last4 != '')"
   };
+  option (buf.validate.message).cel = {
+    id: "transfer_matches_method"
+    message: "a transfer is required for card to card and bank transfer, and not allowed for free"
+    expression: "(this.method == 3) == !has(this.transfer)"
+  };
 
   // 16 raw UUID bytes.
   bytes plan_id = 1 [(buf.validate.field).bytes.len = 16];
@@ -110,9 +137,9 @@ message CreatePaymentRequest {
     (buf.validate.field).enum.defined_only = true,
     (buf.validate.field).enum.not_in = 0
   ];
+  // Required for PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER;
+  // must be unset for PAYMENT_METHOD_FREE.
   oneof details {
-    option (buf.validate.oneof).required = true;
-    // For PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
     ManualTransfer transfer = 4;
   }
 }

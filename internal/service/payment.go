@@ -144,6 +144,7 @@ var purchaseModeNames = map[dentalv1.PurchaseMode]string{
 var paymentMethodNames = map[dentalv1.PaymentMethod]string{
 	dentalv1.PaymentMethod_PAYMENT_METHOD_CARD_TO_CARD:  "card_to_card",
 	dentalv1.PaymentMethod_PAYMENT_METHOD_BANK_TRANSFER: "bank_transfer",
+	dentalv1.PaymentMethod_PAYMENT_METHOD_FREE:          "free",
 }
 
 var paymentStatusNames = map[dentalv1.PaymentStatus]string{
@@ -258,4 +259,75 @@ func paymentsOf(ctx context.Context, q querier, userID pgtype.UUID) ([]*dentalv1
 		return nil, internal(err)
 	}
 	return payments, nil
+}
+
+// activateFree buys a purchase with nothing to pay: the subscription is added at
+// once, as ApprovePayment would, and the payment saved as approved by nobody.
+// Like any other purchase, it waits while another payment is pending.
+func activateFree(ctx context.Context, tx pgx.Tx, ownerID pgtype.UUID, mode dentalv1.PurchaseMode,
+	p purchase, now time.Time) (pgtype.UUID, *dentalv1.Subscription, error) {
+	var id pgtype.UUID
+	var pending bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (SELECT 1 FROM payments WHERE user_id = $1 AND status = 'pending')`, ownerID,
+	).Scan(&pending); err != nil {
+		return id, nil, internal(err)
+	}
+	if pending {
+		return id, nil, fail(connect.CodeFailedPrecondition, reasonPaymentPending)
+	}
+
+	if err := p.schedule(ctx, tx, ownerID, mode, now, true); err != nil {
+		return id, nil, err
+	}
+	sub, err := insertSubscription(ctx, tx, ownerID, p, "", pgtype.UUID{}, now)
+	if err != nil {
+		return id, nil, err
+	}
+	subscriptionID, _ := toUUID(sub.GetId())
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO payments (user_id, plan_id, max_clinics, max_devices_per_clinic, duration_days, mode, method,
+		                      status, price_rials, credit_rials, amount_rials, subscription_id, reviewed_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved', $8, $9, 0, $10, $11, $11) RETURNING id`,
+		ownerID, p.PlanID, p.MaxClinics, p.MaxDevicesPerClinic, p.DurationDays,
+		purchaseModeNames[mode], paymentMethodNames[dentalv1.PaymentMethod_PAYMENT_METHOD_FREE],
+		p.PriceRials, p.CreditRials, subscriptionID, now,
+	).Scan(&id); err != nil {
+		return id, nil, internal(err)
+	}
+	return id, sub, nil
+}
+
+// grantFreePlan starts a free plan for an owner who just registered their first
+// clinic and never had a subscription, without being asked: the oldest active free
+// plan they may still buy (see Plan.max_purchases_per_owner). Returns nil if there
+// is none, or the owner does not qualify.
+func grantFreePlan(ctx context.Context, tx pgx.Tx, ownerID pgtype.UUID, now time.Time) (*dentalv1.Subscription, error) {
+	var planID pgtype.UUID
+	err := tx.QueryRow(ctx, `
+		SELECT p.id FROM plans p
+		WHERE p.active AND p.price_rials = 0
+		  AND (p.max_purchases_per_owner = 0 OR `+purchaseCountSQL+` < p.max_purchases_per_owner)
+		  AND (SELECT count(*) FROM clinics WHERE owner_id = $1) = 1
+		  AND NOT EXISTS (SELECT 1 FROM subscriptions WHERE user_id = $1)
+		ORDER BY p.created_at, p.id
+		LIMIT 1`, ownerID,
+	).Scan(&planID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+
+	p, err := quotePurchase(ctx, tx, ownerID, planID, dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND, now)
+	if err != nil {
+		return nil, err
+	}
+	_, sub, err := activateFree(ctx, tx, ownerID, dentalv1.PurchaseMode_PURCHASE_MODE_EXTEND, p, now)
+	if err != nil {
+		return nil, err
+	}
+	sub.Note = "" // for the owner, as in BillingService
+	return sub, nil
 }

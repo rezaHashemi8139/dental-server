@@ -641,9 +641,13 @@ type RegisterResponse struct {
 	// The clinic's owner, a member and admin of the clinic.
 	Owner *User `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
 	// 16 raw UUID bytes.
-	ClinicId      []byte `protobuf:"bytes,6,opt,name=clinic_id,json=clinicId,proto3" json:"clinic_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	ClinicId []byte `protobuf:"bytes,6,opt,name=clinic_id,json=clinicId,proto3" json:"clinic_id,omitempty"`
+	// Set when registering a clinic started a free plan by itself: the owner's first
+	// clinic, without any subscription before, while an active free plan is on sale
+	// (see Plan.max_purchases_per_owner). The owner can log in at once and upgrade later.
+	FreeSubscription *Subscription `protobuf:"bytes,7,opt,name=free_subscription,json=freeSubscription,proto3" json:"free_subscription,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *RegisterResponse) Reset() {
@@ -714,6 +718,13 @@ func (x *RegisterResponse) GetOwner() *User {
 func (x *RegisterResponse) GetClinicId() []byte {
 	if x != nil {
 		return x.ClinicId
+	}
+	return nil
+}
+
+func (x *RegisterResponse) GetFreeSubscription() *Subscription {
+	if x != nil {
+		return x.FreeSubscription
 	}
 	return nil
 }
@@ -1212,7 +1223,7 @@ var File_dental_v1_installation_proto protoreflect.FileDescriptor
 
 const file_dental_v1_installation_proto_rawDesc = "" +
 	"\n" +
-	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf4\x02\n" +
+	"\x1cdental/v1/installation.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1cdental/v1/subscription.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf4\x02\n" +
 	"\vMachineInfo\x12/\n" +
 	"\x0fmachine_id_hash\x18\x01 \x01(\fB\a\xbaH\x04z\x02h R\rmachineIdHash\x12$\n" +
 	"\bhostname\x18\x02 \x01(\tB\b\xbaH\x05r\x03\x18\xff\x01R\bhostname\x12 \n" +
@@ -1261,7 +1272,7 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\tnew_owner\x18\x03 \x01(\v2\x13.dental.v1.NewOwnerH\x01R\bnewOwner\x12A\n" +
 	"\x0eexisting_owner\x18\x04 \x01(\v2\x18.dental.v1.ExistingOwnerH\x01R\rexistingOwnerB\x0f\n" +
 	"\x06target\x12\x05\xbaH\x02\b\x01B\x0e\n" +
-	"\x05owner\x12\x05\xbaH\x02\b\x01\"\x92\x02\n" +
+	"\x05owner\x12\x05\xbaH\x02\b\x01\"\xd8\x02\n" +
 	"\x10RegisterResponse\x12'\n" +
 	"\x0finstallation_id\x18\x01 \x01(\fR\x0einstallationId\x12/\n" +
 	"\x13installation_secret\x18\x02 \x01(\fR\x12installationSecret\x12#\n" +
@@ -1269,7 +1280,8 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\vserver_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"serverTime\x12%\n" +
 	"\x05owner\x18\x05 \x01(\v2\x0f.dental.v1.UserR\x05owner\x12\x1b\n" +
-	"\tclinic_id\x18\x06 \x01(\fR\bclinicId\"c\n" +
+	"\tclinic_id\x18\x06 \x01(\fR\bclinicId\x12D\n" +
+	"\x11free_subscription\x18\a \x01(\v2\x17.dental.v1.SubscriptionR\x10freeSubscription\"c\n" +
 	"\x14ListMyClinicsRequest\x12%\n" +
 	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
 	"\bpassword\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\"\xb2\x02\n" +
@@ -1345,6 +1357,7 @@ var file_dental_v1_installation_proto_goTypes = []any{
 	(*PersonIdentity)(nil),        // 15: dental.v1.PersonIdentity
 	(*timestamppb.Timestamp)(nil), // 16: google.protobuf.Timestamp
 	(*User)(nil),                  // 17: dental.v1.User
+	(*Subscription)(nil),          // 18: dental.v1.Subscription
 }
 var file_dental_v1_installation_proto_depIdxs = []int32{
 	2,  // 0: dental.v1.ClinicInfo.location:type_name -> dental.v1.GeoLocation
@@ -1357,23 +1370,24 @@ var file_dental_v1_installation_proto_depIdxs = []int32{
 	4,  // 7: dental.v1.RegisterRequest.existing_owner:type_name -> dental.v1.ExistingOwner
 	16, // 8: dental.v1.RegisterResponse.server_time:type_name -> google.protobuf.Timestamp
 	17, // 9: dental.v1.RegisterResponse.owner:type_name -> dental.v1.User
-	17, // 10: dental.v1.ListMyClinicsResponse.user:type_name -> dental.v1.User
-	10, // 11: dental.v1.ListMyClinicsResponse.clinics:type_name -> dental.v1.MyClinic
-	16, // 12: dental.v1.ListMyClinicsResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
-	16, // 13: dental.v1.MyClinic.subscription_ends_at:type_name -> google.protobuf.Timestamp
-	13, // 14: dental.v1.ListCitiesResponse.provinces:type_name -> dental.v1.Province
-	14, // 15: dental.v1.Province.cities:type_name -> dental.v1.City
-	6,  // 16: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
-	8,  // 17: dental.v1.InstallationService.ListMyClinics:input_type -> dental.v1.ListMyClinicsRequest
-	11, // 18: dental.v1.InstallationService.ListCities:input_type -> dental.v1.ListCitiesRequest
-	7,  // 19: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
-	9,  // 20: dental.v1.InstallationService.ListMyClinics:output_type -> dental.v1.ListMyClinicsResponse
-	12, // 21: dental.v1.InstallationService.ListCities:output_type -> dental.v1.ListCitiesResponse
-	19, // [19:22] is the sub-list for method output_type
-	16, // [16:19] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	18, // 10: dental.v1.RegisterResponse.free_subscription:type_name -> dental.v1.Subscription
+	17, // 11: dental.v1.ListMyClinicsResponse.user:type_name -> dental.v1.User
+	10, // 12: dental.v1.ListMyClinicsResponse.clinics:type_name -> dental.v1.MyClinic
+	16, // 13: dental.v1.ListMyClinicsResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	16, // 14: dental.v1.MyClinic.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	13, // 15: dental.v1.ListCitiesResponse.provinces:type_name -> dental.v1.Province
+	14, // 16: dental.v1.Province.cities:type_name -> dental.v1.City
+	6,  // 17: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
+	8,  // 18: dental.v1.InstallationService.ListMyClinics:input_type -> dental.v1.ListMyClinicsRequest
+	11, // 19: dental.v1.InstallationService.ListCities:input_type -> dental.v1.ListCitiesRequest
+	7,  // 20: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
+	9,  // 21: dental.v1.InstallationService.ListMyClinics:output_type -> dental.v1.ListMyClinicsResponse
+	12, // 22: dental.v1.InstallationService.ListCities:output_type -> dental.v1.ListCitiesResponse
+	20, // [20:23] is the sub-list for method output_type
+	17, // [17:20] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_installation_proto_init() }
@@ -1383,6 +1397,7 @@ func file_dental_v1_installation_proto_init() {
 	}
 	file_dental_v1_auth_proto_init()
 	file_dental_v1_person_proto_init()
+	file_dental_v1_subscription_proto_init()
 	file_dental_v1_installation_proto_msgTypes[6].OneofWrappers = []any{
 		(*RegisterRequest_Clinic)(nil),
 		(*RegisterRequest_ExistingClinic)(nil),

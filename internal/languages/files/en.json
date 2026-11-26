@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 21,
+    "version": 25,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -186,7 +186,7 @@
     "limits": "{{clinics}} clinics, {{devices}} computers per clinic",
     "period": "From {{from}} to {{to}}",
     "restricted": {
-      "description": "Until a subscription is active, only this page is available and the clinic's data stays locked. Choose a plan, transfer the amount and report the payment. Once the payment is approved, log in again.",
+      "description": "Until a subscription is active, only this page is available and the clinic data stays locked. Choose a plan and buy it; as soon as the subscription is active, the clinic opens by itself.",
       "logInAgain": "Log in again"
     },
     "reasons": {
@@ -199,7 +199,10 @@
       "approvedLogIn": "The subscription was added. Log in again to use the clinic.",
       "approvedActive": "The subscription was added.",
       "rejected": "Your payment was rejected.",
-      "noReason": "No reason was given. Contact support."
+      "noReason": "No reason was given. Contact support.",
+      "activated": "The subscription is active.",
+      "opening": "Opening the clinic...",
+      "stillRestricted": "The subscription is active, but it does not cover this clinic or this computer yet. The reason is shown at the top of the page."
     },
     "current": {
       "title": "Current subscription",
@@ -221,7 +224,10 @@
       "duration": "Duration: {{days}} days",
       "clinics": "Clinics: up to {{clinics}}",
       "devices": "Computers per clinic: up to {{devices}}",
-      "buy": "Buy"
+      "buy": "Buy",
+      "purchaseLimit": "Your purchases: {{used}} of {{max}}",
+      "limitReached": "Already used",
+      "activate": "Activate for free"
     },
     "modes": {
       "extend": "After the current subscription",
@@ -254,7 +260,11 @@
       "yesterday": "Yesterday",
       "submit": "Report payment",
       "working": "Reporting the payment...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "freeDescription": "There is nothing to pay. Press Activate and the subscription becomes active right away, without approval.",
+      "activate": "Activate",
+      "activating": "Activating...",
+      "freeTitle": "Activate the {{plan}} plan"
     },
     "fields": {
       "reference": "Reference number",
@@ -296,8 +306,12 @@
       "paymentAccountNotFound": "This account no longer takes transfers. Choose another one.",
       "paymentPending": "You have a payment waiting for approval. Wait for it or cancel it.",
       "paymentNotFound": "This payment was not found.",
-      "paymentNotPending": "This payment has already been decided."
-    }
+      "paymentNotPending": "This payment has already been decided.",
+      "purchaseLimitReached": "You cannot buy this plan again: you have used all the purchases it allows.",
+      "paymentRequired": "This purchase is not free. Transfer the amount and report the payment.",
+      "paymentNotRequired": "There is nothing to pay for this purchase. Use Activate instead."
+    },
+    "free": "Free"
   },
   "connectivity": {
     "checking": "Checking connection...",

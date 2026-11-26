@@ -32,7 +32,9 @@ for message formats and the crypto scheme.
    already a member and admin of the clinic.
 4. App stores both, the secret encrypted with DPAPI.
 
-Registering needs no subscription, but logging in does (below).
+Registering needs no subscription, but logging in does (below). An owner registering their
+first clinic who never had a subscription gets a free plan at once, without asking, if one is
+on sale and its purchase limit allows; they can upgrade later.
 
 ## Accounts, clinics and subscriptions
 
@@ -48,6 +50,9 @@ Registering needs no subscription, but logging in does (below).
 - In the app, the owner transfers the quoted amount to an account listed in the admin panel and
   reports it; an administrator checks the bank statement and approves the payment, which adds
   the subscription, or rejects it. The price and limits are fixed when the payment is reported.
+  With nothing to pay (a free plan, or an upgrade whose credit covers the price) the
+  subscription starts at once, without an administrator. Each plan can limit how many times an
+  owner buys it in the app (e.g. a free trial once); selling from the admin panel is not limited.
 - Without a subscription that covers the clinic and installation, nobody can use the owner's
   clinics: other members' logins fail, sessions stop working at once, and offline grants never
   last past the end of the paid time. The owner still logs in, to a billing-only session that
