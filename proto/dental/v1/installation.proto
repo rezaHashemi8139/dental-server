@@ -22,9 +22,10 @@ service InstallationService {
   // Registering needs no subscription, but nobody can log in until the owner has
   // one (see AuthService.Login).
   //
-  // A new clinic needs its license number, phone, address and location (ClinicInfo).
+  // A new clinic needs its license number, phone, city, address and location (ClinicInfo).
   //
   // Besides the usual "invalid_argument" / "weak_password", fails with:
+  // - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
   // - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
   // - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
   //   or identity (national ID or FIDA code) belongs to another account;
@@ -50,6 +51,10 @@ service InstallationService {
   // Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
   // FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
   rpc ListMyClinics(ListMyClinicsRequest) returns (ListMyClinicsResponse) {}
+
+  // Iran's provinces and their cities, for ClinicInfo.city_id. No login needed.
+  // The list rarely changes; IDs are never reused for another place.
+  rpc ListCities(ListCitiesRequest) returns (ListCitiesResponse) {}
 }
 
 // Describes the computer, so the server knows where an installation runs.
@@ -91,11 +96,11 @@ message ClinicInfo {
   string license_number = 2 [(buf.validate.field).string.pattern = "^[A-Za-z0-9./-]{3,32}$"];
   // 7–15 digits, optionally starting with '+'.
   string phone = 3 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
-  // 1–100 characters.
-  string city = 4 [(buf.validate.field).string = {
-    min_len: 1
-    max_len: 100
-  }];
+  // Replaced by city_id.
+  reserved 4;
+  reserved "city";
+  // Where the clinic is: a City.id from ListCities. Its province comes with it.
+  uint32 city_id = 8 [(buf.validate.field).uint32.gt = 0];
   // 1–500 characters.
   string address = 5 [(buf.validate.field).string = {
     min_len: 1
@@ -241,7 +246,10 @@ message MyClinic {
   string name = 2;
   // Identifies the clinic in ExistingClinic.
   string license_number = 3;
+  // The city's name, also for clinics registered before cities had IDs.
   string city = 4;
+  // A City.id from ListCities; 0 for clinics registered before cities had IDs.
+  uint32 city_id = 12;
   string address = 5;
   // Whether the account owns the clinic. Otherwise it is one of its admins.
   bool is_owner = 6;
@@ -260,4 +268,25 @@ message MyClinic {
   // - "clinic_limit_exceeded": the clinic is beyond the owner's clinic limit;
   // - "device_limit_exceeded": the clinic already has max_installations.
   string cannot_add_reason = 11;
+}
+
+message ListCitiesRequest {}
+
+message ListCitiesResponse {
+  // Ordered by ID, not by name: sort them for display.
+  repeated Province provinces = 1;
+}
+
+message Province {
+  uint32 id = 1;
+  // Official Persian name.
+  string name = 2;
+  // Ordered by ID, not by name.
+  repeated City cities = 3;
+}
+
+message City {
+  uint32 id = 1;
+  // Official Persian name. Different provinces may have cities of the same name.
+  string name = 2;
 }

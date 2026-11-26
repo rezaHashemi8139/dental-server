@@ -32,6 +32,7 @@ var publicProcedures = map[string]bool{
 	dentalv1connect.HealthServiceCheckProcedure:               true,
 	dentalv1connect.InstallationServiceRegisterProcedure:      true,
 	dentalv1connect.InstallationServiceListMyClinicsProcedure: true,
+	dentalv1connect.InstallationServiceListCitiesProcedure: true,
 	dentalv1connect.AuthServiceSignUpProcedure:                true,
 	dentalv1connect.AuthServiceLoginProcedure:                 true,
 	dentalv1connect.AuthServiceChangePasswordProcedure:        true,

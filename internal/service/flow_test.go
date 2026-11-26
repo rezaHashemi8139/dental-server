@@ -184,7 +184,7 @@ func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
 			Name:          "Clinic " + owner,
 			LicenseNumber: fmt.Sprintf("LIC-%d", machine),
 			Phone:         "02112345678",
-			City:          "Tehran",
+			CityId:        1,
 			Address:       "1 Test Street",
 			Location:      &dentalv1.GeoLocation{Latitude: 35.6892, Longitude: 51.3890},
 		}},

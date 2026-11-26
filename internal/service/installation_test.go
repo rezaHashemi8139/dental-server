@@ -203,7 +203,7 @@ func TestListMyClinics(t *testing.T) {
 	c := doctor.GetClinics()[0]
 	if !c.GetIsOwner() || c.GetOwnerFullName() != "Dr. doctor" || c.GetInstallationCount() != 1 ||
 		c.GetMaxInstallations() != 1 || c.GetSubscriptionEndsAt() == nil || c.GetName() != "Clinic doctor" ||
-		c.GetCity() != "Tehran" || c.GetAddress() != "1 Test Street" || len(c.GetId()) != 16 {
+		c.GetCity() == "" || c.GetCityId() != 1 || c.GetAddress() != "1 Test Street" || len(c.GetId()) != 16 {
 		t.Fatalf("clinic = %v", c)
 	}
 
@@ -251,4 +251,45 @@ func TestListMyClinics(t *testing.T) {
 	}
 	_, err = e.installation.ListMyClinics(ctx, &dentalv1.ListMyClinicsRequest{Username: "surgeon", Password: "Passw0rd-surgeon"})
 	wantCode(t, err, connect.CodePermissionDenied, reasonUserDisabled)
+}
+
+func TestListCities(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+
+	// No login needed: the clinic form is shown before the computer is registered.
+	res, err := e.installation.ListCities(ctx, &dentalv1.ListCitiesRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cities := map[uint32]bool{}
+	for _, p := range res.GetProvinces() {
+		if p.GetId() == 0 || p.GetName() == "" || len(p.GetCities()) == 0 {
+			t.Errorf("province = %v", p)
+		}
+		for _, c := range p.GetCities() {
+			if c.GetId() == 0 || c.GetName() == "" || cities[c.GetId()] {
+				t.Errorf("city = %v", c)
+			}
+			cities[c.GetId()] = true
+		}
+	}
+	if len(res.GetProvinces()) != 31 || len(cities) != 1242 {
+		t.Errorf("%d provinces, %d cities; want 31 and 1242", len(res.GetProvinces()), len(cities))
+	}
+
+	// A clinic is registered in a city of the list; its province and name are stored with it.
+	unknown := registerRequest(1, "doctor")
+	unknown.GetClinic().CityId = 99999
+	_, err = e.installation.Register(ctx, unknown)
+	wantCode(t, err, connect.CodeNotFound, reasonCityNotFound)
+	e.register(1, "doctor")
+	var cityID int32
+	var sameProvince, sameName bool
+	if err := e.deps.DB.QueryRow(ctx, `
+		SELECT c.city_id, c.province_id = ci.province_id, c.city = ci.name
+		FROM clinics c JOIN cities ci ON ci.id = c.city_id`,
+	).Scan(&cityID, &sameProvince, &sameName); err != nil || cityID != 1 || !sameProvince || !sameName {
+		t.Fatalf("clinic city %d: same province %v, same name %v, %v", cityID, sameProvince, sameName, err)
+	}
 }

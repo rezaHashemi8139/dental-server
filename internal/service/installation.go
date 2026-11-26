@@ -123,7 +123,7 @@ func (s *InstallationService) ListMyClinics(ctx context.Context, req *dentalv1.L
 	}
 	var clinics []listed
 	rows, err := s.d.DB.Query(ctx, `
-		SELECT c.id, c.name, c.license_number, c.city, c.address, c.owner_id, o.full_name,
+		SELECT c.id, c.name, c.license_number, c.city, coalesce(c.city_id, 0), c.address, c.owner_id, o.full_name,
 		       (SELECT count(*) FROM installations i WHERE i.clinic_id = c.id AND i.revoked_at IS NULL),
 		       (SELECT count(*) FROM clinics c2
 		        WHERE c2.owner_id = c.owner_id AND (c2.created_at, c2.id) <= (c.created_at, c.id))
@@ -137,14 +137,16 @@ func (s *InstallationService) ListMyClinics(ctx context.Context, req *dentalv1.L
 	}
 	for rows.Next() {
 		var id pgtype.UUID
+		var cityID int32
 		var installations int64
 		l := listed{clinic: &dentalv1.MyClinic{}}
-		if err := rows.Scan(&id, &l.clinic.Name, &l.clinic.LicenseNumber, &l.clinic.City, &l.clinic.Address,
+		if err := rows.Scan(&id, &l.clinic.Name, &l.clinic.LicenseNumber, &l.clinic.City, &cityID, &l.clinic.Address,
 			&l.ownerID, &l.clinic.OwnerFullName, &installations, &l.rank); err != nil {
 			rows.Close()
 			return nil, internal(err)
 		}
 		l.clinic.Id, l.clinic.IsOwner, l.clinic.InstallationCount = uuidBytes(id), l.ownerID == a.ID, uint32(installations)
+		l.clinic.CityId = uint32(cityID)
 		clinics = append(clinics, l)
 	}
 	rows.Close()
@@ -208,6 +210,38 @@ func (s *InstallationService) ListMyClinics(ctx context.Context, req *dentalv1.L
 	return res, nil
 }
 
+// ListCities returns every province with its cities, ordered by ID.
+func (s *InstallationService) ListCities(ctx context.Context, _ *dentalv1.ListCitiesRequest) (*dentalv1.ListCitiesResponse, error) {
+	rows, err := s.d.DB.Query(ctx, `
+		SELECT p.id, p.name, c.id, c.name
+		FROM provinces p JOIN cities c ON c.province_id = p.id
+		ORDER BY p.id, c.id`)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer rows.Close()
+
+	res := &dentalv1.ListCitiesResponse{}
+	var province *dentalv1.Province
+	for rows.Next() {
+		var provinceID int16
+		var provinceName, cityName string
+		var cityID int32
+		if err := rows.Scan(&provinceID, &provinceName, &cityID, &cityName); err != nil {
+			return nil, internal(err)
+		}
+		if province == nil || province.Id != uint32(provinceID) {
+			province = &dentalv1.Province{Id: uint32(provinceID), Name: provinceName}
+			res.Provinces = append(res.Provinces, province)
+		}
+		province.Cities = append(province.Cities, &dentalv1.City{Id: uint32(cityID), Name: cityName})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, internal(err)
+	}
+	return res, nil
+}
+
 // createOwner creates the account of a clinic owner who has none yet.
 func createOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.NewOwner) (*dentalv1.User, pgtype.UUID, error) {
 	return insertUser(ctx, tx, account{
@@ -223,13 +257,25 @@ func createOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.NewOwner) (*dentalv
 // so their first login needs nothing else.
 func createClinic(ctx context.Context, tx pgx.Tx, c *dentalv1.ClinicInfo, ownerID pgtype.UUID) (pgtype.UUID, error) {
 	var id pgtype.UUID
+	// The city's province and name come from the list of cities (see ListCities).
+	var provinceID int16
+	var cityName string
+	err := tx.QueryRow(ctx, `SELECT province_id, name FROM cities WHERE id = $1`, int32(c.GetCityId())).
+		Scan(&provinceID, &cityName)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return id, fail(connect.CodeNotFound, reasonCityNotFound)
+	}
+	if err != nil {
+		return id, internal(err)
+	}
+
 	loc := c.GetLocation()
-	err := tx.QueryRow(ctx, `
-		INSERT INTO clinics (name, license_number, phone, city, address, postal_code,
+	err = tx.QueryRow(ctx, `
+		INSERT INTO clinics (name, license_number, phone, province_id, city_id, city, address, postal_code,
 		                     latitude, longitude, owner_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-		c.GetName(), c.GetLicenseNumber(), c.GetPhone(), c.GetCity(), c.GetAddress(), c.GetPostalCode(),
-		loc.GetLatitude(), loc.GetLongitude(), ownerID,
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+		c.GetName(), c.GetLicenseNumber(), c.GetPhone(), provinceID, int32(c.GetCityId()), cityName,
+		c.GetAddress(), c.GetPostalCode(), loc.GetLatitude(), loc.GetLongitude(), ownerID,
 	).Scan(&id)
 	if uniqueViolation(err, "clinics_license_number_key") {
 		return id, fail(connect.CodeAlreadyExists, reasonLicenseNumberTaken)

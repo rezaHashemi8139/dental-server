@@ -151,8 +151,8 @@ type ClinicInfo struct {
 	LicenseNumber string `protobuf:"bytes,2,opt,name=license_number,json=licenseNumber,proto3" json:"license_number,omitempty"`
 	// 7–15 digits, optionally starting with '+'.
 	Phone string `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
-	// 1–100 characters.
-	City string `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
+	// Where the clinic is: a City.id from ListCities. Its province comes with it.
+	CityId uint32 `protobuf:"varint,8,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
 	// 1–500 characters.
 	Address string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
 	// Optional: empty, or 5–10 digits.
@@ -214,11 +214,11 @@ func (x *ClinicInfo) GetPhone() string {
 	return ""
 }
 
-func (x *ClinicInfo) GetCity() string {
+func (x *ClinicInfo) GetCityId() uint32 {
 	if x != nil {
-		return x.City
+		return x.CityId
 	}
-	return ""
+	return 0
 }
 
 func (x *ClinicInfo) GetAddress() string {
@@ -872,8 +872,11 @@ type MyClinic struct {
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Identifies the clinic in ExistingClinic.
 	LicenseNumber string `protobuf:"bytes,3,opt,name=license_number,json=licenseNumber,proto3" json:"license_number,omitempty"`
-	City          string `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
-	Address       string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
+	// The city's name, also for clinics registered before cities had IDs.
+	City string `protobuf:"bytes,4,opt,name=city,proto3" json:"city,omitempty"`
+	// A City.id from ListCities; 0 for clinics registered before cities had IDs.
+	CityId  uint32 `protobuf:"varint,12,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	Address string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
 	// Whether the account owns the clinic. Otherwise it is one of its admins.
 	IsOwner       bool   `protobuf:"varint,6,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
 	OwnerFullName string `protobuf:"bytes,7,opt,name=owner_full_name,json=ownerFullName,proto3" json:"owner_full_name,omitempty"`
@@ -953,6 +956,13 @@ func (x *MyClinic) GetCity() string {
 	return ""
 }
 
+func (x *MyClinic) GetCityId() uint32 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
 func (x *MyClinic) GetAddress() string {
 	if x != nil {
 		return x.Address
@@ -1002,6 +1012,202 @@ func (x *MyClinic) GetCannotAddReason() string {
 	return ""
 }
 
+type ListCitiesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCitiesRequest) Reset() {
+	*x = ListCitiesRequest{}
+	mi := &file_dental_v1_installation_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCitiesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCitiesRequest) ProtoMessage() {}
+
+func (x *ListCitiesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCitiesRequest.ProtoReflect.Descriptor instead.
+func (*ListCitiesRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{11}
+}
+
+type ListCitiesResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Ordered by ID, not by name: sort them for display.
+	Provinces     []*Province `protobuf:"bytes,1,rep,name=provinces,proto3" json:"provinces,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCitiesResponse) Reset() {
+	*x = ListCitiesResponse{}
+	mi := &file_dental_v1_installation_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCitiesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCitiesResponse) ProtoMessage() {}
+
+func (x *ListCitiesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCitiesResponse.ProtoReflect.Descriptor instead.
+func (*ListCitiesResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ListCitiesResponse) GetProvinces() []*Province {
+	if x != nil {
+		return x.Provinces
+	}
+	return nil
+}
+
+type Province struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Official Persian name.
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	// Ordered by ID, not by name.
+	Cities        []*City `protobuf:"bytes,3,rep,name=cities,proto3" json:"cities,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Province) Reset() {
+	*x = Province{}
+	mi := &file_dental_v1_installation_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Province) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Province) ProtoMessage() {}
+
+func (x *Province) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Province.ProtoReflect.Descriptor instead.
+func (*Province) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Province) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Province) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Province) GetCities() []*City {
+	if x != nil {
+		return x.Cities
+	}
+	return nil
+}
+
+type City struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Official Persian name. Different provinces may have cities of the same name.
+	Name          string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *City) Reset() {
+	*x = City{}
+	mi := &file_dental_v1_installation_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *City) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*City) ProtoMessage() {}
+
+func (x *City) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_installation_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use City.ProtoReflect.Descriptor instead.
+func (*City) Descriptor() ([]byte, []int) {
+	return file_dental_v1_installation_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *City) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *City) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 var File_dental_v1_installation_proto protoreflect.FileDescriptor
 
 const file_dental_v1_installation_proto_rawDesc = "" +
@@ -1018,19 +1224,19 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\fmemory_bytes\x18\a \x01(\x04R\vmemoryBytes\x123\n" +
 	"\rmac_addresses\x18\b \x03(\tB\x0e\xbaH\v\x92\x01\b\x10 \"\x04r\x02\x18@R\fmacAddresses\x12(\n" +
 	"\vapp_version\x18\t \x01(\tB\a\xbaH\x04r\x02\x182R\n" +
-	"appVersion\"\xdc\x02\n" +
+	"appVersion\"\xeb\x02\n" +
 	"\n" +
 	"ClinicInfo\x12\x1e\n" +
 	"\x04name\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xc8\x01R\x04name\x12D\n" +
 	"\x0elicense_number\x18\x02 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9./-]{3,32}$R\rlicenseNumber\x12-\n" +
-	"\x05phone\x18\x03 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12\x1d\n" +
-	"\x04city\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\x04city\x12$\n" +
+	"\x05phone\x18\x03 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12 \n" +
+	"\acity_id\x18\b \x01(\rB\a\xbaH\x04*\x02 \x00R\x06cityId\x12$\n" +
 	"\aaddress\x18\x05 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xf4\x03R\aaddress\x128\n" +
 	"\vpostal_code\x18\x06 \x01(\tB\x17\xbaH\x14r\x122\x10^([0-9]{5,10})?$R\n" +
 	"postalCode\x12:\n" +
-	"\blocation\x18\a \x01(\v2\x16.dental.v1.GeoLocationB\x06\xbaH\x03\xc8\x01\x01R\blocation\"\xe8\x01\n" +
+	"\blocation\x18\a \x01(\v2\x16.dental.v1.GeoLocationB\x06\xbaH\x03\xc8\x01\x01R\blocationJ\x04\b\x04\x10\x05R\x04city\"\xe8\x01\n" +
 	"\vGeoLocation\x123\n" +
 	"\blatitude\x18\x01 \x01(\x01B\x17\xbaH\x14\x12\x12\x19\x00\x00\x00\x00\x00\x80V@)\x00\x00\x00\x00\x00\x80V\xc0R\blatitude\x125\n" +
 	"\tlongitude\x18\x02 \x01(\x01B\x17\xbaH\x14\x12\x12\x19\x00\x00\x00\x00\x00\x80f@)\x00\x00\x00\x00\x00\x80f\xc0R\tlongitude:m\xbaHj\x1ah\n" +
@@ -1074,12 +1280,13 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\x14subscription_ends_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x12subscriptionEndsAt\x12\x1f\n" +
 	"\vmax_clinics\x18\x05 \x01(\rR\n" +
 	"maxClinics\x12,\n" +
-	"\x12owned_clinic_count\x18\x06 \x01(\rR\x10ownedClinicCount\"\x9c\x03\n" +
+	"\x12owned_clinic_count\x18\x06 \x01(\rR\x10ownedClinicCount\"\xb5\x03\n" +
 	"\bMyClinic\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12%\n" +
 	"\x0elicense_number\x18\x03 \x01(\tR\rlicenseNumber\x12\x12\n" +
-	"\x04city\x18\x04 \x01(\tR\x04city\x12\x18\n" +
+	"\x04city\x18\x04 \x01(\tR\x04city\x12\x17\n" +
+	"\acity_id\x18\f \x01(\rR\x06cityId\x12\x18\n" +
 	"\aaddress\x18\x05 \x01(\tR\aaddress\x12\x19\n" +
 	"\bis_owner\x18\x06 \x01(\bR\aisOwner\x12&\n" +
 	"\x0fowner_full_name\x18\a \x01(\tR\rownerFullName\x12-\n" +
@@ -1087,10 +1294,22 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\x11max_installations\x18\t \x01(\rR\x10maxInstallations\x12L\n" +
 	"\x14subscription_ends_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\x12subscriptionEndsAt\x12*\n" +
-	"\x11cannot_add_reason\x18\v \x01(\tR\x0fcannotAddReason2\xb2\x01\n" +
+	"\x11cannot_add_reason\x18\v \x01(\tR\x0fcannotAddReason\"\x13\n" +
+	"\x11ListCitiesRequest\"G\n" +
+	"\x12ListCitiesResponse\x121\n" +
+	"\tprovinces\x18\x01 \x03(\v2\x13.dental.v1.ProvinceR\tprovinces\"W\n" +
+	"\bProvince\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12'\n" +
+	"\x06cities\x18\x03 \x03(\v2\x0f.dental.v1.CityR\x06cities\"*\n" +
+	"\x04City\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\rR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name2\xff\x01\n" +
 	"\x13InstallationService\x12E\n" +
 	"\bRegister\x12\x1a.dental.v1.RegisterRequest\x1a\x1b.dental.v1.RegisterResponse\"\x00\x12T\n" +
-	"\rListMyClinics\x12\x1f.dental.v1.ListMyClinicsRequest\x1a .dental.v1.ListMyClinicsResponse\"\x00B\x8d\x01\n" +
+	"\rListMyClinics\x12\x1f.dental.v1.ListMyClinicsRequest\x1a .dental.v1.ListMyClinicsResponse\"\x00\x12K\n" +
+	"\n" +
+	"ListCities\x12\x1c.dental.v1.ListCitiesRequest\x1a\x1d.dental.v1.ListCitiesResponse\"\x00B\x8d\x01\n" +
 	"\rcom.dental.v1B\x11InstallationProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
 	"Dental::V1b\x06proto3"
 
@@ -1106,7 +1325,7 @@ func file_dental_v1_installation_proto_rawDescGZIP() []byte {
 	return file_dental_v1_installation_proto_rawDescData
 }
 
-var file_dental_v1_installation_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_dental_v1_installation_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_dental_v1_installation_proto_goTypes = []any{
 	(*MachineInfo)(nil),           // 0: dental.v1.MachineInfo
 	(*ClinicInfo)(nil),            // 1: dental.v1.ClinicInfo
@@ -1119,34 +1338,42 @@ var file_dental_v1_installation_proto_goTypes = []any{
 	(*ListMyClinicsRequest)(nil),  // 8: dental.v1.ListMyClinicsRequest
 	(*ListMyClinicsResponse)(nil), // 9: dental.v1.ListMyClinicsResponse
 	(*MyClinic)(nil),              // 10: dental.v1.MyClinic
-	(*PersonIdentity)(nil),        // 11: dental.v1.PersonIdentity
-	(*timestamppb.Timestamp)(nil), // 12: google.protobuf.Timestamp
-	(*User)(nil),                  // 13: dental.v1.User
+	(*ListCitiesRequest)(nil),     // 11: dental.v1.ListCitiesRequest
+	(*ListCitiesResponse)(nil),    // 12: dental.v1.ListCitiesResponse
+	(*Province)(nil),              // 13: dental.v1.Province
+	(*City)(nil),                  // 14: dental.v1.City
+	(*PersonIdentity)(nil),        // 15: dental.v1.PersonIdentity
+	(*timestamppb.Timestamp)(nil), // 16: google.protobuf.Timestamp
+	(*User)(nil),                  // 17: dental.v1.User
 }
 var file_dental_v1_installation_proto_depIdxs = []int32{
 	2,  // 0: dental.v1.ClinicInfo.location:type_name -> dental.v1.GeoLocation
-	11, // 1: dental.v1.NewOwner.identity:type_name -> dental.v1.PersonIdentity
-	11, // 2: dental.v1.ExistingOwner.identity:type_name -> dental.v1.PersonIdentity
+	15, // 1: dental.v1.NewOwner.identity:type_name -> dental.v1.PersonIdentity
+	15, // 2: dental.v1.ExistingOwner.identity:type_name -> dental.v1.PersonIdentity
 	0,  // 3: dental.v1.RegisterRequest.machine:type_name -> dental.v1.MachineInfo
 	1,  // 4: dental.v1.RegisterRequest.clinic:type_name -> dental.v1.ClinicInfo
 	5,  // 5: dental.v1.RegisterRequest.existing_clinic:type_name -> dental.v1.ExistingClinic
 	3,  // 6: dental.v1.RegisterRequest.new_owner:type_name -> dental.v1.NewOwner
 	4,  // 7: dental.v1.RegisterRequest.existing_owner:type_name -> dental.v1.ExistingOwner
-	12, // 8: dental.v1.RegisterResponse.server_time:type_name -> google.protobuf.Timestamp
-	13, // 9: dental.v1.RegisterResponse.owner:type_name -> dental.v1.User
-	13, // 10: dental.v1.ListMyClinicsResponse.user:type_name -> dental.v1.User
+	16, // 8: dental.v1.RegisterResponse.server_time:type_name -> google.protobuf.Timestamp
+	17, // 9: dental.v1.RegisterResponse.owner:type_name -> dental.v1.User
+	17, // 10: dental.v1.ListMyClinicsResponse.user:type_name -> dental.v1.User
 	10, // 11: dental.v1.ListMyClinicsResponse.clinics:type_name -> dental.v1.MyClinic
-	12, // 12: dental.v1.ListMyClinicsResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
-	12, // 13: dental.v1.MyClinic.subscription_ends_at:type_name -> google.protobuf.Timestamp
-	6,  // 14: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
-	8,  // 15: dental.v1.InstallationService.ListMyClinics:input_type -> dental.v1.ListMyClinicsRequest
-	7,  // 16: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
-	9,  // 17: dental.v1.InstallationService.ListMyClinics:output_type -> dental.v1.ListMyClinicsResponse
-	16, // [16:18] is the sub-list for method output_type
-	14, // [14:16] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	16, // 12: dental.v1.ListMyClinicsResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	16, // 13: dental.v1.MyClinic.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	13, // 14: dental.v1.ListCitiesResponse.provinces:type_name -> dental.v1.Province
+	14, // 15: dental.v1.Province.cities:type_name -> dental.v1.City
+	6,  // 16: dental.v1.InstallationService.Register:input_type -> dental.v1.RegisterRequest
+	8,  // 17: dental.v1.InstallationService.ListMyClinics:input_type -> dental.v1.ListMyClinicsRequest
+	11, // 18: dental.v1.InstallationService.ListCities:input_type -> dental.v1.ListCitiesRequest
+	7,  // 19: dental.v1.InstallationService.Register:output_type -> dental.v1.RegisterResponse
+	9,  // 20: dental.v1.InstallationService.ListMyClinics:output_type -> dental.v1.ListMyClinicsResponse
+	12, // 21: dental.v1.InstallationService.ListCities:output_type -> dental.v1.ListCitiesResponse
+	19, // [19:22] is the sub-list for method output_type
+	16, // [16:19] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_installation_proto_init() }
@@ -1168,7 +1395,7 @@ func file_dental_v1_installation_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_installation_proto_rawDesc), len(file_dental_v1_installation_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

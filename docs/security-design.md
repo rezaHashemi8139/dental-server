@@ -19,8 +19,8 @@ for message formats and the crypto scheme.
 ## First start
 
 1. App generates nothing secret yet; it collects `MachineInfo` (MachineGuid hash, hostname, OS, CPU, RAM, MAC addresses).
-2. The user fills in either a new clinic (name, unique license number, phone, address,
-   map location) and its owner — a new account (with a unique identity: national ID, or FIDA
+2. The user fills in either a new clinic (name, unique license number, phone, city from
+   `InstallationService.ListCities`, address, map location) and its owner — a new account (with a unique identity: national ID, or FIDA
    code for foreign nationals) or an existing one (username + password; the identity only if
    none is on file) — or the license number of an existing clinic and its owner's
    credentials, to add another installation to it. Alternatively the person logs in (or signs

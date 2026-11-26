@@ -5,6 +5,7 @@ package dental.v1;
 import "buf/validate/validate.proto";
 import "dental/v1/auth.proto";
 import "dental/v1/person.proto";
+import "dental/v1/subscription.proto";
 import "google/protobuf/timestamp.proto";
 
 // The admin panel: system administrators, subscription plans and selling
@@ -68,40 +69,6 @@ message Admin {
   bytes id = 1;
   string username = 2;
   string full_name = 3;
-}
-
-message Plan {
-  // 16 raw UUID bytes.
-  bytes id = 1;
-  string name = 2;
-  // How many clinics the owner may have.
-  uint32 max_clinics = 3;
-  // How many installations (not revoked) each clinic may have.
-  uint32 max_devices_per_clinic = 4;
-  uint32 duration_days = 5;
-  // In Iranian rials.
-  int64 price_rials = 6;
-  // Only active plans can be sold.
-  bool active = 7;
-}
-
-message Subscription {
-  // 16 raw UUID bytes.
-  bytes id = 1;
-  // 16 raw UUID bytes: the clinic owner.
-  bytes user_id = 2;
-  // 16 raw UUID bytes.
-  bytes plan_id = 3;
-  string plan_name = 4;
-  // Limits and price as sold, whatever the plan says now.
-  uint32 max_clinics = 5;
-  uint32 max_devices_per_clinic = 6;
-  int64 price_rials = 7;
-  google.protobuf.Timestamp starts_at = 8;
-  google.protobuf.Timestamp ends_at = 9;
-  // Unset unless canceled.
-  google.protobuf.Timestamp canceled_at = 10;
-  string note = 11;
 }
 
 // A clinic as the admin panel lists it.

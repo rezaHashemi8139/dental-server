@@ -57,6 +57,7 @@ const (
 
 	reasonNoClinic               = "no_clinic"
 	reasonClinicNotFound         = "clinic_not_found"
+	reasonCityNotFound           = "city_not_found"
 	reasonNotClinicOwner         = "not_clinic_owner"
 	reasonPasswordChangeRequired = "password_change_required"
 	reasonPasswordUnchanged      = "password_unchanged"

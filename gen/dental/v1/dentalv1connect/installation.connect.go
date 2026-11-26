@@ -39,6 +39,9 @@ const (
 	// InstallationServiceListMyClinicsProcedure is the fully-qualified name of the
 	// InstallationService's ListMyClinics RPC.
 	InstallationServiceListMyClinicsProcedure = "/dental.v1.InstallationService/ListMyClinics"
+	// InstallationServiceListCitiesProcedure is the fully-qualified name of the InstallationService's
+	// ListCities RPC.
+	InstallationServiceListCitiesProcedure = "/dental.v1.InstallationService/ListCities"
 )
 
 // InstallationServiceClient is a client for the dental.v1.InstallationService service.
@@ -53,9 +56,10 @@ type InstallationServiceClient interface {
 	// Registering needs no subscription, but nobody can log in until the owner has
 	// one (see AuthService.Login).
 	//
-	// A new clinic needs its license number, phone, address and location (ClinicInfo).
+	// A new clinic needs its license number, phone, city, address and location (ClinicInfo).
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
 	//   or identity (national ID or FIDA code) belongs to another account;
@@ -80,6 +84,9 @@ type InstallationServiceClient interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
 	// FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
 	ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error)
+	// Iran's provinces and their cities, for ClinicInfo.city_id. No login needed.
+	// The list rarely changes; IDs are never reused for another place.
+	ListCities(context.Context, *v1.ListCitiesRequest) (*v1.ListCitiesResponse, error)
 }
 
 // NewInstallationServiceClient constructs a client for the dental.v1.InstallationService service.
@@ -105,6 +112,12 @@ func NewInstallationServiceClient(httpClient connect.HTTPClient, baseURL string,
 			connect.WithSchema(installationServiceMethods.ByName("ListMyClinics")),
 			connect.WithClientOptions(opts...),
 		),
+		listCities: connect.NewClient[v1.ListCitiesRequest, v1.ListCitiesResponse](
+			httpClient,
+			baseURL+InstallationServiceListCitiesProcedure,
+			connect.WithSchema(installationServiceMethods.ByName("ListCities")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -112,6 +125,7 @@ func NewInstallationServiceClient(httpClient connect.HTTPClient, baseURL string,
 type installationServiceClient struct {
 	register      *connect.Client[v1.RegisterRequest, v1.RegisterResponse]
 	listMyClinics *connect.Client[v1.ListMyClinicsRequest, v1.ListMyClinicsResponse]
+	listCities    *connect.Client[v1.ListCitiesRequest, v1.ListCitiesResponse]
 }
 
 // Register calls dental.v1.InstallationService.Register.
@@ -132,6 +146,15 @@ func (c *installationServiceClient) ListMyClinics(ctx context.Context, req *v1.L
 	return nil, err
 }
 
+// ListCities calls dental.v1.InstallationService.ListCities.
+func (c *installationServiceClient) ListCities(ctx context.Context, req *v1.ListCitiesRequest) (*v1.ListCitiesResponse, error) {
+	response, err := c.listCities.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // InstallationServiceHandler is an implementation of the dental.v1.InstallationService service.
 type InstallationServiceHandler interface {
 	// Called once, the first time the app starts. No login needed.
@@ -144,9 +167,10 @@ type InstallationServiceHandler interface {
 	// Registering needs no subscription, but nobody can log in until the owner has
 	// one (see AuthService.Login).
 	//
-	// A new clinic needs its license number, phone, address and location (ClinicInfo).
+	// A new clinic needs its license number, phone, city, address and location (ClinicInfo).
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
+	// - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
 	//   or identity (national ID or FIDA code) belongs to another account;
@@ -171,6 +195,9 @@ type InstallationServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials", PERMISSION_DENIED "user_disabled",
 	// FAILED_PRECONDITION "password_change_required" or INVALID_ARGUMENT "invalid_argument".
 	ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error)
+	// Iran's provinces and their cities, for ClinicInfo.city_id. No login needed.
+	// The list rarely changes; IDs are never reused for another place.
+	ListCities(context.Context, *v1.ListCitiesRequest) (*v1.ListCitiesResponse, error)
 }
 
 // NewInstallationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -192,12 +219,20 @@ func NewInstallationServiceHandler(svc InstallationServiceHandler, opts ...conne
 		connect.WithSchema(installationServiceMethods.ByName("ListMyClinics")),
 		connect.WithHandlerOptions(opts...),
 	)
+	installationServiceListCitiesHandler := connect.NewUnaryHandlerSimple(
+		InstallationServiceListCitiesProcedure,
+		svc.ListCities,
+		connect.WithSchema(installationServiceMethods.ByName("ListCities")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.InstallationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case InstallationServiceRegisterProcedure:
 			installationServiceRegisterHandler.ServeHTTP(w, r)
 		case InstallationServiceListMyClinicsProcedure:
 			installationServiceListMyClinicsHandler.ServeHTTP(w, r)
+		case InstallationServiceListCitiesProcedure:
+			installationServiceListCitiesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -213,4 +248,8 @@ func (UnimplementedInstallationServiceHandler) Register(context.Context, *v1.Reg
 
 func (UnimplementedInstallationServiceHandler) ListMyClinics(context.Context, *v1.ListMyClinicsRequest) (*v1.ListMyClinicsResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.InstallationService.ListMyClinics is not implemented"))
+}
+
+func (UnimplementedInstallationServiceHandler) ListCities(context.Context, *v1.ListCitiesRequest) (*v1.ListCitiesResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.InstallationService.ListCities is not implemented"))
 }

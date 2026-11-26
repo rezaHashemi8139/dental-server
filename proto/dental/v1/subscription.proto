@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+package dental.v1;
+
+import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
+
+// Plans, subscriptions and the payments that buy them, shared by BillingService
+// (clinic owners, in the desktop app) and AdminService (the admin panel).
+//
+// Only clinic owners buy subscriptions: while one is in force, the members of the
+// owner's clinics may use the app, within its limits on clinics and on installations
+// per clinic. A user's subscriptions never overlap.
+//
+// Payments are manual for now: the owner transfers the amount to one of the
+// PaymentAccounts and reports it (BillingService.CreatePayment); an administrator
+// checks the bank statement and approves it, which adds the subscription
+// (AdminService.ApprovePayment), or rejects it. An online gateway can be added
+// later as another PaymentMethod with its own details, using the same statuses.
+
+message Plan {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  // How many clinics the owner may have.
+  uint32 max_clinics = 3;
+  // How many installations (not revoked) each clinic may have.
+  uint32 max_devices_per_clinic = 4;
+  uint32 duration_days = 5;
+  // In Iranian rials.
+  int64 price_rials = 6;
+  // Only active plans can be sold.
+  bool active = 7;
+}
+
+message Subscription {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  // 16 raw UUID bytes: the clinic owner.
+  bytes user_id = 2;
+  // 16 raw UUID bytes.
+  bytes plan_id = 3;
+  string plan_name = 4;
+  // Limits and price as sold, whatever the plan says now.
+  uint32 max_clinics = 5;
+  uint32 max_devices_per_clinic = 6;
+  int64 price_rials = 7;
+  google.protobuf.Timestamp starts_at = 8;
+  // Earlier than first sold when an upgrade (PURCHASE_MODE_UPGRADE_NOW) replaced it.
+  google.protobuf.Timestamp ends_at = 9;
+  // Unset unless canceled.
+  google.protobuf.Timestamp canceled_at = 10;
+  // The administrator's note. Only AdminService sends it.
+  string note = 11;
+}
+
+// An account the owner can transfer money to. Managed in the admin panel.
+message PaymentAccount {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string bank_name = 2;
+  // Whose account it is, as the bank shows it.
+  string holder_name = 3;
+  // 16 digits, or empty when only the IBAN is given.
+  string card_number = 4;
+  // "IR" and 24 digits, or empty when only the card number is given.
+  string iban = 5;
+  // Only active accounts are shown to owners.
+  bool active = 6;
+  // Owners see accounts in ascending order.
+  int32 position = 7;
+}
+
+enum PaymentMethod {
+  PAYMENT_METHOD_UNSPECIFIED = 0;
+  // Card to card (kart be kart), with the payer's card.
+  PAYMENT_METHOD_CARD_TO_CARD = 1;
+  // A bank transfer to the IBAN (Paya, Satna...).
+  PAYMENT_METHOD_BANK_TRANSFER = 2;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  // Waiting for an administrator. An owner has at most one.
+  PAYMENT_STATUS_PENDING = 1;
+  // The subscription was added (Payment.subscription_id).
+  PAYMENT_STATUS_APPROVED = 2;
+  // See Payment.rejection_reason.
+  PAYMENT_STATUS_REJECTED = 3;
+  // Withdrawn by the owner while pending.
+  PAYMENT_STATUS_CANCELED = 4;
+}
+
+// When the subscription bought starts.
+enum PurchaseMode {
+  PURCHASE_MODE_UNSPECIFIED = 0;
+  // When the paid time already bought ends (now, if none is left), at the plan's
+  // full price: renewing, or a bigger plan from the next period on.
+  PURCHASE_MODE_EXTEND = 1;
+  // Now, replacing the subscription in force: its unused time is credited against
+  // the price. Only when no subscription is queued after the one in force.
+  PURCHASE_MODE_UPGRADE_NOW = 2;
+}
+
+// What a purchase costs and the period it buys, if it were approved now.
+message PaymentQuote {
+  // The plan's price.
+  int64 price_rials = 1;
+  // The unused value of the subscription in force (PURCHASE_MODE_UPGRADE_NOW
+  // only), at most price_rials.
+  int64 credit_rials = 2;
+  // What to transfer: price_rials - credit_rials.
+  int64 amount_rials = 3;
+  google.protobuf.Timestamp starts_at = 4;
+  google.protobuf.Timestamp ends_at = 5;
+}
+
+// A money transfer the owner made by themselves and reported.
+message ManualTransfer {
+  // 16 raw UUID bytes: the PaymentAccount the money was sent to.
+  bytes payment_account_id = 1 [(buf.validate.field).bytes.len = 16];
+  // The bank's tracking or reference number. 4–40 letters, digits or '-'.
+  string reference = 2 [(buf.validate.field).string.pattern = "^[A-Za-z0-9-]{4,40}$"];
+  // When the money was sent: in the past, at most 30 days ago.
+  google.protobuf.Timestamp paid_at = 3 [
+    (buf.validate.field).required = true,
+    (buf.validate.field).timestamp = {
+      lt_now: true
+      within: {seconds: 2592000}
+    }
+  ];
+  // The last 4 digits of the payer's card: required for PAYMENT_METHOD_CARD_TO_CARD,
+  // empty or 4 digits otherwise.
+  string payer_card_last4 = 4 [(buf.validate.field).string.pattern = "^([0-9]{4})?$"];
+  // Kept for a receipt image.
+  reserved 5;
+}
+
+message Payment {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  // 16 raw UUID bytes: the clinic owner.
+  bytes user_id = 2;
+  // 16 raw UUID bytes.
+  bytes plan_id = 3;
+  string plan_name = 4;
+  // What is bought, fixed when the payment was reported, whatever the plan says now.
+  uint32 max_clinics = 5;
+  uint32 max_devices_per_clinic = 6;
+  uint32 duration_days = 7;
+  PurchaseMode mode = 8;
+  PaymentMethod method = 9;
+  PaymentStatus status = 10;
+  // As quoted when the payment was reported (see PaymentQuote).
+  int64 price_rials = 11;
+  int64 credit_rials = 12;
+  int64 amount_rials = 13;
+  oneof details {
+    // PAYMENT_METHOD_CARD_TO_CARD and PAYMENT_METHOD_BANK_TRANSFER.
+    ManualTransfer transfer = 14;
+  }
+  // Why it was rejected; shown to the owner as written.
+  string rejection_reason = 15;
+  // 16 raw UUID bytes: the subscription it bought, once approved.
+  bytes subscription_id = 16;
+  google.protobuf.Timestamp created_at = 17;
+  // When it was approved, rejected or canceled.
+  google.protobuf.Timestamp reviewed_at = 18;
+}
