@@ -231,16 +231,14 @@ func scanSubscription(row pgx.Row) (*dentalv1.Subscription, error) {
 
 func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest) (*dentalv1.GetUserResponse, error) {
 	var id pgtype.UUID
-	var identityType, nationality string
 	var identity pgtype.Text
 	var disabledAt pgtype.Timestamptz
 	var createdAt time.Time
 	res := &dentalv1.GetUserResponse{User: &dentalv1.User{}}
 	err := s.d.DB.QueryRow(ctx, `
-		SELECT id, username, full_name, identity_type, identity, nationality, phone, disabled_at, created_at
-		FROM users WHERE identity_type = $1 AND identity = $2`,
-		identityTypeNames[req.GetIdentity().GetType()], req.GetIdentity().GetNumber(),
-	).Scan(&id, &res.User.Username, &res.User.FullName, &identityType, &identity, &nationality, &res.Phone, &disabledAt, &createdAt)
+		SELECT id, username, full_name, identity, phone, disabled_at, created_at
+		FROM users WHERE identity = $1`, req.GetIdentity().GetNumber(),
+	).Scan(&id, &res.User.Username, &res.User.FullName, &identity, &res.Phone, &disabledAt, &createdAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fail(connect.CodeNotFound, reasonUserNotFound)
 	}
@@ -248,9 +246,7 @@ func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest
 		return nil, internal(err)
 	}
 	res.User.Id = uuidBytes(id)
-	res.Identity = &dentalv1.PersonIdentity{
-		Type: identityTypeFromName(identityType), Number: identity.String, Nationality: nationality,
-	}
+	res.Identity = &dentalv1.PersonIdentity{Number: identity.String}
 	res.Disabled = disabledAt.Valid
 	res.CreatedAt = timestamppb.New(createdAt)
 

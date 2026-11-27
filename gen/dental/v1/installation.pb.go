@@ -308,7 +308,7 @@ type NewOwner struct {
 	FullName string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	// Mobile number: 7–15 digits, optionally starting with '+'.
 	Phone string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
-	// National ID or FIDA code, and nationality. Unique across all accounts.
+	// Identification code, unique across all accounts.
 	Identity      *PersonIdentity `protobuf:"bytes,6,opt,name=identity,proto3" json:"identity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -386,7 +386,7 @@ type ExistingOwner struct {
 	Username string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
 	Password string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	// Optional when the account has an identity on file (ListMyClinicsResponse.identity_on_file);
-	// if sent, it must match it (type and number). Required for accounts made before
+	// if sent, it must match it. Required for accounts made before
 	// identities were required, and saved for them.
 	Identity      *PersonIdentity `protobuf:"bytes,4,opt,name=identity,proto3" json:"identity,omitempty"`
 	unknownFields protoimpl.UnknownFields

@@ -40,7 +40,6 @@ const (
 	reasonNotAMember          = "not_a_member"
 	reasonUsernameTaken       = "username_taken"
 	reasonIdentityTaken       = "identity_taken"
-	reasonInvalidNationalID   = "invalid_national_id"
 	reasonIdentityMismatch    = "identity_mismatch"
 	reasonIdentityRequired    = "identity_required"
 	reasonLicenseNumberTaken  = "license_number_taken"

@@ -21,8 +21,8 @@ import (
 
 // The desktop app derives the same id (src-tauri/src/patients.rs, patient_id_matches_the_server).
 func TestPatientID(t *testing.T) {
-	got := hex.EncodeToString(patientID(dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL, "0012345679"))
-	if got != "8089ab83b0a88a00964dc22230a0062f" {
+	got := hex.EncodeToString(patientID("0012345679"))
+	if got != "3cc05a27428a8621a9efab0ad5d2b80a" {
 		t.Fatalf("patientID = %s", got)
 	}
 }
@@ -49,10 +49,10 @@ func (e *testEnv) patients(token string) dentalv1connect.PatientServiceClient {
 		connect.WithInterceptors(bearer(token)))
 }
 
-func testPatient(nationalIDNumber, firstName string, updatedAt time.Time) *dentalv1.Patient {
+func testPatient(code, firstName string, updatedAt time.Time) *dentalv1.Patient {
 	return &dentalv1.Patient{
-		Id:        patientID(dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL, nationalIDNumber),
-		Identity:  nationalIdentity(nationalIDNumber),
+		Id:        patientID(code),
+		Identity:  personIdentity(code),
 		FirstName: firstName,
 		LastName:  "Ahmadi",
 		Gender:    dentalv1.Gender_GENDER_FEMALE,
@@ -98,7 +98,7 @@ func TestSyncBetweenClinics(t *testing.T) {
 	now := time.Now()
 
 	// Clinic A records a patient and a treatment.
-	sara := testPatient(nationalID(5000), "Sara", now.Add(-time.Hour))
+	sara := testPatient(personCode(5000), "Sara", now.Add(-time.Hour))
 	filling := testTreatment(1, sara, "Filling", now.Add(-time.Hour))
 	res, err := alice.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{sara}, Treatments: []*dentalv1.Treatment{filling}})
 	if err != nil || res.GetAccepted() != 2 || len(res.GetRejected()) != 0 {
@@ -106,7 +106,7 @@ func TestSyncBetweenClinics(t *testing.T) {
 	}
 
 	// Clinic B knows the same person, with an older change: taken, but A's details stay.
-	older := testPatient(nationalID(5000), "S.", now.Add(-2*time.Hour))
+	older := testPatient(personCode(5000), "S.", now.Add(-2*time.Hour))
 	if _, err := bob.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{older}}); err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +117,7 @@ func TestSyncBetweenClinics(t *testing.T) {
 	if len(b.GetTreatments()) != 0 {
 		t.Fatal("B received A's treatment: treatments belong to their clinic")
 	}
-	if got := b.GetPatients()[0].GetIdentity(); got.GetNumber() != nationalID(5000) || got.GetNationality() != "IR" {
+	if got := b.GetPatients()[0].GetIdentity(); got.GetNumber() != personCode(5000) {
 		t.Fatalf("identity = %v", got)
 	}
 
@@ -126,7 +126,7 @@ func TestSyncBetweenClinics(t *testing.T) {
 	if len(a.GetPatients()) != 1 || len(a.GetTreatments()) != 1 {
 		t.Fatalf("A pulled %d patients, %d treatments", len(a.GetPatients()), len(a.GetTreatments()))
 	}
-	newer := testPatient(nationalID(5000), "Sarah", now.Add(-time.Minute))
+	newer := testPatient(personCode(5000), "Sarah", now.Add(-time.Minute))
 	newer.Phone = "09121234567"
 	if _, err := bob.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{newer}}); err != nil {
 		t.Fatal(err)
@@ -140,11 +140,11 @@ func TestSyncBetweenClinics(t *testing.T) {
 	}
 
 	// A change dated in the future counts as made now: it cannot win forever.
-	future := testPatient(nationalID(5000), "Future", now.Add(24*time.Hour))
+	future := testPatient(personCode(5000), "Future", now.Add(24*time.Hour))
 	if _, err := alice.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{future}}); err != nil {
 		t.Fatal(err)
 	}
-	latest := testPatient(nationalID(5000), "Later", time.Now().Add(time.Second))
+	latest := testPatient(personCode(5000), "Later", time.Now().Add(time.Second))
 	if _, err := bob.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{latest}}); err != nil {
 		t.Fatal(err)
 	}
@@ -171,23 +171,22 @@ func TestSyncRejections(t *testing.T) {
 	bob := e.sync(e.clinicToken(2, "bob"))
 	now := time.Now()
 
-	sara := testPatient(nationalID(5000), "Sara", now)
+	sara := testPatient(personCode(5000), "Sara", now)
 	alicesTreatment := testTreatment(1, sara, "Filling", now)
 	if _, err := alice.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{sara}, Treatments: []*dentalv1.Treatment{alicesTreatment}}); err != nil {
 		t.Fatal(err)
 	}
 
-	wrongID := testPatient(nationalID(5001), "Wrong", now)
+	wrongID := testPatient(personCode(5001), "Wrong", now)
 	wrongID.Id = sara.GetId()
-	badCheckDigit := testPatient("0013542418", "Bad", now)
-	stranger := testPatient(nationalID(5002), "Stranger", now)
+	stranger := testPatient(personCode(5002), "Stranger", now)
 	unknownPatient := testTreatment(2, stranger, "Cleaning", now)
 	unknownUser := testTreatment(3, sara, "Cleaning", now)
 	unknownUser.PerformedBy = make([]byte, 16)
 	stolen := testTreatment(1, sara, "Changed by another clinic", now.Add(time.Second))
 
 	res, err := bob.Push(ctx, &dentalv1.PushRequest{
-		Patients:   []*dentalv1.Patient{wrongID, badCheckDigit},
+		Patients:   []*dentalv1.Patient{wrongID},
 		Treatments: []*dentalv1.Treatment{unknownPatient, unknownUser, stolen},
 	})
 	if err != nil {
@@ -199,7 +198,6 @@ func TestSyncRejections(t *testing.T) {
 	}
 	want := map[string]string{
 		hex.EncodeToString(wrongID.GetId()):        rejectInvalidPatientID,
-		hex.EncodeToString(badCheckDigit.GetId()):  rejectInvalidNationalID,
 		hex.EncodeToString(unknownPatient.GetId()): rejectUnknownPatient,
 		hex.EncodeToString(unknownUser.GetId()):    rejectUnknownUser,
 		hex.EncodeToString(stolen.GetId()):         rejectOtherClinic,
@@ -236,7 +234,7 @@ func TestPullPages(t *testing.T) {
 	var patients []*dentalv1.Patient
 	var treatments []*dentalv1.Treatment
 	for i := range 5 {
-		p := testPatient(nationalID(6000+i), "P", now)
+		p := testPatient(personCode(6000+i), "P", now)
 		patients = append(patients, p)
 		treatments = append(treatments, testTreatment(byte(10+i), p, "Check-up", now))
 	}
@@ -261,7 +259,7 @@ func TestPatientHistory(t *testing.T) {
 	bobToken := e.clinicToken(2, "bob")
 	now := time.Now()
 
-	sara := testPatient(nationalID(5000), "Sara", now)
+	sara := testPatient(personCode(5000), "Sara", now)
 	done := testTreatment(1, sara, "Root canal", now)
 	var aliceID [16]byte
 	if err := e.deps.DB.QueryRow(ctx, `SELECT id FROM users WHERE username = 'alice'`).Scan(&aliceID); err != nil {
@@ -276,8 +274,8 @@ func TestPatientHistory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Another clinic looks the patient up by national ID.
-	history, err := e.patients(bobToken).GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: nationalIdentity(nationalID(5000))})
+	// Another clinic looks the patient up by identification code.
+	history, err := e.patients(bobToken).GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: personIdentity(personCode(5000))})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -301,9 +299,9 @@ func TestPatientHistory(t *testing.T) {
 		t.Fatalf("%d logged views, want 1", views)
 	}
 
-	_, err = e.patients(bobToken).GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: nationalIdentity(nationalID(5999))})
+	_, err = e.patients(bobToken).GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: personIdentity(personCode(5999))})
 	wantCode(t, err, connect.CodeNotFound, reasonPatientNotFound)
-	_, err = e.patients("not-a-token").GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: nationalIdentity(nationalID(5000))})
+	_, err = e.patients("not-a-token").GetPatientHistory(ctx, &dentalv1.GetPatientHistoryRequest{Identity: personIdentity(personCode(5000))})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 }
 

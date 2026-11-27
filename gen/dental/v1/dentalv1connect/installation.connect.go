@@ -64,8 +64,7 @@ type InstallationServiceClient interface {
 	// - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
-	//   or identity (national ID or FIDA code) belongs to another account;
-	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
+	//   or identification code belongs to another account;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
 	// - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary
@@ -177,8 +176,7 @@ type InstallationServiceHandler interface {
 	// - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
 	// - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
 	// - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
-	//   or identity (national ID or FIDA code) belongs to another account;
-	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
+	//   or identification code belongs to another account;
 	// - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
 	// - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
 	// - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary

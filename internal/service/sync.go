@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -41,40 +40,26 @@ const syncWriteLock = 0x64656e74616c // "dental"
 
 // Reasons for RejectedRecord.reason.
 const (
-	rejectInvalidPatientID  = "invalid_patient_id"
-	rejectInvalidNationalID = "invalid_national_id"
-	rejectUnknownPatient    = "unknown_patient"
-	rejectUnknownUser       = "unknown_user"
-	rejectOtherClinic       = "other_clinic"
+	rejectInvalidPatientID = "invalid_patient_id"
+	rejectUnknownPatient   = "unknown_patient"
+	rejectUnknownUser      = "unknown_user"
+	rejectOtherClinic      = "other_clinic"
 )
 
-// patientID derives a patient's id from their identity (see Patient.id in patient.proto).
-func patientID(identityType dentalv1.IdentityType, number string) []byte {
-	sum := sha256.Sum256([]byte("dental/patient/v1\x00" + strconv.Itoa(int(identityType)) + "\x00" + number))
+// patientID derives a patient's id from their identification code (see Patient.id
+// in patient.proto). Migration 00015_identity_code.sql computes the same in SQL.
+func patientID(number string) []byte {
+	sum := sha256.Sum256([]byte("dental/patient/v2\x00" + number))
 	id := sum[:16]
 	id[6] = id[6]&0x0f | 0x80 // version 8
 	id[8] = id[8]&0x3f | 0x80 // RFC 4122 variant
 	return id
 }
 
-var identityTypeNames = map[dentalv1.IdentityType]string{
-	dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL: "national",
-	dentalv1.IdentityType_IDENTITY_TYPE_FOREIGN:  "foreign",
-}
-
 var genderNames = map[dentalv1.Gender]string{
 	dentalv1.Gender_GENDER_UNSPECIFIED: "",
 	dentalv1.Gender_GENDER_MALE:        "male",
 	dentalv1.Gender_GENDER_FEMALE:      "female",
-}
-
-func identityTypeFromName(name string) dentalv1.IdentityType {
-	for t, n := range identityTypeNames {
-		if n == name {
-			return t
-		}
-	}
-	return dentalv1.IdentityType_IDENTITY_TYPE_UNSPECIFIED
 }
 
 func genderFromName(name string) dentalv1.Gender {
@@ -84,14 +69,6 @@ func genderFromName(name string) dentalv1.Gender {
 		}
 	}
 	return dentalv1.Gender_GENDER_UNSPECIFIED
-}
-
-// checkIdentity returns why an identity is not acceptable, or "".
-func checkIdentity(identity *dentalv1.PersonIdentity) string {
-	if identity.GetType() == dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL && !validNationalID(identity.GetNumber()) {
-		return rejectInvalidNationalID
-	}
-	return ""
 }
 
 // clientTime is a time set on a client's clock, never later than the server's:
@@ -157,31 +134,25 @@ func (s *SyncService) Push(ctx context.Context, req *dentalv1.PushRequest) (*den
 // pushPatient stores a patient's details if they are newer than the server's, and
 // links the patient to the session's clinic. Returns a reject reason, or "".
 func pushPatient(ctx context.Context, tx pgx.Tx, session Session, p *dentalv1.Patient, now time.Time) (string, error) {
-	identity := p.GetIdentity()
-	if reason := checkIdentity(identity); reason != "" {
-		return reason, nil
-	}
-	expected := patientID(identity.GetType(), identity.GetNumber())
-	if string(expected) != string(p.GetId()) {
+	number := p.GetIdentity().GetNumber()
+	if string(patientID(number)) != string(p.GetId()) {
 		return rejectInvalidPatientID, nil
 	}
 	id := optionalUUID(p.GetId())
 
-	// The identity never changes: it is what the id is made from. The nationality is
-	// not part of it, so a correction of it is taken like any other change.
+	// The identification code never changes: it is what the id is made from.
 	_, err := tx.Exec(ctx, `
-		INSERT INTO patients (id, identity_type, identity, nationality, first_name, last_name, birth_date,
+		INSERT INTO patients (id, identity, first_name, last_name, birth_date,
 		                      gender, phone, address, medical_notes, updated_at, updated_by, updated_in)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		ON CONFLICT (id) DO UPDATE SET
-			nationality = EXCLUDED.nationality, first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name,
+			first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name,
 			birth_date = EXCLUDED.birth_date, gender = EXCLUDED.gender, phone = EXCLUDED.phone,
 			address = EXCLUDED.address, medical_notes = EXCLUDED.medical_notes,
 			updated_at = EXCLUDED.updated_at, updated_by = EXCLUDED.updated_by, updated_in = EXCLUDED.updated_in,
 			revision = nextval('sync_revision_seq')
 		WHERE patients.updated_at < EXCLUDED.updated_at`,
-		id, identityTypeNames[identity.GetType()], identity.GetNumber(), identity.GetNationality(),
-		p.GetFirstName(), p.GetLastName(),
+		id, number, p.GetFirstName(), p.GetLastName(),
 		p.GetBirthDate(), genderNames[p.GetGender()], p.GetPhone(), p.GetAddress(), p.GetMedicalNotes(),
 		clientTime(p.GetUpdatedAt(), now), session.UserID, session.ClinicID,
 	)
@@ -307,7 +278,7 @@ func (s *SyncService) Pull(ctx context.Context, req *dentalv1.PullRequest) (*den
 	return res, nil
 }
 
-const patientColumns = `p.id, p.identity_type, p.identity, p.nationality, p.first_name, p.last_name, p.birth_date,
+const patientColumns = `p.id, p.identity, p.first_name, p.last_name, p.birth_date,
 	p.gender, p.phone, p.address, p.medical_notes, p.updated_at`
 
 // queryPatients runs a query selecting patientColumns plus one bigint (a revision).
@@ -334,16 +305,15 @@ func queryPatients(ctx context.Context, q querier, sql string, args ...any) ([]*
 // scanPatient reads patientColumns, then `extra`.
 func scanPatient(row pgx.Row, extra ...any) (*dentalv1.Patient, error) {
 	var id pgtype.UUID
-	var identityType, gender string
+	var gender string
 	var updatedAt time.Time
 	p := &dentalv1.Patient{Identity: &dentalv1.PersonIdentity{}}
-	dest := append([]any{&id, &identityType, &p.Identity.Number, &p.Identity.Nationality, &p.FirstName, &p.LastName, &p.BirthDate,
+	dest := append([]any{&id, &p.Identity.Number, &p.FirstName, &p.LastName, &p.BirthDate,
 		&gender, &p.Phone, &p.Address, &p.MedicalNotes, &updatedAt}, extra...)
 	if err := row.Scan(dest...); err != nil {
 		return nil, err
 	}
 	p.Id = uuidBytes(id)
-	p.Identity.Type = identityTypeFromName(identityType)
 	p.Gender = genderFromName(gender)
 	p.UpdatedAt = timestamppb.New(updatedAt)
 	return p, nil

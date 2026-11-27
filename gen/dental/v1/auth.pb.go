@@ -94,7 +94,7 @@ type SignUpRequest struct {
 	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
 	// 1–100 characters.
 	FullName string `protobuf:"bytes,3,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
-	// National ID or FIDA code, and nationality. Unique across all accounts.
+	// Identification code, unique across all accounts.
 	Identity *PersonIdentity `protobuf:"bytes,4,opt,name=identity,proto3" json:"identity,omitempty"`
 	// Mobile number: 7–15 digits, optionally starting with '+'.
 	Phone         string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`

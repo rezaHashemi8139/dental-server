@@ -872,7 +872,7 @@ func (x *GetUserRequest) GetIdentity() *PersonIdentity {
 type GetUserResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	User  *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	// National ID or FIDA code, and nationality.
+	// Identification code.
 	Identity     *PersonIdentity        `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
 	Phone        string                 `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	Disabled     bool                   `protobuf:"varint,4,opt,name=disabled,proto3" json:"disabled,omitempty"`

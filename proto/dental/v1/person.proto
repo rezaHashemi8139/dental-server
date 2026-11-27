@@ -4,39 +4,13 @@ package dental.v1;
 
 import "buf/validate/validate.proto";
 
-enum IdentityType {
-  IDENTITY_TYPE_UNSPECIFIED = 0;
-  // Iranian citizens: the national ID, 10 digits, the last one a check digit.
-  IDENTITY_TYPE_NATIONAL = 1;
-  // Foreign nationals: the FIDA code (foreign nationals' identification code)
-  // issued to them in Iran, 5–20 uppercase letters or digits.
-  IDENTITY_TYPE_FOREIGN = 2;
-}
-
-// Who a person (a user or a patient) is, officially. People are unique across the
-// whole system by type and number; the nationality is recorded alongside, so it is
-// always clear who is a foreign national.
+// Who a person (a user or a patient) is: one identification code, e.g. a national
+// ID or any other official code. People are unique across the whole system by it.
+// Nationality is not recorded.
 message PersonIdentity {
-  option (buf.validate.message).cel = {
-    id: "nationality_matches_type"
-    message: "nationality must be IR for a national ID, and another country for a foreign national"
-    expression: "(this.type == 1) == (this.nationality == 'IR')"
-  };
-  option (buf.validate.message).cel = {
-    id: "number_matches_type"
-    message: "a national ID has 10 digits"
-    expression: "this.type != 1 || this.number.matches('^[0-9]{10}$')"
-  };
+  reserved 1, 3;
+  reserved "type", "nationality";
 
-  IdentityType type = 1 [
-    (buf.validate.field).enum.defined_only = true,
-    (buf.validate.field).enum.not_in = 0
-  ];
-  // Digits only for national IDs (the check digit is verified by the server, which
-  // fails with INVALID_ARGUMENT "invalid_national_id"); uppercase letters and digits
-  // for FIDA codes.
+  // 5–20 uppercase English letters or digits.
   string number = 2 [(buf.validate.field).string.pattern = "^[A-Z0-9]{5,20}$"];
-  // ISO 3166-1 alpha-2 country code in capitals, e.g. "IR" or "AF". Must be "IR" for
-  // IDENTITY_TYPE_NATIONAL and another country for IDENTITY_TYPE_FOREIGN.
-  string nationality = 3 [(buf.validate.field).string.pattern = "^[A-Z]{2}$"];
 }

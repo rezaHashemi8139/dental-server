@@ -27,7 +27,7 @@ func (s *AdminService) ListPayments(ctx context.Context, req *dentalv1.ListPayme
 
 	// Pending payments are a queue: oldest first. Otherwise newest first.
 	rows, err := s.d.DB.Query(ctx, `SELECT`+paymentFields+`,
-		u.username, u.full_name, u.identity_type, coalesce(u.identity, ''), u.nationality, u.phone
+		u.username, u.full_name, coalesce(u.identity, ''), u.phone
 		FROM payments p
 		JOIN plans pl ON pl.id = p.plan_id
 		JOIN users u ON u.id = p.user_id
@@ -42,14 +42,11 @@ func (s *AdminService) ListPayments(ctx context.Context, req *dentalv1.ListPayme
 	res := &dentalv1.ListPaymentsResponse{}
 	for rows.Next() {
 		r := &dentalv1.PaymentReview{User: &dentalv1.User{}, Identity: &dentalv1.PersonIdentity{}}
-		var identityType string
-		payment, err := scanPayment(rows, &r.User.Username, &r.User.FullName,
-			&identityType, &r.Identity.Number, &r.Identity.Nationality, &r.Phone)
+		payment, err := scanPayment(rows, &r.User.Username, &r.User.FullName, &r.Identity.Number, &r.Phone)
 		if err != nil {
 			return nil, internal(err)
 		}
 		r.Payment, r.User.Id = payment, payment.GetUserId()
-		r.Identity.Type = identityTypeFromName(identityType)
 		if t := payment.GetTransfer(); t != nil {
 			id, _ := toUUID(t.GetPaymentAccountId())
 			r.Account = accounts[id]

@@ -16,8 +16,7 @@ service AuthService {
   //
   // Besides the usual "invalid_argument" / "weak_password", fails with:
   // - ALREADY_EXISTS "username_taken";
-  // - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
-  // - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
+  // - ALREADY_EXISTS "identity_taken": another account has this identification code.
   rpc SignUp(SignUpRequest) returns (SignUpResponse) {}
 
   // Logs in on an installation and returns the local-database keys.
@@ -85,7 +84,7 @@ message SignUpRequest {
     min_len: 1
     max_len: 100
   }];
-  // National ID or FIDA code, and nationality. Unique across all accounts.
+  // Identification code, unique across all accounts.
   PersonIdentity identity = 4 [(buf.validate.field).required = true];
   // Mobile number: 7–15 digits, optionally starting with '+'.
   string phone = 5 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];

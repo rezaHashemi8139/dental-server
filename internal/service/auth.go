@@ -32,9 +32,6 @@ const databaseKeyLength = 32
 // ValidateInterceptor against the rules in proto/dental/v1/auth.proto.
 
 func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (*dentalv1.SignUpResponse, error) {
-	if err := checkPersonIdentity(req.GetIdentity()); err != nil {
-		return nil, err
-	}
 	user, _, err := insertUser(ctx, s.d.DB, account{
 		Username: req.GetUsername(),
 		Password: req.GetPassword(),
@@ -46,15 +43,6 @@ func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (
 		return nil, err
 	}
 	return &dentalv1.SignUpResponse{User: user}, nil
-}
-
-// checkPersonIdentity checks what the validation rules in person.proto cannot: a
-// national ID's check digit. Fails with invalid_national_id.
-func checkPersonIdentity(identity *dentalv1.PersonIdentity) error {
-	if identity.GetType() == dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL && !validNationalID(identity.GetNumber()) {
-		return fail(connect.CodeInvalidArgument, reasonInvalidNationalID)
-	}
-	return nil
 }
 
 // account is a new user account. Its fields are already checked.
@@ -73,11 +61,9 @@ type account struct {
 func insertUser(ctx context.Context, q querier, a account) (*dentalv1.User, pgtype.UUID, error) {
 	var id pgtype.UUID
 	err := q.QueryRow(ctx, `
-		INSERT INTO users (username, password_hash, full_name, identity_type, identity, nationality, phone,
-		                   must_change_password, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-		a.Username, secure.HashPassword(a.Password), a.FullName,
-		identityTypeNames[a.Identity.GetType()], a.Identity.GetNumber(), a.Identity.GetNationality(), a.Phone,
+		INSERT INTO users (username, password_hash, full_name, identity, phone, must_change_password, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+		a.Username, secure.HashPassword(a.Password), a.FullName, a.Identity.GetNumber(), a.Phone,
 		a.CreatedBy.Valid, a.CreatedBy,
 	).Scan(&id)
 	switch {

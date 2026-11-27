@@ -54,16 +54,14 @@ const (
 // MemberServiceClient is a client for the dental.v1.MemberService service.
 type MemberServiceClient interface {
 	ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error)
-	// Finds the account with an identity (type and number; the nationality is not
-	// compared). Fails with NOT_FOUND "user_not_found".
+	// Finds the account with an identification code. Fails with NOT_FOUND "user_not_found".
 	FindUser(context.Context, *v1.FindUserRequest) (*v1.FindUserResponse, error)
 	// Creates an account for someone who has none, with a temporary password they
 	// must change before their first login (AuthService.ChangePassword). If an
 	// account with this identity already exists, returns it instead (created =
 	// false) and changes nothing.
 	//
-	// Fails with "invalid_argument" / "weak_password", INVALID_ARGUMENT
-	// "invalid_national_id" or ALREADY_EXISTS "username_taken".
+	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateUser(context.Context, *v1.CreateUserRequest) (*v1.CreateUserResponse, error)
 	// Gives an account access to the clinic's app. Fails with NOT_FOUND
 	// "user_not_found" or ALREADY_EXISTS "already_member".
@@ -190,16 +188,14 @@ func (c *memberServiceClient) SetMemberAdmin(ctx context.Context, req *v1.SetMem
 // MemberServiceHandler is an implementation of the dental.v1.MemberService service.
 type MemberServiceHandler interface {
 	ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error)
-	// Finds the account with an identity (type and number; the nationality is not
-	// compared). Fails with NOT_FOUND "user_not_found".
+	// Finds the account with an identification code. Fails with NOT_FOUND "user_not_found".
 	FindUser(context.Context, *v1.FindUserRequest) (*v1.FindUserResponse, error)
 	// Creates an account for someone who has none, with a temporary password they
 	// must change before their first login (AuthService.ChangePassword). If an
 	// account with this identity already exists, returns it instead (created =
 	// false) and changes nothing.
 	//
-	// Fails with "invalid_argument" / "weak_password", INVALID_ARGUMENT
-	// "invalid_national_id" or ALREADY_EXISTS "username_taken".
+	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateUser(context.Context, *v1.CreateUserRequest) (*v1.CreateUserResponse, error)
 	// Gives an account access to the clinic's app. Fails with NOT_FOUND
 	// "user_not_found" or ALREADY_EXISTS "already_member".

@@ -26,8 +26,6 @@ func NewPatientService(d *Deps) *PatientService {
 // logged in the same transaction, so no history is shown without its log entry.
 func (s *PatientService) GetPatientHistory(ctx context.Context, req *dentalv1.GetPatientHistoryRequest) (*dentalv1.GetPatientHistoryResponse, error) {
 	session := sessionFrom(ctx)
-	identity := req.GetIdentity()
-
 	tx, err := s.d.DB.Begin(ctx)
 	if err != nil {
 		return nil, internal(err)
@@ -35,8 +33,7 @@ func (s *PatientService) GetPatientHistory(ctx context.Context, req *dentalv1.Ge
 	defer tx.Rollback(ctx)
 
 	patient, err := scanPatient(tx.QueryRow(ctx,
-		`SELECT `+patientColumns+` FROM patients p WHERE p.identity_type = $1 AND p.identity = $2`,
-		identityTypeNames[identity.GetType()], identity.GetNumber()))
+		`SELECT `+patientColumns+` FROM patients p WHERE p.identity = $1`, req.GetIdentity().GetNumber()))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fail(connect.CodeNotFound, reasonPatientNotFound)
 	}

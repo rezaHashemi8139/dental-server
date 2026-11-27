@@ -132,6 +132,6 @@ func TestValidateInterceptor(t *testing.T) {
 func signUpRequest(password string) *dentalv1.SignUpRequest {
 	return &dentalv1.SignUpRequest{
 		Username: "doctor", Password: password, FullName: "Dr. Doctor",
-		Identity: nationalIdentity("0013542419"), Phone: "09121234567",
+		Identity: personIdentity("0013542419"), Phone: "09121234567",
 	}
 }

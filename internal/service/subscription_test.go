@@ -14,7 +14,7 @@ import (
 // owner `owner` (registered with registerRequest(ownerMachine, owner)).
 func existingOwnerOf(req *dentalv1.RegisterRequest, owner string, ownerMachine byte) *dentalv1.RegisterRequest {
 	req.Owner = &dentalv1.RegisterRequest_ExistingOwner{ExistingOwner: &dentalv1.ExistingOwner{
-		Username: owner, Password: "Passw0rd-" + owner, Identity: nationalIdentity(nationalID(int(ownerMachine))),
+		Username: owner, Password: "Passw0rd-" + owner, Identity: personIdentity(personCode(int(ownerMachine))),
 	}}
 	return req
 }
@@ -61,12 +61,12 @@ func TestAdminPanelSellsSubscriptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	user, err := admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: nationalIdentity(nationalID(1))})
+	user, err := admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: personIdentity(personCode(1))})
 	if err != nil || user.GetUser().GetUsername() != "doctor" || len(user.GetOwnedClinics()) != 1 ||
-		user.GetOwnedClinics()[0].GetInstallationCount() != 1 || user.GetIdentity().GetNationality() != "IR" {
+		user.GetOwnedClinics()[0].GetInstallationCount() != 1 || user.GetIdentity().GetNumber() != personCode(1) {
 		t.Fatalf("get user = %v, %v", user, err)
 	}
-	_, err = admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: nationalIdentity(nationalID(77))})
+	_, err = admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: personIdentity(personCode(77))})
 	wantCode(t, err, connect.CodeNotFound, reasonUserNotFound)
 
 	// Two sales: the second starts when the first ends.
@@ -135,7 +135,7 @@ func TestAdminPanelSellsSubscriptions(t *testing.T) {
 	}
 	_, err = sell()
 	wantCode(t, err, connect.CodeFailedPrecondition, reasonPlanInactive)
-	user, err = admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: nationalIdentity(nationalID(1))})
+	user, err = admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: personIdentity(personCode(1))})
 	if err != nil || len(user.GetSubscriptions()) != 3 || user.GetSubscriptions()[0].GetMaxClinics() != 1 {
 		t.Fatalf("subscriptions after plan change = %v, %v", user.GetSubscriptions(), err)
 	}
@@ -220,7 +220,7 @@ func TestClinicCreatesAccounts(t *testing.T) {
 
 	// Clinic A creates an account for a hygienist; clinic B asks for the same person and gets the same account.
 	request := &dentalv1.CreateUserRequest{
-		Identity: nationalIdentity(nationalID(500)), Username: "hygienist", TemporaryPassword: "Temp-passw0rd",
+		Identity: personIdentity(personCode(500)), Username: "hygienist", TemporaryPassword: "Temp-passw0rd",
 		FullName: "Hygienist", Phone: "09121234567",
 	}
 	created, err := clinicA.CreateUser(ctx, request)
@@ -233,12 +233,12 @@ func TestClinicCreatesAccounts(t *testing.T) {
 		again.GetUser().GetUsername() != "hygienist" {
 		t.Fatalf("create the same person again = %v, %v", again, err)
 	}
-	request.Identity, request.Username = nationalIdentity(nationalID(501)), "Doctor"
+	request.Identity, request.Username = personIdentity(personCode(501)), "Doctor"
 	_, err = clinicB.CreateUser(ctx, request)
 	wantCode(t, err, connect.CodeAlreadyExists, reasonUsernameTaken)
-	request.Identity = nationalIdentity("0013542418")
+	request.Identity = personIdentity("12")
 	_, err = clinicB.CreateUser(ctx, request)
-	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidNationalID)
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
 	// A member of clinic A, with a temporary password that must be changed first.
 	if _, err := clinicA.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: created.GetUser().GetId()}); err != nil {
@@ -286,39 +286,31 @@ func TestClinicCreatesAccounts(t *testing.T) {
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 }
 
-func TestForeignNationals(t *testing.T) {
+func TestIdentificationCodes(t *testing.T) {
 	e := newTestEnv(t)
 	ctx := context.Background()
 
-	foreign := func(number, nationality string) *dentalv1.PersonIdentity {
-		return &dentalv1.PersonIdentity{Type: dentalv1.IdentityType_IDENTITY_TYPE_FOREIGN, Number: number, Nationality: nationality}
-	}
-	signUp := func(username string, identity *dentalv1.PersonIdentity) (*dentalv1.SignUpResponse, error) {
+	signUp := func(username, code string) (*dentalv1.SignUpResponse, error) {
 		return e.auth.SignUp(ctx, &dentalv1.SignUpRequest{
-			Username: username, Password: "Passw0rd-" + username, FullName: "Someone", Identity: identity, Phone: "09121234567",
+			Username: username, Password: "Passw0rd-" + username, FullName: "Someone",
+			Identity: personIdentity(code), Phone: "09121234567",
 		})
 	}
 
-	// A foreign national signs up with their FIDA code; it is unique like a national ID.
-	if _, err := signUp("assistant", foreign("123456789012", "AF")); err != nil {
+	// Any code of 5–20 uppercase letters or digits is taken; it is unique across all accounts.
+	if _, err := signUp("assistant", "123456789012"); err != nil {
 		t.Fatal(err)
 	}
-	_, err := signUp("assistant2", foreign("123456789012", "IQ"))
+	_, err := signUp("assistant2", "123456789012")
 	wantCode(t, err, connect.CodeAlreadyExists, reasonIdentityTaken)
+	for _, code := range []string{"abc12345", "1234", "123456789012345678901", "AB-12345"} {
+		_, err = signUp("assistant3", code)
+		wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
 
-	// The nationality must fit the type of identity.
-	_, err = signUp("assistant3", foreign("123456789013", "IR"))
-	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
-	wrongNationality := nationalIdentity(nationalID(9))
-	wrongNationality.Nationality = "AF"
-	_, err = signUp("assistant3", wrongNationality)
-	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
-	_, err = signUp("assistant3", foreign("123456789013", "af"))
-	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
-
-	// A foreign clinic owner, and a clinic finding a foreign national's account.
+	// A clinic owner with a code of letters and digits, and a clinic finding an account by code.
 	req := registerRequest(1, "owner")
-	req.GetNewOwner().Identity = foreign("ABC12345", "TR")
+	req.GetNewOwner().Identity = personIdentity("ABC12345")
 	inst, err := e.installation.Register(ctx, req)
 	if err != nil {
 		t.Fatal(err)
@@ -329,26 +321,26 @@ func TestForeignNationals(t *testing.T) {
 		t.Fatal(err)
 	}
 	found, err := e.members(login.res.GetSessionToken()).FindUser(ctx, &dentalv1.FindUserRequest{
-		Identity: foreign("123456789012", "AF"),
+		Identity: personIdentity("123456789012"),
 	})
 	if err != nil || found.GetUser().GetUsername() != "assistant" {
-		t.Fatalf("find foreign national = %v, %v", found, err)
+		t.Fatalf("find by code = %v, %v", found, err)
 	}
 
-	var identityType, nationality string
-	if err := e.deps.DB.QueryRow(ctx, `SELECT identity_type, nationality FROM users WHERE username = 'owner'`).
-		Scan(&identityType, &nationality); err != nil || identityType != "foreign" || nationality != "TR" {
-		t.Fatalf("stored owner identity = %q %q, %v", identityType, nationality, err)
+	var stored string
+	if err := e.deps.DB.QueryRow(ctx, `SELECT identity FROM users WHERE username = 'owner'`).
+		Scan(&stored); err != nil || stored != "ABC12345" {
+		t.Fatalf("stored owner identity = %q, %v", stored, err)
 	}
 
-	// The existing-owner check compares the identity, not only the number.
+	// The existing-owner check compares the code.
 	again := existingOwnerOf(registerRequest(2, "unused"), "owner", 1)
-	again.GetExistingOwner().Identity = foreign("ABC12345", "TR")
+	again.GetExistingOwner().Identity = personIdentity("ABC12345")
 	if _, err := e.installation.Register(ctx, again); err != nil {
 		t.Fatal(err)
 	}
 	again = existingOwnerOf(registerRequest(3, "unused"), "owner", 1)
-	again.GetExistingOwner().Identity = foreign("ABC99999", "TR")
+	again.GetExistingOwner().Identity = personIdentity("ABC99999")
 	_, err = e.installation.Register(ctx, again)
 	wantCode(t, err, connect.CodeFailedPrecondition, reasonIdentityMismatch)
 }

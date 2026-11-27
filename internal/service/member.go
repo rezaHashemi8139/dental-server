@@ -54,13 +54,12 @@ func requireAdmin(ctx context.Context) (Session, error) {
 	return session, nil
 }
 
-// findUserByIdentity returns the account with an identity (type and number), or pgx.ErrNoRows.
+// findUserByIdentity returns the account with an identification code, or pgx.ErrNoRows.
 func findUserByIdentity(ctx context.Context, q querier, identity *dentalv1.PersonIdentity) (*dentalv1.User, error) {
 	var id pgtype.UUID
 	user := &dentalv1.User{}
 	err := q.QueryRow(ctx, `
-		SELECT id, username, full_name FROM users WHERE identity_type = $1 AND identity = $2`,
-		identityTypeNames[identity.GetType()], identity.GetNumber(),
+		SELECT id, username, full_name FROM users WHERE identity = $1`, identity.GetNumber(),
 	).Scan(&id, &user.Username, &user.FullName)
 	if err != nil {
 		return nil, err
@@ -111,10 +110,6 @@ func (s *MemberService) CreateUser(ctx context.Context, req *dentalv1.CreateUser
 	if err != nil {
 		return nil, err
 	}
-	if err := checkPersonIdentity(req.GetIdentity()); err != nil {
-		return nil, err
-	}
-
 	// One account per person: if another clinic already created it, that one is returned.
 	existing, err := findUserByIdentity(ctx, s.d.DB, req.GetIdentity())
 	if err == nil {

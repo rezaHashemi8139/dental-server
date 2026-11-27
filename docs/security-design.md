@@ -12,7 +12,7 @@ for message formats and the crypto scheme.
 
 | Where | What |
 |---|---|
-| Server (PostgreSQL) | users (+ identity: national ID or FIDA code, and nationality), clinics (+ unique license number, owner), installations (+ machine info, clinic), clinic membership + admin flag, subscriptions of clinic owners, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions; administrators and their sessions, kept apart from users; patients and their treatments (never financial data), and the log of who viewed a patient's history |
+| Server (PostgreSQL) | users (+ identity: one unique identification code, e.g. a national ID; no nationality), clinics (+ unique license number, owner), installations (+ machine info, clinic), clinic membership + admin flag, subscriptions of clinic owners, database keys (encrypted with `KEY_ENCRYPTION_KEY`), sessions; administrators and their sessions, kept apart from users; patients and their treatments (never financial data), and the log of who viewed a patient's history |
 | Desktop app (Rust) | installation id + secret (DPAPI), per-user offline vault, roles and permissions (inside the encrypted local DB) |
 | Both | server Ed25519 public key built into the app, to verify offline grants |
 
@@ -20,8 +20,8 @@ for message formats and the crypto scheme.
 
 1. App generates nothing secret yet; it collects `MachineInfo` (MachineGuid hash, hostname, OS, CPU, RAM, MAC addresses).
 2. The user fills in either a new clinic (name, unique license number, phone, city from
-   `InstallationService.ListCities`, address, map location) and its owner — a new account (with a unique identity: national ID, or FIDA
-   code for foreign nationals) or an existing one (username + password; the identity only if
+   `InstallationService.ListCities`, address, map location) and its owner — a new account (with a unique identification code, e.g. a national ID
+   or any other official code) or an existing one (username + password; the identity only if
    none is on file) — or the license number of an existing clinic and its owner's
    credentials, to add another installation to it. Alternatively the person logs in (or signs
    up) first: `InstallationService.ListMyClinics`, proven with the password like the existing
@@ -147,7 +147,7 @@ and their treatments are also synced with this server (`SyncService`,
   only reads the tables listed in `SYNCED_TABLES` (src-tauri/src/localdb.rs), and a
   test there fails when a table is added without being declared synced or local-only,
   or when a synced table has a column that looks financial.
-- A patient is a person, unique across the system by identity (`PersonIdentity`). The
+- A patient is a person, unique across the system by identification code (`PersonIdentity`). The
   patient id is derived from the identity (SHA-256, see `Patient.id`), so installations
   that add the same person offline agree on the id. Every clinic that sends a patient,
   or records a treatment for them, is linked to them (`clinic_patients`) and receives

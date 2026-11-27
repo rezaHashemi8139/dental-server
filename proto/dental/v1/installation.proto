@@ -31,8 +31,7 @@ service InstallationService {
   // - NOT_FOUND "city_not_found": no city has ClinicInfo.city_id;
   // - ALREADY_EXISTS "license_number_taken": another clinic has this license number;
   // - ALREADY_EXISTS "username_taken" / "identity_taken": a new owner's username
-  //   or identity (national ID or FIDA code) belongs to another account;
-  // - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong;
+  //   or identification code belongs to another account;
   // - UNAUTHENTICATED "invalid_credentials": an existing owner's username or password is wrong;
   // - PERMISSION_DENIED "user_disabled": an existing owner's account is disabled;
   // - FAILED_PRECONDITION "password_change_required": an existing owner has a temporary
@@ -158,7 +157,7 @@ message NewOwner {
   reserved "national_id";
   // Mobile number: 7–15 digits, optionally starting with '+'.
   string phone = 5 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
-  // National ID or FIDA code, and nationality. Unique across all accounts.
+  // Identification code, unique across all accounts.
   PersonIdentity identity = 6 [(buf.validate.field).required = true];
 }
 
@@ -173,7 +172,7 @@ message ExistingOwner {
   reserved 3;
   reserved "national_id";
   // Optional when the account has an identity on file (ListMyClinicsResponse.identity_on_file);
-  // if sent, it must match it (type and number). Required for accounts made before
+  // if sent, it must match it. Required for accounts made before
   // identities were required, and saved for them.
   PersonIdentity identity = 4;
 }

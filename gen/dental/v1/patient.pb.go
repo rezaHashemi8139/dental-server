@@ -76,11 +76,10 @@ func (Gender) EnumDescriptor() ([]byte, []int) {
 type Patient struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 16 bytes: the first 16 bytes of
-	//   SHA-256("dental/patient/v1" 0x00 <identity.type as a decimal number> 0x00 <identity.number>)
-	// with the UUID version set to 8 and the variant to RFC 4122, e.g. for national ID
-	// 0012345679 the hash of "dental/patient/v1\x001\x000012345679". The nationality is
-	// not part of it. The server checks it, so every installation gives the same
-	// person the same id, even offline.
+	//   SHA-256("dental/patient/v2" 0x00 <identity.number>)
+	// with the UUID version set to 8 and the variant to RFC 4122, e.g. for code
+	// 0012345679 the hash of "dental/patient/v2\x000012345679". The server checks it,
+	// so every installation gives the same person the same id, even offline.
 	Id       []byte          `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Identity *PersonIdentity `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
 	// 1–100 characters each.

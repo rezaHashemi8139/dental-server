@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/jackc/pgx/v5"
@@ -36,14 +35,6 @@ func (s *InstallationService) Register(ctx context.Context, req *dentalv1.Regist
 	if req.GetExistingClinic() != nil && req.GetNewOwner() != nil {
 		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
 	}
-	identity := req.GetNewOwner().GetIdentity()
-	if req.GetExistingOwner() != nil {
-		identity = req.GetExistingOwner().GetIdentity()
-	}
-	if err := checkPersonIdentity(identity); err != nil {
-		return nil, err
-	}
-
 	tx, err := s.d.DB.Begin(ctx)
 	if err != nil {
 		return nil, internal(err)
@@ -331,15 +322,14 @@ func checkExistingOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.ExistingOwne
 		// The identity on file stands.
 	case !a.Identity.Valid:
 		_, err := tx.Exec(ctx, `
-			UPDATE users SET identity_type = $2, identity = $3, nationality = $4, updated_at = now() WHERE id = $1`,
-			a.ID, identityTypeNames[given.GetType()], given.GetNumber(), given.GetNationality())
+			UPDATE users SET identity = $2, updated_at = now() WHERE id = $1`, a.ID, given.GetNumber())
 		if uniqueViolation(err, "users_identity_key") {
 			return nil, a.ID, fail(connect.CodeAlreadyExists, reasonIdentityTaken)
 		}
 		if err != nil {
 			return nil, a.ID, internal(err)
 		}
-	case a.IdentityType != identityTypeNames[given.GetType()] || a.Identity.String != given.GetNumber():
+	case a.Identity.String != given.GetNumber():
 		return nil, a.ID, fail(connect.CodeFailedPrecondition, reasonIdentityMismatch)
 	}
 	return a.User, a.ID, nil
@@ -349,9 +339,8 @@ func checkExistingOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.ExistingOwne
 type checkedAccount struct {
 	ID   pgtype.UUID
 	User *dentalv1.User
-	// identity_type and identity; Identity is NULL for accounts made before identities were required.
-	IdentityType string
-	Identity     pgtype.Text
+	// The identification code; NULL for accounts made before identities were required.
+	Identity pgtype.Text
 }
 
 // checkAccount proves an account with its password, as AuthService.Login does, and
@@ -359,7 +348,7 @@ type checkedAccount struct {
 // forUpdate locks the account's row until the transaction ends.
 func checkAccount(ctx context.Context, q querier, username, password string, forUpdate bool) (checkedAccount, error) {
 	query := `
-		SELECT id, username, full_name, password_hash, identity_type, identity, disabled_at, must_change_password
+		SELECT id, username, full_name, password_hash, identity, disabled_at, must_change_password
 		FROM users WHERE lower(username) = lower($1)`
 	if forUpdate {
 		query += ` FOR UPDATE`
@@ -370,7 +359,7 @@ func checkAccount(ctx context.Context, q querier, username, password string, for
 	var disabledAt pgtype.Timestamptz
 	var mustChangePassword bool
 	err := q.QueryRow(ctx, query, username).Scan(&a.ID, &a.User.Username, &a.User.FullName, &passwordHash,
-		&a.IdentityType, &a.Identity, &disabledAt, &mustChangePassword)
+		&a.Identity, &disabledAt, &mustChangePassword)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return a, internal(err)
 	}
@@ -391,24 +380,6 @@ func checkAccount(ctx context.Context, q querier, username, password string, for
 func uniqueViolation(err error, constraint string) bool {
 	pgErr, ok := errors.AsType[*pgconn.PgError](err)
 	return ok && pgErr.Code == "23505" && pgErr.ConstraintName == constraint
-}
-
-// validNationalID checks an Iranian national ID: 10 digits, the last one a check
-// digit. IDs made of one repeated digit pass the check but are never issued.
-func validNationalID(id string) bool {
-	if len(id) != 10 || strings.Trim(id, "0123456789") != "" || id == strings.Repeat(id[:1], 10) {
-		return false
-	}
-	sum := 0
-	for i := range 9 {
-		sum += int(id[i]-'0') * (10 - i)
-	}
-	check := int(id[9] - '0')
-	if r := sum % 11; r < 2 {
-		return check == r
-	} else {
-		return check == 11-r
-	}
 }
 
 // limit cuts s to at most n bytes without splitting a UTF-8 character.

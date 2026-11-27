@@ -84,7 +84,6 @@ type RejectedRecord struct {
 	Id []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Why, as a stable code:
 	// - "invalid_patient_id": Patient.id does not match its identity;
-	// - "invalid_national_id": the national ID's check digit is wrong;
 	// - "unknown_patient": the treatment's patient is not on the server;
 	// - "unknown_user": Treatment.performed_by is not an account;
 	// - "other_clinic": the treatment id belongs to another clinic's treatment.

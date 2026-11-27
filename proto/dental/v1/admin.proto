@@ -47,7 +47,7 @@ service AdminService {
   // were sold with. Fails with NOT_FOUND "plan_not_found".
   rpc UpdatePlan(UpdatePlanRequest) returns (UpdatePlanResponse) {}
 
-  // An account by identity (type and number), with the clinics it owns and its subscriptions.
+  // An account by identification code, with the clinics it owns and its subscriptions.
   // Fails with NOT_FOUND "user_not_found".
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
 
@@ -230,7 +230,7 @@ message GetUserRequest {
 
 message GetUserResponse {
   User user = 1;
-  // National ID or FIDA code, and nationality.
+  // Identification code.
   PersonIdentity identity = 2;
   string phone = 3;
   bool disabled = 4;

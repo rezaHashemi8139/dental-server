@@ -32,7 +32,7 @@ type testEnv struct {
 	installation dentalv1connect.InstallationServiceClient
 	auth         dentalv1connect.AuthServiceClient
 	signerPublic ed25519.PublicKey
-	// Distinct national IDs for signUp, above the range used by registerRequest.
+	// Distinct identification codes for signUp, above the range used by registerRequest.
 	nextPerson int
 }
 
@@ -173,7 +173,7 @@ func bearer(token string) connect.UnaryInterceptorFunc {
 }
 
 // registerRequest registers a clinic with license number "LIC-<machine>" whose owner is
-// a new account `owner` (password "Passw0rd-<owner>", national ID nationalID(machine)).
+// a new account `owner` (password "Passw0rd-<owner>", identification code personCode(machine)).
 func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
 	return &dentalv1.RegisterRequest{
 		Machine: &dentalv1.MachineInfo{
@@ -193,7 +193,7 @@ func registerRequest(machine byte, owner string) *dentalv1.RegisterRequest {
 			Username: owner,
 			Password: "Passw0rd-" + owner,
 			FullName: "Dr. " + owner,
-			Identity: nationalIdentity(nationalID(int(machine))),
+			Identity: personIdentity(personCode(int(machine))),
 			Phone:    "09121234567",
 		}},
 	}
@@ -209,27 +209,18 @@ func (e *testEnv) register(machine byte, owner string) *dentalv1.RegisterRespons
 	return res
 }
 
-// nationalID returns a valid national ID that differs for every n below 10^8.
-func nationalID(n int) string {
-	digits := fmt.Sprintf("1%08d", n)
-	sum := 0
-	for i := range 9 {
-		sum += int(digits[i]-'0') * (10 - i)
-	}
-	check := sum % 11
-	if check >= 2 {
-		check = 11 - check
-	}
-	return fmt.Sprintf("%s%d", digits, check)
+// personCode returns an identification code that differs for every n below 10^9.
+func personCode(n int) string {
+	return fmt.Sprintf("1%09d", n)
 }
 
-// signUp creates the account `username` (password "Passw0rd-<username>") with a fresh national ID.
+// signUp creates the account `username` (password "Passw0rd-<username>") with a fresh identification code.
 func (e *testEnv) signUp(username string) *dentalv1.User {
 	e.t.Helper()
 	e.nextPerson++
 	res, err := e.auth.SignUp(context.Background(), &dentalv1.SignUpRequest{
 		Username: username, Password: "Passw0rd-" + username, FullName: "Dr. " + username,
-		Identity: nationalIdentity(nationalID(e.nextPerson)), Phone: "09121234567",
+		Identity: personIdentity(personCode(e.nextPerson)), Phone: "09121234567",
 	})
 	if err != nil {
 		e.t.Fatal(err)
@@ -298,20 +289,20 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	}
 	again := registerRequest(1, "dentist")
 	again.GetClinic().LicenseNumber = "LIC-1-second"
-	again.GetNewOwner().Identity = nationalIdentity(nationalID(1001))
+	again.GetNewOwner().Identity = personIdentity(personCode(1001))
 	if res, err := e.installation.Register(ctx, again); err != nil || !res.GetKnownMachine() {
 		t.Errorf("second installation on the same machine not recognised (%v)", err)
 	}
 
 	signUp := func(username, id string) error {
 		_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{
-			Username: username, Password: "Another-passw0rd", FullName: "Someone", Identity: nationalIdentity(id), Phone: "09121234567",
+			Username: username, Password: "Another-passw0rd", FullName: "Someone", Identity: personIdentity(id), Phone: "09121234567",
 		})
 		return err
 	}
-	wantCode(t, signUp("DOCTOR", nationalID(2001)), connect.CodeAlreadyExists, reasonUsernameTaken)
-	wantCode(t, signUp("someone", nationalID(1)), connect.CodeAlreadyExists, reasonIdentityTaken)
-	wantCode(t, signUp("someone", "0013542418"), connect.CodeInvalidArgument, reasonInvalidNationalID)
+	wantCode(t, signUp("DOCTOR", personCode(2001)), connect.CodeAlreadyExists, reasonUsernameTaken)
+	wantCode(t, signUp("someone", personCode(1)), connect.CodeAlreadyExists, reasonIdentityTaken)
+	wantCode(t, signUp("someone", "abc-123"), connect.CodeInvalidArgument, reasonInvalidArgument)
 	_, err := e.auth.SignUp(ctx, &dentalv1.SignUpRequest{Username: "x", Password: "short"})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 
@@ -382,13 +373,13 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	_, err = e.login(inst, "secretary", "Passw0rd-secretary")
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAMember)
 
-	// The admin finds them by national ID and adds them; then they get the same database key.
+	// The admin finds them by identification code and adds them; then they get the same database key.
 	owner := e.members(second.res.GetSessionToken())
-	found, err := owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(e.nextPerson))})
+	found, err := owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: personIdentity(personCode(e.nextPerson))})
 	if err != nil || !bytes.Equal(found.GetUser().GetId(), secretaryUser.GetId()) {
 		t.Fatalf("find user = %v, %v", found, err)
 	}
-	_, err = owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(9999))})
+	_, err = owner.FindUser(ctx, &dentalv1.FindUserRequest{Identity: personIdentity(personCode(9999))})
 	wantCode(t, err, connect.CodeNotFound, reasonUserNotFound)
 	added, err := owner.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: found.GetUser().GetId()})
 	if err != nil || added.GetMember().GetIsAdmin() || added.GetMember().GetUser().GetUsername() != "secretary" {
@@ -412,7 +403,7 @@ func TestLoginKeyRotationAndMembers(t *testing.T) {
 	secretary := e.members(sec.res.GetSessionToken())
 	_, err = secretary.AddMember(ctx, &dentalv1.AddMemberRequest{UserId: second.res.GetUser().GetId()})
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAdmin)
-	_, err = secretary.FindUser(ctx, &dentalv1.FindUserRequest{Identity: nationalIdentity(nationalID(1))})
+	_, err = secretary.FindUser(ctx, &dentalv1.FindUserRequest{Identity: personIdentity(personCode(1))})
 	wantCode(t, err, connect.CodePermissionDenied, reasonNotAdmin)
 	list, err := secretary.ListMembers(ctx, &dentalv1.ListMembersRequest{})
 	if err != nil || len(list.GetMembers()) != 2 {
@@ -467,7 +458,7 @@ func TestKeysAreEncryptedAtRest(t *testing.T) {
 	}
 }
 
-// nationalIdentity is the identity of an Iranian citizen with national ID id.
-func nationalIdentity(id string) *dentalv1.PersonIdentity {
-	return &dentalv1.PersonIdentity{Type: dentalv1.IdentityType_IDENTITY_TYPE_NATIONAL, Number: id, Nationality: "IR"}
+// personIdentity is the identity of a person with identification code code.
+func personIdentity(code string) *dentalv1.PersonIdentity {
+	return &dentalv1.PersonIdentity{Number: code}
 }

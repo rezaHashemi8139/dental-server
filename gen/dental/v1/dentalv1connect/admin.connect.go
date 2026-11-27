@@ -88,7 +88,7 @@ type AdminServiceClient interface {
 	// Changes a plan. Subscriptions already sold keep the limits and price they
 	// were sold with. Fails with NOT_FOUND "plan_not_found".
 	UpdatePlan(context.Context, *v1.UpdatePlanRequest) (*v1.UpdatePlanResponse, error)
-	// An account by identity (type and number), with the clinics it owns and its subscriptions.
+	// An account by identification code, with the clinics it owns and its subscriptions.
 	// Fails with NOT_FOUND "user_not_found".
 	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
 	// Sells a subscription from a plan. It starts when the user's paid time ends
@@ -397,7 +397,7 @@ type AdminServiceHandler interface {
 	// Changes a plan. Subscriptions already sold keep the limits and price they
 	// were sold with. Fails with NOT_FOUND "plan_not_found".
 	UpdatePlan(context.Context, *v1.UpdatePlanRequest) (*v1.UpdatePlanResponse, error)
-	// An account by identity (type and number), with the clinics it owns and its subscriptions.
+	// An account by identification code, with the clinics it owns and its subscriptions.
 	// Fails with NOT_FOUND "user_not_found".
 	GetUser(context.Context, *v1.GetUserRequest) (*v1.GetUserResponse, error)
 	// Sells a subscription from a plan. It starts when the user's paid time ends

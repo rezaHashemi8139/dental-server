@@ -53,8 +53,7 @@ type AuthServiceClient interface {
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "username_taken";
-	// - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
-	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
+	// - ALREADY_EXISTS "identity_taken": another account has this identification code.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
 	//
@@ -196,8 +195,7 @@ type AuthServiceHandler interface {
 	//
 	// Besides the usual "invalid_argument" / "weak_password", fails with:
 	// - ALREADY_EXISTS "username_taken";
-	// - ALREADY_EXISTS "identity_taken": another account has this national ID or FIDA code;
-	// - INVALID_ARGUMENT "invalid_national_id": the national ID's check digit is wrong.
+	// - ALREADY_EXISTS "identity_taken": another account has this identification code.
 	SignUp(context.Context, *v1.SignUpRequest) (*v1.SignUpResponse, error)
 	// Logs in on an installation and returns the local-database keys.
 	//
