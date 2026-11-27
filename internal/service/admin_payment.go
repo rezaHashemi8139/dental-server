@@ -14,11 +14,23 @@ import (
 // Reviewing payments reported in the desktop app, and the accounts owners pay to.
 
 func (s *AdminService) ListPayments(ctx context.Context, req *dentalv1.ListPaymentsRequest) (*dentalv1.ListPaymentsResponse, error) {
-	limit := int32(req.GetLimit())
-	if limit == 0 {
-		limit = 100
-	}
 	status := paymentStatusNames[req.GetStatus()] // "" for all
+	query := searchText(req.GetQuery())
+	limit, offset := pageBounds(req.GetPage(), req.GetPageSize())
+
+	from := `
+		FROM payments p
+		JOIN plans pl ON pl.id = p.plan_id
+		JOIN users u ON u.id = p.user_id
+		WHERE ($1 = '' OR p.status = $1)
+		  AND ($2 = '' OR ` + ownerMatchesSQL("$2") + ` OR strpos(lower(p.reference), $2) > 0)`
+
+	res := &dentalv1.ListPaymentsResponse{}
+	var total int64
+	if err := s.d.DB.QueryRow(ctx, `SELECT count(*)`+from, status, query).Scan(&total); err != nil {
+		return nil, internal(err)
+	}
+	res.TotalCount = uint32(total)
 
 	accounts, err := s.paymentAccounts(ctx)
 	if err != nil {
@@ -27,19 +39,16 @@ func (s *AdminService) ListPayments(ctx context.Context, req *dentalv1.ListPayme
 
 	// Pending payments are a queue: oldest first. Otherwise newest first.
 	rows, err := s.d.DB.Query(ctx, `SELECT`+paymentFields+`,
-		u.username, u.full_name, coalesce(u.identity, ''), u.phone
-		FROM payments p
-		JOIN plans pl ON pl.id = p.plan_id
-		JOIN users u ON u.id = p.user_id
-		WHERE $1 = '' OR p.status = $1
-		ORDER BY CASE WHEN $1 = 'pending' THEN p.created_at END, p.created_at DESC
-		LIMIT $2`, status, limit)
+		u.username, u.full_name, coalesce(u.identity, ''), u.phone`+from+`
+		ORDER BY CASE WHEN $1 = 'pending' THEN p.created_at END,
+		         CASE WHEN $1 = 'pending' THEN p.id END,
+		         p.created_at DESC, p.id DESC
+		LIMIT $3 OFFSET $4`, status, query, limit, offset)
 	if err != nil {
 		return nil, internal(err)
 	}
 	defer rows.Close()
 
-	res := &dentalv1.ListPaymentsResponse{}
 	for rows.Next() {
 		r := &dentalv1.PaymentReview{User: &dentalv1.User{}, Identity: &dentalv1.PersonIdentity{}}
 		payment, err := scanPayment(rows, &r.User.Username, &r.User.FullName, &r.Identity.Number, &r.Phone)

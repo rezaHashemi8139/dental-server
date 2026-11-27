@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 27,
+    "version": 28,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -16,6 +16,7 @@
   "nav": {
     "label": "Main menu",
     "home": "Home",
+    "patients": "Patients",
     "database": "Database",
     "subscription": "Subscription"
   },
@@ -373,6 +374,64 @@
     }
   },
   "patients": {
+    "title": "Patients",
+    "description": "This clinic's patient records. Changes are saved on this computer first and synced whenever you are connected to the server.",
+    "search": "Search by name or identification code",
+    "add": "New patient",
+    "loading": "Loading...",
+    "empty": "No patients yet.",
+    "noResults": "No patient matches this search.",
+    "limitNote": "Only the first {{count}} results are shown. Narrow the search.",
+    "back": "Patient list",
+    "edit": "Edit details",
+    "notGiven": "Not given",
+    "fields": {
+      "identityCode": "Identification code",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "birthDate": "Date of birth",
+      "gender": "Gender",
+      "phone": "Phone",
+      "address": "Address",
+      "medicalNotes": "Medical history"
+    },
+    "hints": {
+      "identityCode": "The patient's national ID or any other official code: 5 to 20 English letters or digits.",
+      "medicalNotes": "Conditions, allergies, medications and anything else important."
+    },
+    "gender": {
+      "unspecified": "Not specified",
+      "male": "Male",
+      "female": "Female"
+    },
+    "dialog": {
+      "addTitle": "New patient",
+      "addDescription": "If a patient with this identification code is already recorded, their details are updated.",
+      "editTitle": "Edit patient details",
+      "editDescription": "These details are shared by every clinic that treats this patient.",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "lookup": {
+      "button": "Find on server",
+      "working": "Searching...",
+      "found": "This patient's details were read from the server. Check them, then save."
+    },
+    "sync": {
+      "waiting": "Waiting to sync",
+      "waitingHint": "Saved on this computer; sent once the server is reachable.",
+      "rejected": "Refused",
+      "rejectedHint": "The server did not accept this record. Correct it and save it again."
+    },
+    "history": {
+      "button": "History in other clinics",
+      "title": "Treatment history in every clinic",
+      "description": "Read from the server and not stored here. Your view is recorded with your name and this clinic.",
+      "loading": "Loading history...",
+      "empty": "No treatments recorded for this patient.",
+      "clinic": "{{name}}, {{city}}"
+    },
     "errors": {
       "nameRequired": "Enter the patient's first and last name.",
       "invalidGender": "This gender is not valid.",
@@ -387,6 +446,35 @@
     }
   },
   "treatments": {
+    "title": "Treatments",
+    "add": "New treatment",
+    "empty": "No treatments recorded for this patient in this clinic yet.",
+    "edit": "Edit treatment",
+    "delete": "Delete treatment",
+    "toothLabel": "Tooth {{tooth}}",
+    "performedBy": "By {{name}}",
+    "performedByNone": "Not specified",
+    "performedByUnknown": "A user who has not logged in here",
+    "fields": {
+      "performedOn": "Date",
+      "procedure": "Procedure",
+      "tooth": "Tooth",
+      "performedBy": "Performed by",
+      "notes": "Notes"
+    },
+    "hints": {
+      "tooth": "FDI tooth number, e.g. 36. Leave empty if the treatment is not about one tooth."
+    },
+    "dialog": {
+      "addTitle": "New treatment",
+      "editTitle": "Edit treatment"
+    },
+    "deleteDialog": {
+      "title": "Delete treatment",
+      "description": "“{{procedure}}” is removed from the patient's record, and the deletion reaches the server and the clinic's other computers too.",
+      "confirm": "Delete",
+      "working": "Deleting..."
+    },
     "errors": {
       "procedureRequired": "Describe the treatment.",
       "invalidPerformer": "Who performed the treatment is not valid.",
@@ -528,6 +616,12 @@
     "persian": "Solar Hijri",
     "gregory": "Gregorian",
     "islamic": "Lunar Hijri"
+  },
+  "dateField": {
+    "day": "Day",
+    "month": "Month",
+    "year": "Year",
+    "clear": "Clear date"
   },
   "currency": {
     "label": "Currency",

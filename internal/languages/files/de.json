@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 27,
+    "version": 28,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -16,6 +16,7 @@
   "nav": {
     "label": "Hauptmenü",
     "home": "Startseite",
+    "patients": "Patienten",
     "database": "Datenbank",
     "subscription": "Abonnement"
   },
@@ -373,6 +374,64 @@
     }
   },
   "patients": {
+    "title": "Patienten",
+    "description": "Die Patientenakten dieser Praxis. Änderungen werden zuerst auf diesem Computer gespeichert und synchronisiert, sobald eine Verbindung zum Server besteht.",
+    "search": "Nach Name oder Identifikationscode suchen",
+    "add": "Neuer Patient",
+    "loading": "Wird geladen...",
+    "empty": "Noch keine Patienten.",
+    "noResults": "Kein Patient entspricht dieser Suche.",
+    "limitNote": "Es werden nur die ersten {{count}} Ergebnisse angezeigt. Grenzen Sie die Suche ein.",
+    "back": "Patientenliste",
+    "edit": "Angaben bearbeiten",
+    "notGiven": "Nicht angegeben",
+    "fields": {
+      "identityCode": "Identifikationscode",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "birthDate": "Geburtsdatum",
+      "gender": "Geschlecht",
+      "phone": "Telefon",
+      "address": "Adresse",
+      "medicalNotes": "Krankengeschichte"
+    },
+    "hints": {
+      "identityCode": "Die nationale Identifikationsnummer des Patienten oder ein anderer amtlicher Code: 5 bis 20 lateinische Buchstaben oder Ziffern.",
+      "medicalNotes": "Erkrankungen, Allergien, Medikamente und alles andere Wichtige."
+    },
+    "gender": {
+      "unspecified": "Nicht angegeben",
+      "male": "Männlich",
+      "female": "Weiblich"
+    },
+    "dialog": {
+      "addTitle": "Neuer Patient",
+      "addDescription": "Ist bereits ein Patient mit diesem Identifikationscode erfasst, werden seine Angaben aktualisiert.",
+      "editTitle": "Patientenangaben bearbeiten",
+      "editDescription": "Diese Angaben teilen sich alle Praxen, die diesen Patienten behandeln.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "cancel": "Abbrechen"
+    },
+    "lookup": {
+      "button": "Auf dem Server suchen",
+      "working": "Wird gesucht...",
+      "found": "Die Angaben dieses Patienten wurden vom Server gelesen. Prüfen Sie sie und speichern Sie dann."
+    },
+    "sync": {
+      "waiting": "Wartet auf Synchronisierung",
+      "waitingHint": "Auf diesem Computer gespeichert; wird gesendet, sobald der Server erreichbar ist.",
+      "rejected": "Abgelehnt",
+      "rejectedHint": "Der Server hat diesen Eintrag nicht angenommen. Korrigieren Sie ihn und speichern Sie ihn erneut."
+    },
+    "history": {
+      "button": "Verlauf in anderen Praxen",
+      "title": "Behandlungsverlauf in allen Praxen",
+      "description": "Wird vom Server gelesen und hier nicht gespeichert. Ihr Abruf wird mit Ihrem Namen und dieser Praxis protokolliert.",
+      "loading": "Verlauf wird geladen...",
+      "empty": "Für diesen Patienten sind keine Behandlungen erfasst.",
+      "clinic": "{{name}}, {{city}}"
+    },
     "errors": {
       "nameRequired": "Geben Sie Vor- und Nachnamen des Patienten ein.",
       "invalidGender": "Dieses Geschlecht ist ungültig.",
@@ -387,6 +446,35 @@
     }
   },
   "treatments": {
+    "title": "Behandlungen",
+    "add": "Neue Behandlung",
+    "empty": "Für diesen Patienten sind in dieser Praxis noch keine Behandlungen erfasst.",
+    "edit": "Behandlung bearbeiten",
+    "delete": "Behandlung löschen",
+    "toothLabel": "Zahn {{tooth}}",
+    "performedBy": "Von {{name}}",
+    "performedByNone": "Nicht angegeben",
+    "performedByUnknown": "Ein Benutzer, der sich hier nicht angemeldet hat",
+    "fields": {
+      "performedOn": "Datum",
+      "procedure": "Behandlung",
+      "tooth": "Zahn",
+      "performedBy": "Durchgeführt von",
+      "notes": "Notizen"
+    },
+    "hints": {
+      "tooth": "Zahnnummer nach FDI, z. B. 36. Leer lassen, wenn die Behandlung keinen einzelnen Zahn betrifft."
+    },
+    "dialog": {
+      "addTitle": "Neue Behandlung",
+      "editTitle": "Behandlung bearbeiten"
+    },
+    "deleteDialog": {
+      "title": "Behandlung löschen",
+      "description": "„{{procedure}}“ wird aus der Patientenakte entfernt, und die Löschung erreicht auch den Server und die anderen Computer der Praxis.",
+      "confirm": "Löschen",
+      "working": "Wird gelöscht..."
+    },
     "errors": {
       "procedureRequired": "Beschreiben Sie die Behandlung.",
       "invalidPerformer": "Die Angabe, wer die Behandlung durchgeführt hat, ist ungültig.",
@@ -528,6 +616,12 @@
     "persian": "Persisch (Sonnenkalender)",
     "gregory": "Gregorianisch",
     "islamic": "Islamisch (Mondkalender)"
+  },
+  "dateField": {
+    "day": "Tag",
+    "month": "Monat",
+    "year": "Jahr",
+    "clear": "Datum löschen"
   },
   "currency": {
     "label": "Währung",

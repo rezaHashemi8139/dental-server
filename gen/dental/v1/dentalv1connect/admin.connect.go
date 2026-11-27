@@ -54,6 +54,9 @@ const (
 	// AdminServiceCancelSubscriptionProcedure is the fully-qualified name of the AdminService's
 	// CancelSubscription RPC.
 	AdminServiceCancelSubscriptionProcedure = "/dental.v1.AdminService/CancelSubscription"
+	// AdminServiceListSubscriptionsProcedure is the fully-qualified name of the AdminService's
+	// ListSubscriptions RPC.
+	AdminServiceListSubscriptionsProcedure = "/dental.v1.AdminService/ListSubscriptions"
 	// AdminServiceListPaymentsProcedure is the fully-qualified name of the AdminService's ListPayments
 	// RPC.
 	AdminServiceListPaymentsProcedure = "/dental.v1.AdminService/ListPayments"
@@ -101,8 +104,12 @@ type AdminServiceClient interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
-	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
-	// Pending ones oldest first (the queue to review), the others newest first.
+	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
+	// both descending), with their owner and the payment that bought them.
+	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
+	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
+	// a page at a time. Asking for pending ones lists them oldest first (the queue to
+	// review); otherwise newest first. Ties are ordered by id, so pages are stable.
 	ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error)
 	// Approves a pending payment after checking the bank statement, and adds the
 	// subscription it pays for, as the payment says (PurchaseMode):
@@ -190,6 +197,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
 			connect.WithClientOptions(opts...),
 		),
+		listSubscriptions: connect.NewClient[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse](
+			httpClient,
+			baseURL+AdminServiceListSubscriptionsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListSubscriptions")),
+			connect.WithClientOptions(opts...),
+		),
 		listPayments: connect.NewClient[v1.ListPaymentsRequest, v1.ListPaymentsResponse](
 			httpClient,
 			baseURL+AdminServiceListPaymentsProcedure,
@@ -240,6 +253,7 @@ type adminServiceClient struct {
 	getUser              *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
 	sellSubscription     *connect.Client[v1.SellSubscriptionRequest, v1.SellSubscriptionResponse]
 	cancelSubscription   *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
+	listSubscriptions    *connect.Client[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse]
 	listPayments         *connect.Client[v1.ListPaymentsRequest, v1.ListPaymentsResponse]
 	approvePayment       *connect.Client[v1.ApprovePaymentRequest, v1.ApprovePaymentResponse]
 	rejectPayment        *connect.Client[v1.RejectPaymentRequest, v1.RejectPaymentResponse]
@@ -329,6 +343,15 @@ func (c *adminServiceClient) CancelSubscription(ctx context.Context, req *v1.Can
 	return nil, err
 }
 
+// ListSubscriptions calls dental.v1.AdminService.ListSubscriptions.
+func (c *adminServiceClient) ListSubscriptions(ctx context.Context, req *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error) {
+	response, err := c.listSubscriptions.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // ListPayments calls dental.v1.AdminService.ListPayments.
 func (c *adminServiceClient) ListPayments(ctx context.Context, req *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error) {
 	response, err := c.listPayments.CallUnary(ctx, connect.NewRequest(req))
@@ -410,8 +433,12 @@ type AdminServiceHandler interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
-	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
-	// Pending ones oldest first (the queue to review), the others newest first.
+	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
+	// both descending), with their owner and the payment that bought them.
+	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
+	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
+	// a page at a time. Asking for pending ones lists them oldest first (the queue to
+	// review); otherwise newest first. Ties are ordered by id, so pages are stable.
 	ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error)
 	// Approves a pending payment after checking the bank statement, and adds the
 	// subscription it pays for, as the payment says (PurchaseMode):
@@ -495,6 +522,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceListSubscriptionsHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceListSubscriptionsProcedure,
+		svc.ListSubscriptions,
+		connect.WithSchema(adminServiceMethods.ByName("ListSubscriptions")),
+		connect.WithHandlerOptions(opts...),
+	)
 	adminServiceListPaymentsHandler := connect.NewUnaryHandlerSimple(
 		AdminServiceListPaymentsProcedure,
 		svc.ListPayments,
@@ -551,6 +584,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSellSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceCancelSubscriptionProcedure:
 			adminServiceCancelSubscriptionHandler.ServeHTTP(w, r)
+		case AdminServiceListSubscriptionsProcedure:
+			adminServiceListSubscriptionsHandler.ServeHTTP(w, r)
 		case AdminServiceListPaymentsProcedure:
 			adminServiceListPaymentsHandler.ServeHTTP(w, r)
 		case AdminServiceApprovePaymentProcedure:
@@ -606,6 +641,10 @@ func (UnimplementedAdminServiceHandler) SellSubscription(context.Context, *v1.Se
 
 func (UnimplementedAdminServiceHandler) CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.CancelSubscription is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListSubscriptions is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error) {

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"buf.build/go/protovalidate"
@@ -204,20 +205,24 @@ func (s *AdminService) UpdatePlan(ctx context.Context, req *dentalv1.UpdatePlanR
 	return &dentalv1.UpdatePlanResponse{Plan: plan}, nil
 }
 
-const subscriptionColumns = `
+const subscriptionFields = `
 	s.id, s.user_id, s.plan_id, p.name, s.max_clinics, s.max_devices_per_clinic, s.price_rials,
-	s.starts_at, s.ends_at, s.canceled_at, s.note
+	s.starts_at, s.ends_at, s.canceled_at, s.note`
+
+const subscriptionColumns = subscriptionFields + `
 	FROM subscriptions s
 	JOIN plans p ON p.id = s.plan_id`
 
-func scanSubscription(row pgx.Row) (*dentalv1.Subscription, error) {
+// scanSubscription scans subscriptionColumns, then any extra destinations selected after them.
+func scanSubscription(row pgx.Row, extra ...any) (*dentalv1.Subscription, error) {
 	var id, userID, planID pgtype.UUID
 	var maxClinics, maxDevices int32
 	var startsAt, endsAt time.Time
 	var canceledAt pgtype.Timestamptz
 	sub := &dentalv1.Subscription{}
-	if err := row.Scan(&id, &userID, &planID, &sub.PlanName, &maxClinics, &maxDevices, &sub.PriceRials,
-		&startsAt, &endsAt, &canceledAt, &sub.Note); err != nil {
+	dest := []any{&id, &userID, &planID, &sub.PlanName, &maxClinics, &maxDevices, &sub.PriceRials,
+		&startsAt, &endsAt, &canceledAt, &sub.Note}
+	if err := row.Scan(append(dest, extra...)...); err != nil {
 		return nil, err
 	}
 	sub.Id, sub.UserId, sub.PlanId = uuidBytes(id), uuidBytes(userID), uuidBytes(planID)
@@ -352,4 +357,123 @@ func (s *AdminService) CancelSubscription(ctx context.Context, req *dentalv1.Can
 		return nil, internal(err)
 	}
 	return &dentalv1.CancelSubscriptionResponse{Subscription: sub}, nil
+}
+
+var subscriptionStatusNames = map[dentalv1.SubscriptionStatus]string{
+	dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ACTIVE:   "active",
+	dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_UPCOMING: "upcoming",
+	dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ENDED:    "ended",
+	dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_CANCELED: "canceled",
+}
+
+func subscriptionStatusFromName(name string) dentalv1.SubscriptionStatus {
+	for s, n := range subscriptionStatusNames {
+		if n == name {
+			return s
+		}
+	}
+	return dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_UNSPECIFIED
+}
+
+// subscriptionStatusSQL is where a subscription stands at $1 (see SubscriptionStatus).
+const subscriptionStatusSQL = `CASE
+	WHEN s.canceled_at IS NOT NULL THEN 'canceled'
+	WHEN $1 < s.starts_at THEN 'upcoming'
+	WHEN $1 < s.ends_at THEN 'active'
+	ELSE 'ended' END`
+
+// ownerMatchesSQL is true when the owner u matches the search text in the
+// parameter param (lower case, see searchText).
+func ownerMatchesSQL(param string) string {
+	return strings.NewReplacer("$q", param).Replace(`
+		strpos(lower(u.full_name), $q) > 0 OR strpos(lower(u.username), $q) > 0
+		OR strpos(lower(coalesce(u.identity, '')), $q) > 0 OR strpos(lower(u.phone), $q) > 0`)
+}
+
+// pageBounds returns the LIMIT and OFFSET of a page (from 1; 0 means 1) of size (0 means 20).
+func pageBounds(page, size uint32) (limit, offset int64) {
+	if page == 0 {
+		page = 1
+	}
+	if size == 0 {
+		size = 20
+	}
+	return int64(size), int64(page-1) * int64(size)
+}
+
+// searchText normalizes a list search: trimmed and lower case, as ownerMatchesSQL compares.
+func searchText(query string) string {
+	return strings.ToLower(strings.TrimSpace(query))
+}
+
+func (s *AdminService) ListSubscriptions(ctx context.Context, req *dentalv1.ListSubscriptionsRequest) (*dentalv1.ListSubscriptionsResponse, error) {
+	now := s.d.Now()
+	status := subscriptionStatusNames[req.GetStatus()] // "" for all
+	query := searchText(req.GetQuery())
+	limit, offset := pageBounds(req.GetPage(), req.GetPageSize())
+
+	from := `
+		FROM subscriptions s
+		JOIN plans p ON p.id = s.plan_id
+		JOIN users u ON u.id = s.user_id
+		WHERE ($2 = '' OR $2 = ` + subscriptionStatusSQL + `)
+		  AND ($3 = '' OR ` + ownerMatchesSQL("$3") + `)`
+
+	res := &dentalv1.ListSubscriptionsResponse{}
+	var total int64
+	if err := s.d.DB.QueryRow(ctx, `SELECT count(*)`+from, now, status, query).Scan(&total); err != nil {
+		return nil, internal(err)
+	}
+	res.TotalCount = uint32(total)
+
+	rows, err := s.d.DB.Query(ctx, `SELECT`+subscriptionFields+`, `+subscriptionStatusSQL+`,
+		u.username, u.full_name, coalesce(u.identity, ''), u.phone, u.disabled_at IS NOT NULL`+from+`
+		ORDER BY s.starts_at DESC, s.id DESC
+		LIMIT $4 OFFSET $5`, now, status, query, limit, offset)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer rows.Close()
+
+	bySubscription := map[pgtype.UUID]*dentalv1.SubscriptionListItem{}
+	var ids []pgtype.UUID
+	for rows.Next() {
+		var statusName string
+		item := &dentalv1.SubscriptionListItem{User: &dentalv1.User{}, Identity: &dentalv1.PersonIdentity{}}
+		sub, err := scanSubscription(rows, &statusName,
+			&item.User.Username, &item.User.FullName, &item.Identity.Number, &item.Phone, &item.UserDisabled)
+		if err != nil {
+			return nil, internal(err)
+		}
+		item.Subscription, item.Status, item.User.Id = sub, subscriptionStatusFromName(statusName), sub.GetUserId()
+		id, _ := toUUID(sub.GetId())
+		bySubscription[id] = item
+		ids = append(ids, id)
+		res.Items = append(res.Items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, internal(err)
+	}
+	if len(ids) == 0 {
+		return res, nil
+	}
+
+	// The payments that bought them; subscriptions sold in the panel have none.
+	payments, err := s.d.DB.Query(ctx, `SELECT`+paymentColumns+` WHERE p.subscription_id = ANY($1)`, ids)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer payments.Close()
+	for payments.Next() {
+		payment, err := scanPayment(payments)
+		if err != nil {
+			return nil, internal(err)
+		}
+		id, _ := toUUID(payment.GetSubscriptionId())
+		bySubscription[id].Purchase = payment
+	}
+	if err := payments.Err(); err != nil {
+		return nil, internal(err)
+	}
+	return res, nil
 }

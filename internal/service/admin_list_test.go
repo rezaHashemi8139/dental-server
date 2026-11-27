@@ -1,0 +1,168 @@
+package service
+
+import (
+	"context"
+	"testing"
+
+	"connectrpc.com/connect"
+
+	dentalv1 "dental-server/gen/dental/v1"
+)
+
+func TestAdminListsPages(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+
+	alice, bob := e.signUp("alice"), e.signUp("bob")
+	var planID [16]byte
+	if err := e.deps.DB.QueryRow(ctx, `
+		INSERT INTO plans (name, max_clinics, max_devices_per_clinic, duration_days)
+		VALUES ('Basic', 1, 1, 30) RETURNING id`).Scan(&planID); err != nil {
+		t.Fatal(err)
+	}
+	// alice: one ended, one active (bought with a payment), one upcoming; bob: one canceled.
+	subscription := func(user *dentalv1.User, startDays, endDays int, canceled bool) [16]byte {
+		t.Helper()
+		var id [16]byte
+		if err := e.deps.DB.QueryRow(ctx, `
+			INSERT INTO subscriptions (user_id, plan_id, max_clinics, max_devices_per_clinic, price_rials,
+			                           starts_at, ends_at, canceled_at)
+			VALUES ($1, $2, 1, 1, 0, now() + make_interval(days => $3), now() + make_interval(days => $4),
+			        CASE WHEN $5 THEN now() END)
+			RETURNING id`, user.GetId(), planID, startDays, endDays, canceled).Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		return id
+	}
+	ended := subscription(alice, -60, -30, false)
+	active := subscription(alice, -30, 1, false)
+	upcoming := subscription(alice, 1, 31, false)
+	canceled := subscription(bob, -10, 20, true)
+	var accountID [16]byte
+	if err := e.deps.DB.QueryRow(ctx, `
+		INSERT INTO payment_accounts (bank_name, holder_name, card_number) VALUES ('Bank', 'Dental', '1234567812345678')
+		RETURNING id`).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.deps.DB.Exec(ctx, `
+		INSERT INTO payments (user_id, plan_id, max_clinics, max_devices_per_clinic, duration_days, mode, method,
+		                      status, price_rials, amount_rials, reference, subscription_id, created_at, payment_account_id)
+		VALUES ($1, $2, 1, 1, 30, 'extend', 'card_to_card', 'approved', 5, 5, 'REF-ALICE', $3, now() - interval '2 days', $5),
+		       ($4, $2, 1, 1, 30, 'extend', 'card_to_card', 'rejected', 5, 5, 'REF-BOB-1', NULL, now() - interval '1 day', $5),
+		       ($4, $2, 1, 1, 30, 'extend', 'card_to_card', 'pending', 5, 5, 'REF-BOB-2', NULL, now(), $5)`,
+		alice.GetId(), planID, active, bob.GetId(), accountID); err != nil {
+		t.Fatal(err)
+	}
+
+	list := func(req *dentalv1.ListSubscriptionsRequest) *dentalv1.ListSubscriptionsResponse {
+		t.Helper()
+		res, err := admin.ListSubscriptions(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+
+	// Newest first, a page at a time, with the total on every page.
+	var got [][16]byte
+	for page := uint32(1); page <= 3; page++ {
+		res := list(&dentalv1.ListSubscriptionsRequest{Page: page, PageSize: 2})
+		if res.GetTotalCount() != 4 {
+			t.Fatalf("page %d total = %d, want 4", page, res.GetTotalCount())
+		}
+		for _, item := range res.GetItems() {
+			got = append(got, [16]byte(item.GetSubscription().GetId()))
+		}
+	}
+	if want := [][16]byte{upcoming, canceled, active, ended}; len(got) != len(want) ||
+		got[0] != want[0] || got[1] != want[1] || got[2] != want[2] || got[3] != want[3] {
+		t.Fatalf("order = %x, want %x", got, want)
+	}
+
+	// Status, owner and purchase of each.
+	all := list(&dentalv1.ListSubscriptionsRequest{})
+	wantStatus := map[[16]byte]dentalv1.SubscriptionStatus{
+		ended:    dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ENDED,
+		active:   dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ACTIVE,
+		upcoming: dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_UPCOMING,
+		canceled: dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_CANCELED,
+	}
+	for _, item := range all.GetItems() {
+		id := [16]byte(item.GetSubscription().GetId())
+		if item.GetStatus() != wantStatus[id] {
+			t.Errorf("status of %x = %v, want %v", id, item.GetStatus(), wantStatus[id])
+		}
+		if (item.GetPurchase() != nil) != (id == active) {
+			t.Errorf("purchase of %x = %v", id, item.GetPurchase())
+		}
+		if item.GetIdentity().GetNumber() == "" || item.GetPhone() == "" || item.GetUser().GetUsername() == "" {
+			t.Errorf("owner of %x = %v", id, item)
+		}
+	}
+
+	var bobCode string
+	if err := e.deps.DB.QueryRow(ctx, `SELECT identity FROM users WHERE id = $1`, bob.GetId()).Scan(&bobCode); err != nil {
+		t.Fatal(err)
+	}
+	// Filters: status, then text in the owner's name, identification code or phone.
+	for _, tc := range []struct {
+		req  *dentalv1.ListSubscriptionsRequest
+		want uint32
+	}{
+		{&dentalv1.ListSubscriptionsRequest{Status: dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ACTIVE}, 1},
+		{&dentalv1.ListSubscriptionsRequest{Status: dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_CANCELED}, 1},
+		{&dentalv1.ListSubscriptionsRequest{Query: "  DR. ALICE "}, 3},
+		{&dentalv1.ListSubscriptionsRequest{Query: bobCode}, 1},
+		{&dentalv1.ListSubscriptionsRequest{Query: "0912"}, 4},
+		{&dentalv1.ListSubscriptionsRequest{Query: "bob", Status: dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ACTIVE}, 0},
+		{&dentalv1.ListSubscriptionsRequest{Query: "%"}, 0},
+	} {
+		if res := list(tc.req); res.GetTotalCount() != tc.want || len(res.GetItems()) != int(tc.want) {
+			t.Errorf("%v: %d of %d, want %d", tc.req, len(res.GetItems()), res.GetTotalCount(), tc.want)
+		}
+	}
+	_, err = admin.ListSubscriptions(ctx, &dentalv1.ListSubscriptionsRequest{PageSize: 101})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+
+	// Payments: pending ones oldest first, the others newest first; filtered and paged the same way.
+	payments := func(req *dentalv1.ListPaymentsRequest) ([]string, uint32) {
+		t.Helper()
+		res, err := admin.ListPayments(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var refs []string
+		for _, r := range res.GetPayments() {
+			refs = append(refs, r.GetPayment().GetTransfer().GetReference())
+		}
+		return refs, res.GetTotalCount()
+	}
+	if refs, total := payments(&dentalv1.ListPaymentsRequest{PageSize: 2}); total != 3 || len(refs) != 2 ||
+		refs[0] != "REF-BOB-2" || refs[1] != "REF-BOB-1" {
+		t.Errorf("first page = %v of %d", refs, total)
+	}
+	if refs, total := payments(&dentalv1.ListPaymentsRequest{Page: 2, PageSize: 2}); total != 3 || len(refs) != 1 || refs[0] != "REF-ALICE" {
+		t.Errorf("second page = %v of %d", refs, total)
+	}
+	if refs, total := payments(&dentalv1.ListPaymentsRequest{Query: "ref-bob"}); total != 2 || len(refs) != 2 {
+		t.Errorf("by reference = %v of %d", refs, total)
+	}
+	if refs, total := payments(&dentalv1.ListPaymentsRequest{
+		Status: dentalv1.PaymentStatus_PAYMENT_STATUS_APPROVED, Query: "alice",
+	}); total != 1 || refs[0] != "REF-ALICE" {
+		t.Errorf("approved of alice = %v of %d", refs, total)
+	}
+	if refs, total := payments(&dentalv1.ListPaymentsRequest{Page: 9}); total != 3 || len(refs) != 0 {
+		t.Errorf("past the end = %v of %d", refs, total)
+	}
+}

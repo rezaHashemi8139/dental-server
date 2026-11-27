@@ -63,8 +63,13 @@ service AdminService {
   // Fails with NOT_FOUND "subscription_not_found".
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse) {}
 
-  // Payments reported by clinic owners (BillingService.CreatePayment), with who paid.
-  // Pending ones oldest first (the queue to review), the others newest first.
+  // Subscriptions of every user, a page at a time: newest first (starts_at, then id,
+  // both descending), with their owner and the payment that bought them.
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse) {}
+
+  // Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
+  // a page at a time. Asking for pending ones lists them oldest first (the queue to
+  // review); otherwise newest first. Ties are ordered by id, so pages are stable.
   rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse) {}
 
   // Approves a pending payment after checking the bank statement, and adds the
@@ -264,15 +269,72 @@ message CancelSubscriptionResponse {
   Subscription subscription = 1;
 }
 
+// Where a subscription stands, on the server's clock.
+enum SubscriptionStatus {
+  SUBSCRIPTION_STATUS_UNSPECIFIED = 0;
+  // Not canceled; starts_at <= now < ends_at.
+  SUBSCRIPTION_STATUS_ACTIVE = 1;
+  // Not canceled; now < starts_at (a renewal queued after the paid time).
+  SUBSCRIPTION_STATUS_UPCOMING = 2;
+  // Not canceled; ends_at <= now. Includes one that an upgrade ended early.
+  SUBSCRIPTION_STATUS_ENDED = 3;
+  // canceled_at is set.
+  SUBSCRIPTION_STATUS_CANCELED = 4;
+}
+
+message ListSubscriptionsRequest {
+  // Only subscriptions in this status now; SUBSCRIPTION_STATUS_UNSPECIFIED for all.
+  SubscriptionStatus status = 1 [(buf.validate.field).enum.defined_only = true];
+  // Only owners whose full name, username, identification code or phone contains
+  // this text, ignoring case and surrounding spaces; empty for all.
+  string query = 2 [(buf.validate.field).string.max_len = 100];
+  // Which page, from 1; 0 means 1.
+  uint32 page = 3 [(buf.validate.field).uint32.lte = 100000];
+  // Subscriptions per page, up to 100; 0 means 20.
+  uint32 page_size = 4 [(buf.validate.field).uint32.lte = 100];
+}
+
+message ListSubscriptionsResponse {
+  repeated SubscriptionListItem items = 1;
+  // How many subscriptions match the filters, across all pages.
+  uint32 total_count = 2;
+}
+
+message SubscriptionListItem {
+  // With the administrator's note.
+  Subscription subscription = 1;
+  SubscriptionStatus status = 2;
+  // The owner.
+  User user = 3;
+  // The owner's identification code, for GetUser; empty if none is on file.
+  PersonIdentity identity = 4;
+  string phone = 5;
+  bool user_disabled = 6;
+  // The approved payment that bought it (Payment.subscription_id); unset when it was
+  // sold in the admin panel (SellSubscription).
+  Payment purchase = 7;
+}
+
 message ListPaymentsRequest {
   // Only payments with this status; PAYMENT_STATUS_UNSPECIFIED for all.
   PaymentStatus status = 1 [(buf.validate.field).enum.defined_only = true];
-  // At most this many, up to 500; 0 means 100.
-  uint32 limit = 2 [(buf.validate.field).uint32.lte = 500];
+  // Replaced by page and page_size.
+  reserved 2;
+  reserved "limit";
+  // Only payments whose owner's full name, username, identification code or phone,
+  // or whose transfer reference, contains this text, ignoring case and surrounding
+  // spaces; empty for all.
+  string query = 3 [(buf.validate.field).string.max_len = 100];
+  // Which page, from 1; 0 means 1.
+  uint32 page = 4 [(buf.validate.field).uint32.lte = 100000];
+  // Payments per page, up to 100; 0 means 20.
+  uint32 page_size = 5 [(buf.validate.field).uint32.lte = 100];
 }
 
 message ListPaymentsResponse {
   repeated PaymentReview payments = 1;
+  // How many payments match the filters, across all pages.
+  uint32 total_count = 2;
 }
 
 // A payment with what an administrator needs to check it.
