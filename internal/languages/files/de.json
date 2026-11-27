@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 33,
+    "version": 34,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -395,6 +395,7 @@
       "birthDate": "Geburtsdatum",
       "gender": "Geschlecht",
       "phone": "Telefon",
+      "email": "E-Mail",
       "address": "Adresse",
       "medicalNotes": "Krankengeschichte"
     },
@@ -440,6 +441,7 @@
       "invalidGender": "Dieses Geschlecht ist ungültig.",
       "invalidBirthDate": "Dieses Geburtsdatum ist ungültig.",
       "invalidPhone": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
+      "invalidEmail": "Die E-Mail-Adresse ist ungültig. Geben Sie sie wie name@example.com ein, mit höchstens 254 Zeichen.",
       "tooLong": "Dieser Text ist zu lang. Höchstens {{max}} Zeichen sind erlaubt.",
       "notFound": "Dieser Patient wurde nicht gefunden.",
       "identityLocked": "Der Identifikationscode eines bereits auf dem Server gespeicherten Patienten kann nicht geändert werden.",
@@ -495,8 +497,11 @@
   "workHours": {
     "title": "Arbeitszeiten",
     "description": "Erfassen Sie Kommen und Gehen und sehen Sie die Summe jedes Tages und jedes Monats. Diese Zeiten werden nur auf diesem Computer gespeichert und nie an den Server gesendet.",
-    "add": "Kommen eintragen",
+    "add": "Manuell eintragen (Tag und Uhrzeit wählen)",
     "user": "Benutzer",
+    "everyone": "Alle Mitarbeitenden in diesem Monat",
+    "everyoneHint": "Klicken Sie auf eine Person, um ihr Kommen und Gehen zu sehen.",
+    "entriesOf": "Kommen und Gehen von {{name}}",
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
     "startNow": "Kommen (jetzt)",
@@ -505,6 +510,7 @@
     "atWorkSince": "Eingestempelt seit {{time}}",
     "notAtWork": "Nicht eingestempelt.",
     "exitFirstHint": "Erst wenn das Gehen erfasst ist, kann ein neues Kommen erfasst werden.",
+    "viewOnly": "Nur Ansicht: Nur die Praxisleitung kann die Arbeitszeiten anderer ändern.",
     "loading": "Wird geladen...",
     "empty": "In diesem Monat wurden keine Arbeitszeiten erfasst.",
     "ongoing": "Läuft",
@@ -550,7 +556,7 @@
       "timeFormat": "Geben Sie die Uhrzeit als Stunden:Minuten ein."
     },
     "errors": {
-      "notAllowed": "Nur die Praxisleitung kann die Arbeitszeiten anderer sehen oder erfassen.",
+      "notAllowed": "Nur die Praxisleitung kann die Arbeitszeiten anderer erfassen, bearbeiten oder löschen.",
       "unknownUser": "Dieser Benutzer ist nicht auf diesem Computer.",
       "notFound": "Dieser Eintrag wurde nicht gefunden.",
       "invalidStart": "Die Zeit für das Kommen ist ungültig.",

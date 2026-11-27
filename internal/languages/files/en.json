@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 33,
+    "version": 34,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -395,6 +395,7 @@
       "birthDate": "Date of birth",
       "gender": "Gender",
       "phone": "Phone",
+      "email": "Email",
       "address": "Address",
       "medicalNotes": "Medical history"
     },
@@ -440,6 +441,7 @@
       "invalidGender": "This gender is not valid.",
       "invalidBirthDate": "This date of birth is not valid.",
       "invalidPhone": "The phone number must have 7 to 15 digits (optionally starting with +).",
+      "invalidEmail": "The email address is not valid. Enter it like name@example.com, in at most 254 characters.",
       "tooLong": "This text is too long. At most {{max}} characters are allowed.",
       "notFound": "This patient was not found.",
       "identityLocked": "The identification code of a patient already saved on the server cannot be changed.",
@@ -495,8 +497,11 @@
   "workHours": {
     "title": "Working hours",
     "description": "Record when you come in and leave, and see each day's and each month's total. These hours are stored on this computer only and are never sent to the server.",
-    "add": "Type an entry",
+    "add": "Enter manually (pick day and time)",
     "user": "User",
+    "everyone": "All staff this month",
+    "everyoneHint": "Click a person to see their entries and exits.",
+    "entriesOf": "Entries and exits of {{name}}",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
     "startNow": "Clock in (now)",
@@ -505,6 +510,7 @@
     "atWorkSince": "Clocked in since {{time}}",
     "notAtWork": "Not clocked in.",
     "exitFirstHint": "No new entry can be recorded until this one has its exit.",
+    "viewOnly": "View only: only the clinic manager can change other people's working hours.",
     "loading": "Loading...",
     "empty": "No working hours recorded this month.",
     "ongoing": "In progress",
@@ -550,7 +556,7 @@
       "timeFormat": "Enter the time as hours:minutes."
     },
     "errors": {
-      "notAllowed": "Only the clinic manager can see or record other people's working hours.",
+      "notAllowed": "Only the clinic manager can record, edit or delete other people's working hours.",
       "unknownUser": "This user is not on this computer.",
       "notFound": "This entry was not found.",
       "invalidStart": "The time in is not valid.",
