@@ -496,31 +496,33 @@
   },
   "workHours": {
     "title": "Working hours",
-    "description": "Record when you come in and leave, and see each day's and each month's total. These hours are stored on this computer only and are never sent to the server.",
-    "add": "Enter manually (pick day and time)",
+    "description": "Entries, exits and totals of working hours. Stored on this computer only, never sent to the server.",
+    "tabs": {
+      "person": "Timesheet",
+      "team": "All staff"
+    },
     "user": "User",
-    "everyone": "All staff this month",
-    "everyoneHint": "Click a person to see their entries and exits.",
-    "entriesOf": "Entries and exits of {{name}}",
+    "me": "(you)",
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
-    "startNow": "Clock in (now)",
-    "endNow": "Clock out (now)",
-    "typeExit": "Type the exit",
-    "atWorkSince": "Clocked in since {{time}}",
-    "notAtWork": "Not clocked in.",
-    "exitFirstHint": "No new entry can be recorded until this one has its exit.",
+    "atWork": "At work",
+    "notAtWork": "Not at work",
+    "since": "Since {{time}} · {{elapsed}}",
+    "startNow": "Clock in",
+    "endNow": "Clock out",
+    "add": "Enter or edit manually",
+    "addToDay": "Entries and exits of this day",
+    "addShort": "Add",
+    "typeExit": "Enter exit",
     "viewOnly": "View only: only the clinic manager can change other people's working hours.",
     "loading": "Loading...",
     "empty": "No working hours recorded this month.",
-    "ongoing": "In progress",
-    "entry": "In",
-    "exit": "Out",
-    "edit": "Edit",
-    "delete": "Delete",
-    "dayTotal": "Day total",
-    "monthTotal": "Total for {{month}}",
-    "days": "Days worked: {{days}}",
+    "monthTotal": "Month total",
+    "days": "Days worked",
+    "average": "Daily average",
+    "daysCount": "{{days}} days worked",
+    "editEntry": "Edit {{range}}",
+    "rowError": "Row {{row}}: {{message}}",
     "duration": "{{hours}} h {{minutes}} min",
     "now": "Now",
     "fields": {
@@ -530,11 +532,14 @@
       "notes": "Notes"
     },
     "hints": {
-      "end": "Still at work? Leave the time out empty. A time out earlier than the time in means the next day."
+      "end": "One row for each time in and out. Still at work? Leave the last row's exit empty. An exit of 00:00 is midnight at the end of this day."
     },
     "dialog": {
-      "addTitle": "Record an entry",
-      "editTitle": "Edit entry and exit",
+      "title": "Entries and exits of the day",
+      "loading": "Loading this day's entries and exits...",
+      "empty": "No entries or exits recorded for this day.",
+      "addRow": "Another entry and exit",
+      "removeRow": "Remove this row",
       "save": "Save",
       "saving": "Saving...",
       "cancel": "Cancel"
@@ -545,15 +550,11 @@
       "add": "Add notes for the day",
       "edit": "Edit notes for the day"
     },
-    "deleteDialog": {
-      "title": "Delete entry and exit",
-      "description": "The entry and exit \"{{entry}}\" will be deleted.",
-      "confirm": "Delete",
-      "working": "Deleting..."
-    },
     "validation": {
       "dayRequired": "Enter the full date.",
-      "timeFormat": "Enter the time as hours:minutes."
+      "timeFormat": "Enter the time as hours:minutes.",
+      "endBeforeStart": "The exit must be after the entry. For midnight, enter 00:00.",
+      "overlap": "This row overlaps another one."
     },
     "errors": {
       "notAllowed": "Only the clinic manager can record, edit or delete other people's working hours.",
@@ -566,7 +567,9 @@
       "tooLong": "The time between entry and exit cannot be more than 24 hours.",
       "overlap": "This time overlaps another entry of the same user.",
       "exitFirst": "Record the exit of the previous entry first, then a new entry.",
-      "notesTooLong": "Notes can be at most {{max}} characters."
+      "notesTooLong": "Notes can be at most {{max}} characters.",
+      "outsideDay": "Entries and exits must be on the chosen day.",
+      "notAtWork": "There is no open entry to record an exit for."
     }
   },
   "members": {

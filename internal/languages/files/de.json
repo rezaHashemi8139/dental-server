@@ -496,31 +496,33 @@
   },
   "workHours": {
     "title": "Arbeitszeiten",
-    "description": "Erfassen Sie Kommen und Gehen und sehen Sie die Summe jedes Tages und jedes Monats. Diese Zeiten werden nur auf diesem Computer gespeichert und nie an den Server gesendet.",
-    "add": "Manuell eintragen (Tag und Uhrzeit wählen)",
+    "description": "Kommen, Gehen und Summen der Arbeitszeit. Nur auf diesem Computer gespeichert, nie an den Server gesendet.",
+    "tabs": {
+      "person": "Zeiterfassung",
+      "team": "Alle Mitarbeitenden"
+    },
     "user": "Benutzer",
-    "everyone": "Alle Mitarbeitenden in diesem Monat",
-    "everyoneHint": "Klicken Sie auf eine Person, um ihr Kommen und Gehen zu sehen.",
-    "entriesOf": "Kommen und Gehen von {{name}}",
+    "me": "(Sie)",
     "previousMonth": "Vorheriger Monat",
     "nextMonth": "Nächster Monat",
-    "startNow": "Kommen (jetzt)",
-    "endNow": "Gehen (jetzt)",
+    "atWork": "Bei der Arbeit",
+    "notAtWork": "Nicht bei der Arbeit",
+    "since": "Seit {{time}} · {{elapsed}}",
+    "startNow": "Kommen",
+    "endNow": "Gehen",
+    "add": "Manuell erfassen oder bearbeiten",
+    "addToDay": "Kommen und Gehen dieses Tages",
+    "addShort": "Hinzufügen",
     "typeExit": "Gehen eintragen",
-    "atWorkSince": "Eingestempelt seit {{time}}",
-    "notAtWork": "Nicht eingestempelt.",
-    "exitFirstHint": "Erst wenn das Gehen erfasst ist, kann ein neues Kommen erfasst werden.",
     "viewOnly": "Nur Ansicht: Nur die Praxisleitung kann die Arbeitszeiten anderer ändern.",
     "loading": "Wird geladen...",
     "empty": "In diesem Monat wurden keine Arbeitszeiten erfasst.",
-    "ongoing": "Läuft",
-    "entry": "Kommen",
-    "exit": "Gehen",
-    "edit": "Bearbeiten",
-    "delete": "Löschen",
-    "dayTotal": "Tagessumme",
-    "monthTotal": "Summe {{month}}",
-    "days": "Arbeitstage: {{days}}",
+    "monthTotal": "Monatssumme",
+    "days": "Arbeitstage",
+    "average": "Tagesdurchschnitt",
+    "daysCount": "{{days}} Arbeitstage",
+    "editEntry": "{{range}} bearbeiten",
+    "rowError": "Zeile {{row}}: {{message}}",
     "duration": "{{hours}} Std. {{minutes}} Min.",
     "now": "Jetzt",
     "fields": {
@@ -530,11 +532,14 @@
       "notes": "Notizen"
     },
     "hints": {
-      "end": "Noch bei der Arbeit? Lassen Sie „Gehen“ leer. Ein Gehen vor dem Kommen bedeutet den nächsten Tag."
+      "end": "Eine Zeile für jedes Kommen und Gehen. Noch bei der Arbeit? Lassen Sie das Gehen der letzten Zeile leer. Gehen um 00:00 ist Mitternacht am Ende dieses Tages."
     },
     "dialog": {
-      "addTitle": "Kommen erfassen",
-      "editTitle": "Kommen und Gehen bearbeiten",
+      "title": "Kommen und Gehen des Tages",
+      "loading": "Kommen und Gehen dieses Tages werden geladen...",
+      "empty": "Für diesen Tag ist kein Kommen oder Gehen erfasst.",
+      "addRow": "Weiteres Kommen und Gehen",
+      "removeRow": "Diese Zeile entfernen",
       "save": "Speichern",
       "saving": "Wird gespeichert...",
       "cancel": "Abbrechen"
@@ -545,15 +550,11 @@
       "add": "Notizen zum Tag hinzufügen",
       "edit": "Notizen zum Tag bearbeiten"
     },
-    "deleteDialog": {
-      "title": "Kommen und Gehen löschen",
-      "description": "Kommen und Gehen „{{entry}}“ werden gelöscht.",
-      "confirm": "Löschen",
-      "working": "Wird gelöscht..."
-    },
     "validation": {
       "dayRequired": "Geben Sie das vollständige Datum ein.",
-      "timeFormat": "Geben Sie die Uhrzeit als Stunden:Minuten ein."
+      "timeFormat": "Geben Sie die Uhrzeit als Stunden:Minuten ein.",
+      "endBeforeStart": "Das Gehen muss nach dem Kommen liegen. Für Mitternacht geben Sie 00:00 ein.",
+      "overlap": "Diese Zeile überschneidet sich mit einer anderen."
     },
     "errors": {
       "notAllowed": "Nur die Praxisleitung kann die Arbeitszeiten anderer erfassen, bearbeiten oder löschen.",
@@ -566,7 +567,9 @@
       "tooLong": "Zwischen Kommen und Gehen dürfen höchstens 24 Stunden liegen.",
       "overlap": "Diese Zeit überschneidet sich mit einem anderen Eintrag desselben Benutzers.",
       "exitFirst": "Erfassen Sie zuerst das Gehen des vorherigen Eintrags, dann ein neues Kommen.",
-      "notesTooLong": "Notizen dürfen höchstens {{max}} Zeichen lang sein."
+      "notesTooLong": "Notizen dürfen höchstens {{max}} Zeichen lang sein.",
+      "outsideDay": "Kommen und Gehen müssen am gewählten Tag liegen.",
+      "notAtWork": "Es gibt kein offenes Kommen, zu dem ein Gehen erfasst werden könnte."
     }
   },
   "members": {
