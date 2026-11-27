@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 28,
+    "version": 30,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -376,12 +376,11 @@
   "patients": {
     "title": "Patienten",
     "description": "Die Patientenakten dieser Praxis. Änderungen werden zuerst auf diesem Computer gespeichert und synchronisiert, sobald eine Verbindung zum Server besteht.",
-    "search": "Nach Name oder Identifikationscode suchen",
+    "search": "Nach Name, Identifikationscode oder Telefon suchen",
     "add": "Neuer Patient",
     "loading": "Wird geladen...",
     "empty": "Noch keine Patienten.",
     "noResults": "Kein Patient entspricht dieser Suche.",
-    "limitNote": "Es werden nur die ersten {{count}} Ergebnisse angezeigt. Grenzen Sie die Suche ein.",
     "back": "Patientenliste",
     "edit": "Angaben bearbeiten",
     "notGiven": "Nicht angegeben",
@@ -414,9 +413,9 @@
       "cancel": "Abbrechen"
     },
     "lookup": {
-      "button": "Auf dem Server suchen",
       "working": "Wird gesucht...",
-      "found": "Die Angaben dieses Patienten wurden vom Server gelesen. Prüfen Sie sie und speichern Sie dann."
+      "found": "Die Angaben dieses Patienten wurden vom Server gelesen. Prüfen Sie sie und speichern Sie dann.",
+      "foundLocal": "Dieser Patient ist auf diesem Computer bereits erfasst. Seine Angaben wurden eingetragen; beim Speichern wird derselbe Eintrag aktualisiert."
     },
     "sync": {
       "waiting": "Wartet auf Synchronisierung",
@@ -444,6 +443,13 @@
       "historyNotFound": "Keine Praxis hat einen Patienten mit diesem Identifikationscode.",
       "historyNeedsServer": "Für die Behandlungshistorie aus anderen Praxen ist eine Verbindung zum Server nötig."
     }
+  },
+  "pagination": {
+    "label": "Seitennavigation",
+    "summary": "{{from}}–{{to}} von {{total}}",
+    "page": "Seite {{page}} von {{pages}}",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "treatments": {
     "title": "Behandlungen",

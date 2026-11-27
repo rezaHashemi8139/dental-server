@@ -2204,11 +2204,258 @@ func (x *UpdatePaymentAccountResponse) GetAccount() *PaymentAccount {
 	return nil
 }
 
+type ListPatientsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Only patients whose name ("first last"), identification code or phone contains
+	// this text, ignoring case and surrounding spaces; empty for all.
+	Query string `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	// Which page, from 1; 0 means 1.
+	Page uint32 `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	// Patients per page, up to 100; 0 means 20.
+	PageSize      uint32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPatientsRequest) Reset() {
+	*x = ListPatientsRequest{}
+	mi := &file_dental_v1_admin_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPatientsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPatientsRequest) ProtoMessage() {}
+
+func (x *ListPatientsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPatientsRequest.ProtoReflect.Descriptor instead.
+func (*ListPatientsRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *ListPatientsRequest) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
+func (x *ListPatientsRequest) GetPage() uint32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListPatientsRequest) GetPageSize() uint32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type ListPatientsResponse struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Patients []*PatientListItem     `protobuf:"bytes,1,rep,name=patients,proto3" json:"patients,omitempty"`
+	// How many patients match the search, across all pages.
+	TotalCount    uint32 `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListPatientsResponse) Reset() {
+	*x = ListPatientsResponse{}
+	mi := &file_dental_v1_admin_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListPatientsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListPatientsResponse) ProtoMessage() {}
+
+func (x *ListPatientsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListPatientsResponse.ProtoReflect.Descriptor instead.
+func (*ListPatientsResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *ListPatientsResponse) GetPatients() []*PatientListItem {
+	if x != nil {
+		return x.Patients
+	}
+	return nil
+}
+
+func (x *ListPatientsResponse) GetTotalCount() uint32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+// A patient as the admin panel lists it; fields as in Patient.
+type PatientListItem struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 bytes (Patient.id).
+	Id        []byte          `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Identity  *PersonIdentity `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
+	FirstName string          `protobuf:"bytes,3,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName  string          `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	BirthDate string          `protobuf:"bytes,5,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
+	Gender    Gender          `protobuf:"varint,6,opt,name=gender,proto3,enum=dental.v1.Gender" json:"gender,omitempty"`
+	Phone     string          `protobuf:"bytes,7,opt,name=phone,proto3" json:"phone,omitempty"`
+	// Clinics the record is synced to: every clinic that sent it or treats the patient.
+	ClinicCount uint32 `protobuf:"varint,8,opt,name=clinic_count,json=clinicCount,proto3" json:"clinic_count,omitempty"`
+	// Treatments in every clinic, deleted ones left out.
+	TreatmentCount uint32 `protobuf:"varint,9,opt,name=treatment_count,json=treatmentCount,proto3" json:"treatment_count,omitempty"`
+	// When the server first received the patient.
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// When the details were last changed (Patient.updated_at).
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PatientListItem) Reset() {
+	*x = PatientListItem{}
+	mi := &file_dental_v1_admin_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PatientListItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PatientListItem) ProtoMessage() {}
+
+func (x *PatientListItem) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PatientListItem.ProtoReflect.Descriptor instead.
+func (*PatientListItem) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *PatientListItem) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *PatientListItem) GetIdentity() *PersonIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+func (x *PatientListItem) GetFirstName() string {
+	if x != nil {
+		return x.FirstName
+	}
+	return ""
+}
+
+func (x *PatientListItem) GetLastName() string {
+	if x != nil {
+		return x.LastName
+	}
+	return ""
+}
+
+func (x *PatientListItem) GetBirthDate() string {
+	if x != nil {
+		return x.BirthDate
+	}
+	return ""
+}
+
+func (x *PatientListItem) GetGender() Gender {
+	if x != nil {
+		return x.Gender
+	}
+	return Gender_GENDER_UNSPECIFIED
+}
+
+func (x *PatientListItem) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+func (x *PatientListItem) GetClinicCount() uint32 {
+	if x != nil {
+		return x.ClinicCount
+	}
+	return 0
+}
+
+func (x *PatientListItem) GetTreatmentCount() uint32 {
+	if x != nil {
+		return x.TreatmentCount
+	}
+	return 0
+}
+
+func (x *PatientListItem) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *PatientListItem) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 var File_dental_v1_admin_proto protoreflect.FileDescriptor
 
 const file_dental_v1_admin_proto_rawDesc = "" +
 	"\n" +
-	"\x15dental/v1/admin.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1cdental/v1/subscription.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n" +
+	"\x15dental/v1/admin.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x17dental/v1/patient.proto\x1a\x16dental/v1/person.proto\x1a\x1cdental/v1/subscription.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"P\n" +
 	"\x05Admin\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1b\n" +
@@ -2363,13 +2610,38 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\x06active\x18\a \x01(\bR\x06active:l\xbaHi\x1ag\n" +
 	"\x14destination_required\x12$a card number or an IBAN is required\x1a)this.card_number != '' || this.iban != ''\"S\n" +
 	"\x1cUpdatePaymentAccountResponse\x123\n" +
-	"\aaccount\x18\x01 \x01(\v2\x19.dental.v1.PaymentAccountR\aaccount*\xbc\x01\n" +
+	"\aaccount\x18\x01 \x01(\v2\x19.dental.v1.PaymentAccountR\aaccount\"y\n" +
+	"\x13ListPatientsRequest\x12\x1d\n" +
+	"\x05query\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x18dR\x05query\x12\x1d\n" +
+	"\x04page\x18\x02 \x01(\rB\t\xbaH\x06*\x04\x18\xa0\x8d\x06R\x04page\x12$\n" +
+	"\tpage_size\x18\x03 \x01(\rB\a\xbaH\x04*\x02\x18dR\bpageSize\"o\n" +
+	"\x14ListPatientsResponse\x126\n" +
+	"\bpatients\x18\x01 \x03(\v2\x1a.dental.v1.PatientListItemR\bpatients\x12\x1f\n" +
+	"\vtotal_count\x18\x02 \x01(\rR\n" +
+	"totalCount\"\xb6\x03\n" +
+	"\x0fPatientListItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\fR\x02id\x125\n" +
+	"\bidentity\x18\x02 \x01(\v2\x19.dental.v1.PersonIdentityR\bidentity\x12\x1d\n" +
+	"\n" +
+	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1d\n" +
+	"\n" +
+	"birth_date\x18\x05 \x01(\tR\tbirthDate\x12)\n" +
+	"\x06gender\x18\x06 \x01(\x0e2\x11.dental.v1.GenderR\x06gender\x12\x14\n" +
+	"\x05phone\x18\a \x01(\tR\x05phone\x12!\n" +
+	"\fclinic_count\x18\b \x01(\rR\vclinicCount\x12'\n" +
+	"\x0ftreatment_count\x18\t \x01(\rR\x0etreatmentCount\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt*\xbc\x01\n" +
 	"\x12SubscriptionStatus\x12#\n" +
 	"\x1fSUBSCRIPTION_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSUBSCRIPTION_STATUS_ACTIVE\x10\x01\x12 \n" +
 	"\x1cSUBSCRIPTION_STATUS_UPCOMING\x10\x02\x12\x1d\n" +
 	"\x19SUBSCRIPTION_STATUS_ENDED\x10\x03\x12 \n" +
-	"\x1cSUBSCRIPTION_STATUS_CANCELED\x10\x042\x9b\v\n" +
+	"\x1cSUBSCRIPTION_STATUS_CANCELED\x10\x042\xee\v\n" +
 	"\fAdminService\x12T\n" +
 	"\x05Login\x12#.dental.v1.AdminServiceLoginRequest\x1a$.dental.v1.AdminServiceLoginResponse\"\x00\x12W\n" +
 	"\x06Logout\x12$.dental.v1.AdminServiceLogoutRequest\x1a%.dental.v1.AdminServiceLogoutResponse\"\x00\x12N\n" +
@@ -2388,7 +2660,8 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\rRejectPayment\x12\x1f.dental.v1.RejectPaymentRequest\x1a .dental.v1.RejectPaymentResponse\"\x00\x12f\n" +
 	"\x13ListPaymentAccounts\x12%.dental.v1.ListPaymentAccountsRequest\x1a&.dental.v1.ListPaymentAccountsResponse\"\x00\x12i\n" +
 	"\x14CreatePaymentAccount\x12&.dental.v1.CreatePaymentAccountRequest\x1a'.dental.v1.CreatePaymentAccountResponse\"\x00\x12i\n" +
-	"\x14UpdatePaymentAccount\x12&.dental.v1.UpdatePaymentAccountRequest\x1a'.dental.v1.UpdatePaymentAccountResponse\"\x00B\x86\x01\n" +
+	"\x14UpdatePaymentAccount\x12&.dental.v1.UpdatePaymentAccountRequest\x1a'.dental.v1.UpdatePaymentAccountResponse\"\x00\x12Q\n" +
+	"\fListPatients\x12\x1e.dental.v1.ListPatientsRequest\x1a\x1f.dental.v1.ListPatientsResponse\"\x00B\x86\x01\n" +
 	"\rcom.dental.v1B\n" +
 	"AdminProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
 	"Dental::V1b\x06proto3"
@@ -2406,7 +2679,7 @@ func file_dental_v1_admin_proto_rawDescGZIP() []byte {
 }
 
 var file_dental_v1_admin_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dental_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
+var file_dental_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
 var file_dental_v1_admin_proto_goTypes = []any{
 	(SubscriptionStatus)(0),              // 0: dental.v1.SubscriptionStatus
 	(*Admin)(nil),                        // 1: dental.v1.Admin
@@ -2445,88 +2718,99 @@ var file_dental_v1_admin_proto_goTypes = []any{
 	(*CreatePaymentAccountResponse)(nil), // 34: dental.v1.CreatePaymentAccountResponse
 	(*UpdatePaymentAccountRequest)(nil),  // 35: dental.v1.UpdatePaymentAccountRequest
 	(*UpdatePaymentAccountResponse)(nil), // 36: dental.v1.UpdatePaymentAccountResponse
-	(*timestamppb.Timestamp)(nil),        // 37: google.protobuf.Timestamp
-	(*Plan)(nil),                         // 38: dental.v1.Plan
-	(*PersonIdentity)(nil),               // 39: dental.v1.PersonIdentity
-	(*User)(nil),                         // 40: dental.v1.User
-	(*Subscription)(nil),                 // 41: dental.v1.Subscription
-	(*Payment)(nil),                      // 42: dental.v1.Payment
-	(PaymentStatus)(0),                   // 43: dental.v1.PaymentStatus
-	(*PaymentAccount)(nil),               // 44: dental.v1.PaymentAccount
+	(*ListPatientsRequest)(nil),          // 37: dental.v1.ListPatientsRequest
+	(*ListPatientsResponse)(nil),         // 38: dental.v1.ListPatientsResponse
+	(*PatientListItem)(nil),              // 39: dental.v1.PatientListItem
+	(*timestamppb.Timestamp)(nil),        // 40: google.protobuf.Timestamp
+	(*Plan)(nil),                         // 41: dental.v1.Plan
+	(*PersonIdentity)(nil),               // 42: dental.v1.PersonIdentity
+	(*User)(nil),                         // 43: dental.v1.User
+	(*Subscription)(nil),                 // 44: dental.v1.Subscription
+	(*Payment)(nil),                      // 45: dental.v1.Payment
+	(PaymentStatus)(0),                   // 46: dental.v1.PaymentStatus
+	(*PaymentAccount)(nil),               // 47: dental.v1.PaymentAccount
+	(Gender)(0),                          // 48: dental.v1.Gender
 }
 var file_dental_v1_admin_proto_depIdxs = []int32{
-	37, // 0: dental.v1.ClinicSummary.created_at:type_name -> google.protobuf.Timestamp
-	37, // 1: dental.v1.AdminServiceLoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
+	40, // 0: dental.v1.ClinicSummary.created_at:type_name -> google.protobuf.Timestamp
+	40, // 1: dental.v1.AdminServiceLoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
 	1,  // 2: dental.v1.AdminServiceLoginResponse.admin:type_name -> dental.v1.Admin
 	1,  // 3: dental.v1.CreateAdminResponse.admin:type_name -> dental.v1.Admin
-	38, // 4: dental.v1.ListPlansResponse.plans:type_name -> dental.v1.Plan
-	38, // 5: dental.v1.CreatePlanResponse.plan:type_name -> dental.v1.Plan
-	38, // 6: dental.v1.UpdatePlanResponse.plan:type_name -> dental.v1.Plan
-	39, // 7: dental.v1.GetUserRequest.identity:type_name -> dental.v1.PersonIdentity
-	40, // 8: dental.v1.GetUserResponse.user:type_name -> dental.v1.User
-	39, // 9: dental.v1.GetUserResponse.identity:type_name -> dental.v1.PersonIdentity
-	37, // 10: dental.v1.GetUserResponse.created_at:type_name -> google.protobuf.Timestamp
+	41, // 4: dental.v1.ListPlansResponse.plans:type_name -> dental.v1.Plan
+	41, // 5: dental.v1.CreatePlanResponse.plan:type_name -> dental.v1.Plan
+	41, // 6: dental.v1.UpdatePlanResponse.plan:type_name -> dental.v1.Plan
+	42, // 7: dental.v1.GetUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	43, // 8: dental.v1.GetUserResponse.user:type_name -> dental.v1.User
+	42, // 9: dental.v1.GetUserResponse.identity:type_name -> dental.v1.PersonIdentity
+	40, // 10: dental.v1.GetUserResponse.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 11: dental.v1.GetUserResponse.owned_clinics:type_name -> dental.v1.ClinicSummary
-	41, // 12: dental.v1.GetUserResponse.subscriptions:type_name -> dental.v1.Subscription
-	42, // 13: dental.v1.GetUserResponse.payments:type_name -> dental.v1.Payment
-	41, // 14: dental.v1.SellSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
-	41, // 15: dental.v1.CancelSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
+	44, // 12: dental.v1.GetUserResponse.subscriptions:type_name -> dental.v1.Subscription
+	45, // 13: dental.v1.GetUserResponse.payments:type_name -> dental.v1.Payment
+	44, // 14: dental.v1.SellSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
+	44, // 15: dental.v1.CancelSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
 	0,  // 16: dental.v1.ListSubscriptionsRequest.status:type_name -> dental.v1.SubscriptionStatus
 	23, // 17: dental.v1.ListSubscriptionsResponse.items:type_name -> dental.v1.SubscriptionListItem
-	41, // 18: dental.v1.SubscriptionListItem.subscription:type_name -> dental.v1.Subscription
+	44, // 18: dental.v1.SubscriptionListItem.subscription:type_name -> dental.v1.Subscription
 	0,  // 19: dental.v1.SubscriptionListItem.status:type_name -> dental.v1.SubscriptionStatus
-	40, // 20: dental.v1.SubscriptionListItem.user:type_name -> dental.v1.User
-	39, // 21: dental.v1.SubscriptionListItem.identity:type_name -> dental.v1.PersonIdentity
-	42, // 22: dental.v1.SubscriptionListItem.purchase:type_name -> dental.v1.Payment
-	43, // 23: dental.v1.ListPaymentsRequest.status:type_name -> dental.v1.PaymentStatus
+	43, // 20: dental.v1.SubscriptionListItem.user:type_name -> dental.v1.User
+	42, // 21: dental.v1.SubscriptionListItem.identity:type_name -> dental.v1.PersonIdentity
+	45, // 22: dental.v1.SubscriptionListItem.purchase:type_name -> dental.v1.Payment
+	46, // 23: dental.v1.ListPaymentsRequest.status:type_name -> dental.v1.PaymentStatus
 	26, // 24: dental.v1.ListPaymentsResponse.payments:type_name -> dental.v1.PaymentReview
-	42, // 25: dental.v1.PaymentReview.payment:type_name -> dental.v1.Payment
-	40, // 26: dental.v1.PaymentReview.user:type_name -> dental.v1.User
-	39, // 27: dental.v1.PaymentReview.identity:type_name -> dental.v1.PersonIdentity
-	44, // 28: dental.v1.PaymentReview.account:type_name -> dental.v1.PaymentAccount
-	42, // 29: dental.v1.ApprovePaymentResponse.payment:type_name -> dental.v1.Payment
-	41, // 30: dental.v1.ApprovePaymentResponse.subscription:type_name -> dental.v1.Subscription
-	42, // 31: dental.v1.RejectPaymentResponse.payment:type_name -> dental.v1.Payment
-	44, // 32: dental.v1.ListPaymentAccountsResponse.accounts:type_name -> dental.v1.PaymentAccount
-	44, // 33: dental.v1.CreatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
-	44, // 34: dental.v1.UpdatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
-	3,  // 35: dental.v1.AdminService.Login:input_type -> dental.v1.AdminServiceLoginRequest
-	5,  // 36: dental.v1.AdminService.Logout:input_type -> dental.v1.AdminServiceLogoutRequest
-	7,  // 37: dental.v1.AdminService.CreateAdmin:input_type -> dental.v1.CreateAdminRequest
-	9,  // 38: dental.v1.AdminService.ListPlans:input_type -> dental.v1.ListPlansRequest
-	11, // 39: dental.v1.AdminService.CreatePlan:input_type -> dental.v1.CreatePlanRequest
-	13, // 40: dental.v1.AdminService.UpdatePlan:input_type -> dental.v1.UpdatePlanRequest
-	15, // 41: dental.v1.AdminService.GetUser:input_type -> dental.v1.GetUserRequest
-	17, // 42: dental.v1.AdminService.SellSubscription:input_type -> dental.v1.SellSubscriptionRequest
-	19, // 43: dental.v1.AdminService.CancelSubscription:input_type -> dental.v1.CancelSubscriptionRequest
-	21, // 44: dental.v1.AdminService.ListSubscriptions:input_type -> dental.v1.ListSubscriptionsRequest
-	24, // 45: dental.v1.AdminService.ListPayments:input_type -> dental.v1.ListPaymentsRequest
-	27, // 46: dental.v1.AdminService.ApprovePayment:input_type -> dental.v1.ApprovePaymentRequest
-	29, // 47: dental.v1.AdminService.RejectPayment:input_type -> dental.v1.RejectPaymentRequest
-	31, // 48: dental.v1.AdminService.ListPaymentAccounts:input_type -> dental.v1.ListPaymentAccountsRequest
-	33, // 49: dental.v1.AdminService.CreatePaymentAccount:input_type -> dental.v1.CreatePaymentAccountRequest
-	35, // 50: dental.v1.AdminService.UpdatePaymentAccount:input_type -> dental.v1.UpdatePaymentAccountRequest
-	4,  // 51: dental.v1.AdminService.Login:output_type -> dental.v1.AdminServiceLoginResponse
-	6,  // 52: dental.v1.AdminService.Logout:output_type -> dental.v1.AdminServiceLogoutResponse
-	8,  // 53: dental.v1.AdminService.CreateAdmin:output_type -> dental.v1.CreateAdminResponse
-	10, // 54: dental.v1.AdminService.ListPlans:output_type -> dental.v1.ListPlansResponse
-	12, // 55: dental.v1.AdminService.CreatePlan:output_type -> dental.v1.CreatePlanResponse
-	14, // 56: dental.v1.AdminService.UpdatePlan:output_type -> dental.v1.UpdatePlanResponse
-	16, // 57: dental.v1.AdminService.GetUser:output_type -> dental.v1.GetUserResponse
-	18, // 58: dental.v1.AdminService.SellSubscription:output_type -> dental.v1.SellSubscriptionResponse
-	20, // 59: dental.v1.AdminService.CancelSubscription:output_type -> dental.v1.CancelSubscriptionResponse
-	22, // 60: dental.v1.AdminService.ListSubscriptions:output_type -> dental.v1.ListSubscriptionsResponse
-	25, // 61: dental.v1.AdminService.ListPayments:output_type -> dental.v1.ListPaymentsResponse
-	28, // 62: dental.v1.AdminService.ApprovePayment:output_type -> dental.v1.ApprovePaymentResponse
-	30, // 63: dental.v1.AdminService.RejectPayment:output_type -> dental.v1.RejectPaymentResponse
-	32, // 64: dental.v1.AdminService.ListPaymentAccounts:output_type -> dental.v1.ListPaymentAccountsResponse
-	34, // 65: dental.v1.AdminService.CreatePaymentAccount:output_type -> dental.v1.CreatePaymentAccountResponse
-	36, // 66: dental.v1.AdminService.UpdatePaymentAccount:output_type -> dental.v1.UpdatePaymentAccountResponse
-	51, // [51:67] is the sub-list for method output_type
-	35, // [35:51] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	45, // 25: dental.v1.PaymentReview.payment:type_name -> dental.v1.Payment
+	43, // 26: dental.v1.PaymentReview.user:type_name -> dental.v1.User
+	42, // 27: dental.v1.PaymentReview.identity:type_name -> dental.v1.PersonIdentity
+	47, // 28: dental.v1.PaymentReview.account:type_name -> dental.v1.PaymentAccount
+	45, // 29: dental.v1.ApprovePaymentResponse.payment:type_name -> dental.v1.Payment
+	44, // 30: dental.v1.ApprovePaymentResponse.subscription:type_name -> dental.v1.Subscription
+	45, // 31: dental.v1.RejectPaymentResponse.payment:type_name -> dental.v1.Payment
+	47, // 32: dental.v1.ListPaymentAccountsResponse.accounts:type_name -> dental.v1.PaymentAccount
+	47, // 33: dental.v1.CreatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
+	47, // 34: dental.v1.UpdatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
+	39, // 35: dental.v1.ListPatientsResponse.patients:type_name -> dental.v1.PatientListItem
+	42, // 36: dental.v1.PatientListItem.identity:type_name -> dental.v1.PersonIdentity
+	48, // 37: dental.v1.PatientListItem.gender:type_name -> dental.v1.Gender
+	40, // 38: dental.v1.PatientListItem.created_at:type_name -> google.protobuf.Timestamp
+	40, // 39: dental.v1.PatientListItem.updated_at:type_name -> google.protobuf.Timestamp
+	3,  // 40: dental.v1.AdminService.Login:input_type -> dental.v1.AdminServiceLoginRequest
+	5,  // 41: dental.v1.AdminService.Logout:input_type -> dental.v1.AdminServiceLogoutRequest
+	7,  // 42: dental.v1.AdminService.CreateAdmin:input_type -> dental.v1.CreateAdminRequest
+	9,  // 43: dental.v1.AdminService.ListPlans:input_type -> dental.v1.ListPlansRequest
+	11, // 44: dental.v1.AdminService.CreatePlan:input_type -> dental.v1.CreatePlanRequest
+	13, // 45: dental.v1.AdminService.UpdatePlan:input_type -> dental.v1.UpdatePlanRequest
+	15, // 46: dental.v1.AdminService.GetUser:input_type -> dental.v1.GetUserRequest
+	17, // 47: dental.v1.AdminService.SellSubscription:input_type -> dental.v1.SellSubscriptionRequest
+	19, // 48: dental.v1.AdminService.CancelSubscription:input_type -> dental.v1.CancelSubscriptionRequest
+	21, // 49: dental.v1.AdminService.ListSubscriptions:input_type -> dental.v1.ListSubscriptionsRequest
+	24, // 50: dental.v1.AdminService.ListPayments:input_type -> dental.v1.ListPaymentsRequest
+	27, // 51: dental.v1.AdminService.ApprovePayment:input_type -> dental.v1.ApprovePaymentRequest
+	29, // 52: dental.v1.AdminService.RejectPayment:input_type -> dental.v1.RejectPaymentRequest
+	31, // 53: dental.v1.AdminService.ListPaymentAccounts:input_type -> dental.v1.ListPaymentAccountsRequest
+	33, // 54: dental.v1.AdminService.CreatePaymentAccount:input_type -> dental.v1.CreatePaymentAccountRequest
+	35, // 55: dental.v1.AdminService.UpdatePaymentAccount:input_type -> dental.v1.UpdatePaymentAccountRequest
+	37, // 56: dental.v1.AdminService.ListPatients:input_type -> dental.v1.ListPatientsRequest
+	4,  // 57: dental.v1.AdminService.Login:output_type -> dental.v1.AdminServiceLoginResponse
+	6,  // 58: dental.v1.AdminService.Logout:output_type -> dental.v1.AdminServiceLogoutResponse
+	8,  // 59: dental.v1.AdminService.CreateAdmin:output_type -> dental.v1.CreateAdminResponse
+	10, // 60: dental.v1.AdminService.ListPlans:output_type -> dental.v1.ListPlansResponse
+	12, // 61: dental.v1.AdminService.CreatePlan:output_type -> dental.v1.CreatePlanResponse
+	14, // 62: dental.v1.AdminService.UpdatePlan:output_type -> dental.v1.UpdatePlanResponse
+	16, // 63: dental.v1.AdminService.GetUser:output_type -> dental.v1.GetUserResponse
+	18, // 64: dental.v1.AdminService.SellSubscription:output_type -> dental.v1.SellSubscriptionResponse
+	20, // 65: dental.v1.AdminService.CancelSubscription:output_type -> dental.v1.CancelSubscriptionResponse
+	22, // 66: dental.v1.AdminService.ListSubscriptions:output_type -> dental.v1.ListSubscriptionsResponse
+	25, // 67: dental.v1.AdminService.ListPayments:output_type -> dental.v1.ListPaymentsResponse
+	28, // 68: dental.v1.AdminService.ApprovePayment:output_type -> dental.v1.ApprovePaymentResponse
+	30, // 69: dental.v1.AdminService.RejectPayment:output_type -> dental.v1.RejectPaymentResponse
+	32, // 70: dental.v1.AdminService.ListPaymentAccounts:output_type -> dental.v1.ListPaymentAccountsResponse
+	34, // 71: dental.v1.AdminService.CreatePaymentAccount:output_type -> dental.v1.CreatePaymentAccountResponse
+	36, // 72: dental.v1.AdminService.UpdatePaymentAccount:output_type -> dental.v1.UpdatePaymentAccountResponse
+	38, // 73: dental.v1.AdminService.ListPatients:output_type -> dental.v1.ListPatientsResponse
+	57, // [57:74] is the sub-list for method output_type
+	40, // [40:57] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_admin_proto_init() }
@@ -2535,6 +2819,7 @@ func file_dental_v1_admin_proto_init() {
 		return
 	}
 	file_dental_v1_auth_proto_init()
+	file_dental_v1_patient_proto_init()
 	file_dental_v1_person_proto_init()
 	file_dental_v1_subscription_proto_init()
 	type x struct{}
@@ -2543,7 +2828,7 @@ func file_dental_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_admin_proto_rawDesc), len(file_dental_v1_admin_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   36,
+			NumMessages:   39,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

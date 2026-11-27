@@ -4,12 +4,13 @@ package dental.v1;
 
 import "buf/validate/validate.proto";
 import "dental/v1/auth.proto";
+import "dental/v1/patient.proto";
 import "dental/v1/person.proto";
 import "dental/v1/subscription.proto";
 import "google/protobuf/timestamp.proto";
 
-// The admin panel: system administrators, subscription plans and selling
-// subscriptions. Administrators are separate from user accounts, with their own
+// The admin panel: system administrators, subscription plans, selling
+// subscriptions and looking up patients. Administrators are separate from user accounts, with their own
 // logins and sessions; a user session never works here and an admin session
 // never works anywhere else.
 //
@@ -95,6 +96,11 @@ service AdminService {
   // Changes an account. Payments already reported keep pointing to it.
   // Fails with NOT_FOUND "payment_account_not_found".
   rpc UpdatePaymentAccount(UpdatePaymentAccountRequest) returns (UpdatePaymentAccountResponse) {}
+
+  // Patients synced from every clinic, a page at a time: newest first (created_at,
+  // then id, both descending). Only who they are and how to reach them: never their
+  // address, medical notes or treatments.
+  rpc ListPatients(ListPatientsRequest) returns (ListPatientsResponse) {}
 }
 
 message Admin {
@@ -435,4 +441,40 @@ message UpdatePaymentAccountRequest {
 
 message UpdatePaymentAccountResponse {
   PaymentAccount account = 1;
+}
+
+message ListPatientsRequest {
+  // Only patients whose name ("first last"), identification code or phone contains
+  // this text, ignoring case and surrounding spaces; empty for all.
+  string query = 1 [(buf.validate.field).string.max_len = 100];
+  // Which page, from 1; 0 means 1.
+  uint32 page = 2 [(buf.validate.field).uint32.lte = 100000];
+  // Patients per page, up to 100; 0 means 20.
+  uint32 page_size = 3 [(buf.validate.field).uint32.lte = 100];
+}
+
+message ListPatientsResponse {
+  repeated PatientListItem patients = 1;
+  // How many patients match the search, across all pages.
+  uint32 total_count = 2;
+}
+
+// A patient as the admin panel lists it; fields as in Patient.
+message PatientListItem {
+  // 16 bytes (Patient.id).
+  bytes id = 1;
+  PersonIdentity identity = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string birth_date = 5;
+  Gender gender = 6;
+  string phone = 7;
+  // Clinics the record is synced to: every clinic that sent it or treats the patient.
+  uint32 clinic_count = 8;
+  // Treatments in every clinic, deleted ones left out.
+  uint32 treatment_count = 9;
+  // When the server first received the patient.
+  google.protobuf.Timestamp created_at = 10;
+  // When the details were last changed (Patient.updated_at).
+  google.protobuf.Timestamp updated_at = 11;
 }

@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 28,
+    "version": 30,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -376,12 +376,11 @@
   "patients": {
     "title": "Patients",
     "description": "This clinic's patient records. Changes are saved on this computer first and synced whenever you are connected to the server.",
-    "search": "Search by name or identification code",
+    "search": "Search by name, identification code or phone",
     "add": "New patient",
     "loading": "Loading...",
     "empty": "No patients yet.",
     "noResults": "No patient matches this search.",
-    "limitNote": "Only the first {{count}} results are shown. Narrow the search.",
     "back": "Patient list",
     "edit": "Edit details",
     "notGiven": "Not given",
@@ -414,9 +413,9 @@
       "cancel": "Cancel"
     },
     "lookup": {
-      "button": "Find on server",
       "working": "Searching...",
-      "found": "This patient's details were read from the server. Check them, then save."
+      "found": "This patient's details were read from the server. Check them, then save.",
+      "foundLocal": "This patient is already registered on this computer. Their details were filled in; saving updates the same record."
     },
     "sync": {
       "waiting": "Waiting to sync",
@@ -444,6 +443,13 @@
       "historyNotFound": "No clinic has a patient with this identification code.",
       "historyNeedsServer": "Seeing a patient's history in other clinics needs a connection to the server."
     }
+  },
+  "pagination": {
+    "label": "Pagination",
+    "summary": "{{from}}–{{to}} of {{total}}",
+    "page": "Page {{page}} of {{pages}}",
+    "previous": "Previous",
+    "next": "Next"
   },
   "treatments": {
     "title": "Treatments",

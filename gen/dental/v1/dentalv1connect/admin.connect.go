@@ -75,6 +75,9 @@ const (
 	// AdminServiceUpdatePaymentAccountProcedure is the fully-qualified name of the AdminService's
 	// UpdatePaymentAccount RPC.
 	AdminServiceUpdatePaymentAccountProcedure = "/dental.v1.AdminService/UpdatePaymentAccount"
+	// AdminServiceListPatientsProcedure is the fully-qualified name of the AdminService's ListPatients
+	// RPC.
+	AdminServiceListPatientsProcedure = "/dental.v1.AdminService/ListPatients"
 )
 
 // AdminServiceClient is a client for the dental.v1.AdminService service.
@@ -130,6 +133,10 @@ type AdminServiceClient interface {
 	// Changes an account. Payments already reported keep pointing to it.
 	// Fails with NOT_FOUND "payment_account_not_found".
 	UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error)
+	// Patients synced from every clinic, a page at a time: newest first (created_at,
+	// then id, both descending). Only who they are and how to reach them: never their
+	// address, medical notes or treatments.
+	ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error)
 }
 
 // NewAdminServiceClient constructs a client for the dental.v1.AdminService service. By default, it
@@ -239,6 +246,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("UpdatePaymentAccount")),
 			connect.WithClientOptions(opts...),
 		),
+		listPatients: connect.NewClient[v1.ListPatientsRequest, v1.ListPatientsResponse](
+			httpClient,
+			baseURL+AdminServiceListPatientsProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListPatients")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -260,6 +273,7 @@ type adminServiceClient struct {
 	listPaymentAccounts  *connect.Client[v1.ListPaymentAccountsRequest, v1.ListPaymentAccountsResponse]
 	createPaymentAccount *connect.Client[v1.CreatePaymentAccountRequest, v1.CreatePaymentAccountResponse]
 	updatePaymentAccount *connect.Client[v1.UpdatePaymentAccountRequest, v1.UpdatePaymentAccountResponse]
+	listPatients         *connect.Client[v1.ListPatientsRequest, v1.ListPatientsResponse]
 }
 
 // Login calls dental.v1.AdminService.Login.
@@ -406,6 +420,15 @@ func (c *adminServiceClient) UpdatePaymentAccount(ctx context.Context, req *v1.U
 	return nil, err
 }
 
+// ListPatients calls dental.v1.AdminService.ListPatients.
+func (c *adminServiceClient) ListPatients(ctx context.Context, req *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error) {
+	response, err := c.listPatients.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // AdminServiceHandler is an implementation of the dental.v1.AdminService service.
 type AdminServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
@@ -459,6 +482,10 @@ type AdminServiceHandler interface {
 	// Changes an account. Payments already reported keep pointing to it.
 	// Fails with NOT_FOUND "payment_account_not_found".
 	UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error)
+	// Patients synced from every clinic, a page at a time: newest first (created_at,
+	// then id, both descending). Only who they are and how to reach them: never their
+	// address, medical notes or treatments.
+	ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -564,6 +591,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("UpdatePaymentAccount")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceListPatientsHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceListPatientsProcedure,
+		svc.ListPatients,
+		connect.WithSchema(adminServiceMethods.ByName("ListPatients")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceLoginProcedure:
@@ -598,6 +631,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceCreatePaymentAccountHandler.ServeHTTP(w, r)
 		case AdminServiceUpdatePaymentAccountProcedure:
 			adminServiceUpdatePaymentAccountHandler.ServeHTTP(w, r)
+		case AdminServiceListPatientsProcedure:
+			adminServiceListPatientsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -669,4 +704,8 @@ func (UnimplementedAdminServiceHandler) CreatePaymentAccount(context.Context, *v
 
 func (UnimplementedAdminServiceHandler) UpdatePaymentAccount(context.Context, *v1.UpdatePaymentAccountRequest) (*v1.UpdatePaymentAccountResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.UpdatePaymentAccount is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListPatients is not implemented"))
 }

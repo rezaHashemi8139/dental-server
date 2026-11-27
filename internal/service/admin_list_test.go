@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	dentalv1 "dental-server/gen/dental/v1"
 )
@@ -165,4 +167,105 @@ func TestAdminListsPages(t *testing.T) {
 	if refs, total := payments(&dentalv1.ListPaymentsRequest{Page: 9}); total != 3 || len(refs) != 0 {
 		t.Errorf("past the end = %v of %d", refs, total)
 	}
+}
+
+func TestAdminListsPatients(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+
+	// Three patients from one clinic; Sara is also treated in a second one.
+	aliceToken := e.clinicToken(1, "alice")
+	bobToken := e.clinicToken(2, "bob")
+	now := time.Now()
+	sara := testPatient(personCode(7001), "Sara", now)
+	sara.Phone = "09121112233"
+	reza := testPatient(personCode(7002), "Reza", now)
+	reza.LastName, reza.Phone = "Karimi", "09354445566"
+	mina := testPatient(personCode(7003), "Mina", now)
+	removed := testTreatment(2, sara, "Wrong entry", now)
+	removed.DeletedAt = timestamppb.Now()
+	if _, err := e.sync(aliceToken).Push(ctx, &dentalv1.PushRequest{
+		Patients:   []*dentalv1.Patient{sara, reza, mina},
+		Treatments: []*dentalv1.Treatment{testTreatment(1, sara, "Filling", now), removed},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.sync(bobToken).Push(ctx, &dentalv1.PushRequest{
+		Treatments: []*dentalv1.Treatment{testTreatment(3, sara, "Cleaning", now)},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	// Received one after another: Sara first, Mina last.
+	for i, p := range []*dentalv1.Patient{sara, reza, mina} {
+		if _, err := e.deps.DB.Exec(ctx, `UPDATE patients SET created_at = now() - make_interval(days => $2) WHERE id = $1`,
+			p.GetId(), 3-i); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	list := func(req *dentalv1.ListPatientsRequest) ([]string, uint32) {
+		t.Helper()
+		res, err := admin.ListPatients(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var names []string
+		for _, p := range res.GetPatients() {
+			names = append(names, p.GetFirstName())
+		}
+		return names, res.GetTotalCount()
+	}
+
+	// Newest first, a page at a time, with the total on every page.
+	if names, total := list(&dentalv1.ListPatientsRequest{PageSize: 2}); total != 3 || len(names) != 2 ||
+		names[0] != "Mina" || names[1] != "Reza" {
+		t.Errorf("first page = %v of %d", names, total)
+	}
+	if names, total := list(&dentalv1.ListPatientsRequest{Page: 2, PageSize: 2}); total != 3 || len(names) != 1 || names[0] != "Sara" {
+		t.Errorf("second page = %v of %d", names, total)
+	}
+
+	// Clinics and treatments (deleted ones left out) of each.
+	res, err := admin.ListPatients(ctx, &dentalv1.ListPatientsRequest{Query: personCode(7001)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.GetPatients()) != 1 {
+		t.Fatalf("by code = %v", res.GetPatients())
+	}
+	if got := res.GetPatients()[0]; got.GetClinicCount() != 2 || got.GetTreatmentCount() != 2 ||
+		got.GetPhone() != "09121112233" || got.GetGender() != dentalv1.Gender_GENDER_FEMALE ||
+		[16]byte(got.GetId()) != [16]byte(sara.GetId()) || got.GetCreatedAt() == nil || got.GetUpdatedAt() == nil {
+		t.Errorf("sara = %v", got)
+	}
+
+	// Text in the full name, identification code or phone.
+	for _, tc := range []struct {
+		query string
+		want  uint32
+	}{
+		{"  reza KARIMI ", 1},
+		{"ahmadi", 2},
+		{"0935", 1},
+		{"09", 2},
+		{personCode(7001)[:9], 3},
+		{"nobody", 0},
+		{"%", 0},
+	} {
+		if names, total := list(&dentalv1.ListPatientsRequest{Query: tc.query}); total != tc.want || len(names) != int(tc.want) {
+			t.Errorf("%q: %v of %d, want %d", tc.query, names, total, tc.want)
+		}
+	}
+	_, err = admin.ListPatients(ctx, &dentalv1.ListPatientsRequest{PageSize: 101})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 }
