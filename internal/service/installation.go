@@ -246,6 +246,7 @@ func createOwner(ctx context.Context, tx pgx.Tx, o *dentalv1.NewOwner) (*dentalv
 		FullName: o.GetFullName(),
 		Identity: o.GetIdentity(),
 		Phone:    o.GetPhone(),
+		Email:    o.GetEmail(),
 	})
 }
 

@@ -251,6 +251,8 @@ message GetUserResponse {
   repeated Subscription subscriptions = 7;
   // Payments reported in the desktop app, newest first.
   repeated Payment payments = 8;
+  // Empty when none was given.
+  string email = 9;
 }
 
 message SellSubscriptionRequest {

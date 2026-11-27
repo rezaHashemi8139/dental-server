@@ -241,9 +241,9 @@ func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest
 	var createdAt time.Time
 	res := &dentalv1.GetUserResponse{User: &dentalv1.User{}}
 	err := s.d.DB.QueryRow(ctx, `
-		SELECT id, username, full_name, identity, phone, disabled_at, created_at
+		SELECT id, username, full_name, identity, phone, email, disabled_at, created_at
 		FROM users WHERE identity = $1`, req.GetIdentity().GetNumber(),
-	).Scan(&id, &res.User.Username, &res.User.FullName, &identity, &res.Phone, &disabledAt, &createdAt)
+	).Scan(&id, &res.User.Username, &res.User.FullName, &identity, &res.Phone, &res.Email, &disabledAt, &createdAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, fail(connect.CodeNotFound, reasonUserNotFound)
 	}

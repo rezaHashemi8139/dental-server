@@ -941,7 +941,9 @@ type GetUserResponse struct {
 	// Newest first, canceled ones included.
 	Subscriptions []*Subscription `protobuf:"bytes,7,rep,name=subscriptions,proto3" json:"subscriptions,omitempty"`
 	// Payments reported in the desktop app, newest first.
-	Payments      []*Payment `protobuf:"bytes,8,rep,name=payments,proto3" json:"payments,omitempty"`
+	Payments []*Payment `protobuf:"bytes,8,rep,name=payments,proto3" json:"payments,omitempty"`
+	// Empty when none was given.
+	Email         string `protobuf:"bytes,9,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1030,6 +1032,13 @@ func (x *GetUserResponse) GetPayments() []*Payment {
 		return x.Payments
 	}
 	return nil
+}
+
+func (x *GetUserResponse) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
 }
 
 type SellSubscriptionRequest struct {
@@ -2519,7 +2528,7 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\x12UpdatePlanResponse\x12#\n" +
 	"\x04plan\x18\x01 \x01(\v2\x0f.dental.v1.PlanR\x04plan\"O\n" +
 	"\x0eGetUserRequest\x12=\n" +
-	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\"\x88\x03\n" +
+	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\"\x9e\x03\n" +
 	"\x0fGetUserResponse\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x125\n" +
 	"\bidentity\x18\x02 \x01(\v2\x19.dental.v1.PersonIdentityR\bidentity\x12\x14\n" +
@@ -2529,7 +2538,8 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12=\n" +
 	"\rowned_clinics\x18\x06 \x03(\v2\x18.dental.v1.ClinicSummaryR\fownedClinics\x12=\n" +
 	"\rsubscriptions\x18\a \x03(\v2\x17.dental.v1.SubscriptionR\rsubscriptions\x12.\n" +
-	"\bpayments\x18\b \x03(\v2\x12.dental.v1.PaymentR\bpayments\"{\n" +
+	"\bpayments\x18\b \x03(\v2\x12.dental.v1.PaymentR\bpayments\x12\x14\n" +
+	"\x05email\x18\t \x01(\tR\x05email\"{\n" +
 	"\x17SellSubscriptionRequest\x12 \n" +
 	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\x12 \n" +
 	"\aplan_id\x18\x02 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06planId\x12\x1c\n" +

@@ -97,7 +97,7 @@ type AuthServiceClient interface {
 	// The logged-in user's own account details. Needs session; a billing-only
 	// session may call it too.
 	GetProfile(context.Context, *v1.GetProfileRequest) (*v1.GetProfileResponse, error)
-	// Changes the logged-in user's full name and mobile number. Needs session; a
+	// Changes the logged-in user's full name, mobile number and email. Needs session; a
 	// billing-only session may call it too. The username and the identification
 	// code cannot be changed. Offline grants already given keep the old name until
 	// the next login.
@@ -279,7 +279,7 @@ type AuthServiceHandler interface {
 	// The logged-in user's own account details. Needs session; a billing-only
 	// session may call it too.
 	GetProfile(context.Context, *v1.GetProfileRequest) (*v1.GetProfileResponse, error)
-	// Changes the logged-in user's full name and mobile number. Needs session; a
+	// Changes the logged-in user's full name, mobile number and email. Needs session; a
 	// billing-only session may call it too. The username and the identification
 	// code cannot be changed. Offline grants already given keep the old name until
 	// the next login.

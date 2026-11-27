@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 31,
+    "version": 32,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -149,7 +149,8 @@
       "postalCode": "Postal code (optional)",
       "location": "Clinic location on the map",
       "identityCode": "Identification code",
-      "ownerPhone": "Mobile phone"
+      "ownerPhone": "Mobile phone",
+      "ownerEmail": "Email (optional)"
     },
     "hints": {
       "licenseNumber": "In Latin letters and digits, as printed on the license.",
@@ -165,6 +166,7 @@
     "validation": {
       "licenseNumberFormat": "Use 3 to 32 Latin letters, digits, dots, dashes or slashes.",
       "phoneFormat": "The phone number must have 7 to 15 digits (optionally starting with +).",
+      "emailFormat": "This is not a valid email address, e.g. name@example.com. Or leave it empty.",
       "postalCodeFormat": "The postal code must have 5 to 10 digits.",
       "identityCodeFormat": "The code must have 5 to 20 English letters or digits.",
       "locationRequired": "Mark the clinic's place on the map.",

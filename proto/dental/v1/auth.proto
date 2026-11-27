@@ -61,7 +61,7 @@ service AuthService {
   // session may call it too.
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {}
 
-  // Changes the logged-in user's full name and mobile number. Needs session; a
+  // Changes the logged-in user's full name, mobile number and email. Needs session; a
   // billing-only session may call it too. The username and the identification
   // code cannot be changed. Offline grants already given keep the old name until
   // the next login.
@@ -98,6 +98,15 @@ message SignUpRequest {
   PersonIdentity identity = 4 [(buf.validate.field).required = true];
   // Mobile number: 7–15 digits, optionally starting with '+'.
   string phone = 5 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
+  // Optional email address, at most 254 characters; empty for none. Contact
+  // information only: several accounts may share one, and it is not used to log in.
+  string email = 6 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string = {
+      email: true
+      max_len: 254
+    }
+  ];
 }
 
 message SignUpResponse {
@@ -186,6 +195,8 @@ message Profile {
   PersonIdentity identity = 2;
   // Mobile number; empty for accounts made before it was asked for.
   string phone = 3;
+  // Email address; empty when none was given.
+  string email = 4;
 }
 
 message GetProfileRequest {}
@@ -202,6 +213,14 @@ message UpdateProfileRequest {
   }];
   // Same rules as SignUpRequest.phone.
   string phone = 2 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
+  // Same rules as SignUpRequest.email. Empty removes the email on file.
+  string email = 3 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string = {
+      email: true
+      max_len: 254
+    }
+  ];
 }
 
 message UpdateProfileResponse {

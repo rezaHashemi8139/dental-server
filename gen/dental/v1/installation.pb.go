@@ -309,7 +309,9 @@ type NewOwner struct {
 	// Mobile number: 7–15 digits, optionally starting with '+'.
 	Phone string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
 	// Identification code, unique across all accounts.
-	Identity      *PersonIdentity `protobuf:"bytes,6,opt,name=identity,proto3" json:"identity,omitempty"`
+	Identity *PersonIdentity `protobuf:"bytes,6,opt,name=identity,proto3" json:"identity,omitempty"`
+	// Same rules as SignUpRequest.email.
+	Email         string `protobuf:"bytes,7,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -377,6 +379,13 @@ func (x *NewOwner) GetIdentity() *PersonIdentity {
 		return x.Identity
 	}
 	return nil
+}
+
+func (x *NewOwner) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
 }
 
 // A clinic owner who already has an account (AuthService.SignUp, MemberService.CreateUser,
@@ -1251,14 +1260,16 @@ const file_dental_v1_installation_proto_rawDesc = "" +
 	"\vGeoLocation\x123\n" +
 	"\blatitude\x18\x01 \x01(\x01B\x17\xbaH\x14\x12\x12\x19\x00\x00\x00\x00\x00\x80V@)\x00\x00\x00\x00\x00\x80V\xc0R\blatitude\x125\n" +
 	"\tlongitude\x18\x02 \x01(\x01B\x17\xbaH\x14\x12\x12\x19\x00\x00\x00\x00\x00\x80f@)\x00\x00\x00\x00\x00\x80f\xc0R\tlongitude:m\xbaHj\x1ah\n" +
-	"\flocation_set\x12)latitude and longitude must not both be 0\x1a-this.latitude != 0.0 || this.longitude != 0.0\"\xdc\x03\n" +
+	"\flocation_set\x12)latitude and longitude must not both be 0\x1a-this.latitude != 0.0 || this.longitude != 0.0\"\x81\x04\n" +
 	"\bNewOwner\x129\n" +
 	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xeb\x01\n" +
 	"\bpassword\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
 	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\bpassword\x12&\n" +
 	"\tfull_name\x18\x03 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12-\n" +
 	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12=\n" +
-	"\bidentity\x18\x06 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentityJ\x04\b\x04\x10\x05R\vnational_id\"\xa6\x01\n" +
+	"\bidentity\x18\x06 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\x12#\n" +
+	"\x05email\x18\a \x01(\tB\r\xbaH\n" +
+	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05emailJ\x04\b\x04\x10\x05R\vnational_id\"\xa6\x01\n" +
 	"\rExistingOwner\x12%\n" +
 	"\busername\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\busername\x12$\n" +
 	"\bpassword\x18\x02 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\bpassword\x125\n" +

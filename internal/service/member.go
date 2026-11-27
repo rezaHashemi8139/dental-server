@@ -125,6 +125,7 @@ func (s *MemberService) CreateUser(ctx context.Context, req *dentalv1.CreateUser
 		FullName:  req.GetFullName(),
 		Identity:  req.GetIdentity(),
 		Phone:     req.GetPhone(),
+		Email:     req.GetEmail(),
 		CreatedBy: session.UserID,
 	})
 	if err != nil {

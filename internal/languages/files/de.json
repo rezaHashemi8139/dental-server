@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 31,
+    "version": 32,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -149,7 +149,8 @@
       "postalCode": "Postleitzahl (optional)",
       "location": "Standort der Praxis auf der Karte",
       "identityCode": "Identifikationscode",
-      "ownerPhone": "Mobiltelefon"
+      "ownerPhone": "Mobiltelefon",
+      "ownerEmail": "E-Mail (optional)"
     },
     "hints": {
       "licenseNumber": "Mit lateinischen Buchstaben und Ziffern, wie auf der Zulassung angegeben.",
@@ -165,6 +166,7 @@
     "validation": {
       "licenseNumberFormat": "Verwenden Sie 3 bis 32 lateinische Buchstaben, Ziffern, Punkte, Bindestriche oder Schrägstriche.",
       "phoneFormat": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
+      "emailFormat": "Das ist keine gültige E-Mail-Adresse, z. B. name@example.com. Oder lassen Sie das Feld leer.",
       "postalCodeFormat": "Die Postleitzahl muss 5 bis 10 Ziffern haben.",
       "identityCodeFormat": "Der Code muss aus 5 bis 20 lateinischen Buchstaben oder Ziffern bestehen.",
       "locationRequired": "Markieren Sie den Standort der Praxis auf der Karte.",

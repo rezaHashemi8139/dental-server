@@ -40,6 +40,31 @@ func TestPasswordPolicy(t *testing.T) {
 	}
 }
 
+func TestEmailRule(t *testing.T) {
+	tests := []struct {
+		email string
+		want  bool
+	}{
+		{"", true}, // optional
+		{"dr.karimi@example.com", true},
+		{"a+clinic@mail.example.ir", true},
+		{strings.Repeat("a", 64) + "@" + strings.Repeat("b", 63) + "." + strings.Repeat("c", 63) + "." + strings.Repeat("d", 61), true}, // 254, the maximum
+		{"not an email", false},
+		{"dr@", false},
+		{"@example.com", false},
+		{"Dr. Karimi <dr@example.com>", false},
+		{strings.Repeat("a", 64) + "@" + strings.Repeat("b", 63) + "." + strings.Repeat("c", 63) + "." + strings.Repeat("d", 62), false}, // 255, too long
+	}
+	for _, tt := range tests {
+		req := signUpRequest("Passw0rd-doctor")
+		req.Email = tt.email
+		err := protovalidate.Validate(req)
+		if got := err == nil; got != tt.want {
+			t.Errorf("email %q: valid = %v, want %v (%v)", tt.email, got, tt.want, err)
+		}
+	}
+}
+
 func TestClinicLocation(t *testing.T) {
 	tests := []struct {
 		location *dentalv1.GeoLocation

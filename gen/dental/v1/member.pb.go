@@ -272,7 +272,9 @@ type CreateUserRequest struct {
 	// 1–100 characters.
 	FullName string `protobuf:"bytes,4,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	// Mobile number: 7–15 digits, optionally starting with '+'.
-	Phone         string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
+	Phone string `protobuf:"bytes,5,opt,name=phone,proto3" json:"phone,omitempty"`
+	// Same rules as SignUpRequest.email.
+	Email         string `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -338,6 +340,13 @@ func (x *CreateUserRequest) GetFullName() string {
 func (x *CreateUserRequest) GetPhone() string {
 	if x != nil {
 		return x.Phone
+	}
+	return ""
+}
+
+func (x *CreateUserRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
 	}
 	return ""
 }
@@ -686,14 +695,16 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"\x0fFindUserRequest\x12=\n" +
 	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\"7\n" +
 	"\x10FindUserResponse\x12#\n" +
-	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\xe5\x03\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\"\x8a\x04\n" +
 	"\x11CreateUserRequest\x12=\n" +
 	"\bidentity\x18\x01 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\x129\n" +
 	"\busername\x18\x02 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xfe\x01\n" +
 	"\x12temporary_password\x18\x03 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
 	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\x11temporaryPassword\x12&\n" +
 	"\tfull_name\x18\x04 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12-\n" +
-	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\"S\n" +
+	"\x05phone\x18\x05 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12#\n" +
+	"\x05email\x18\x06 \x01(\tB\r\xbaH\n" +
+	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\"S\n" +
 	"\x12CreateUserResponse\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x12\x18\n" +
 	"\acreated\x18\x02 \x01(\bR\acreated\"_\n" +

@@ -38,6 +38,7 @@ func (s *AuthService) SignUp(ctx context.Context, req *dentalv1.SignUpRequest) (
 		FullName: req.GetFullName(),
 		Identity: req.GetIdentity(),
 		Phone:    req.GetPhone(),
+		Email:    req.GetEmail(),
 	})
 	if err != nil {
 		return nil, err
@@ -52,6 +53,7 @@ type account struct {
 	FullName string
 	Identity *dentalv1.PersonIdentity
 	Phone    string
+	Email    string
 	// Set when someone else creates the account: the password is then temporary
 	// and must be changed before the first login.
 	CreatedBy pgtype.UUID
@@ -61,9 +63,9 @@ type account struct {
 func insertUser(ctx context.Context, q querier, a account) (*dentalv1.User, pgtype.UUID, error) {
 	var id pgtype.UUID
 	err := q.QueryRow(ctx, `
-		INSERT INTO users (username, password_hash, full_name, identity, phone, must_change_password, created_by)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		a.Username, secure.HashPassword(a.Password), a.FullName, a.Identity.GetNumber(), a.Phone,
+		INSERT INTO users (username, password_hash, full_name, identity, phone, email, must_change_password, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+		a.Username, secure.HashPassword(a.Password), a.FullName, a.Identity.GetNumber(), a.Phone, a.Email,
 		a.CreatedBy.Valid, a.CreatedBy,
 	).Scan(&id)
 	switch {
@@ -427,13 +429,13 @@ func (s *AuthService) GetProfile(ctx context.Context, _ *dentalv1.GetProfileRequ
 	return &dentalv1.GetProfileResponse{Profile: profile}, nil
 }
 
-// UpdateProfile changes the full name and phone; the username and identification
+// UpdateProfile changes the full name, phone and email; the username and identification
 // code stay as they are (offline logins and patients are matched by them).
 func (s *AuthService) UpdateProfile(ctx context.Context, req *dentalv1.UpdateProfileRequest) (*dentalv1.UpdateProfileResponse, error) {
 	userID := sessionFrom(ctx).UserID
 	if _, err := s.d.DB.Exec(ctx, `
-		UPDATE users SET full_name = $2, phone = $3, updated_at = now() WHERE id = $1`,
-		userID, req.GetFullName(), req.GetPhone()); err != nil {
+		UPDATE users SET full_name = $2, phone = $3, email = $4, updated_at = now() WHERE id = $1`,
+		userID, req.GetFullName(), req.GetPhone(), req.GetEmail()); err != nil {
 		return nil, internal(err)
 	}
 	profile, err := loadProfile(ctx, s.d.DB, userID)
@@ -446,10 +448,10 @@ func (s *AuthService) UpdateProfile(ctx context.Context, req *dentalv1.UpdatePro
 // loadProfile reads a user's own account details.
 func loadProfile(ctx context.Context, q querier, userID pgtype.UUID) (*dentalv1.Profile, error) {
 	user := &dentalv1.User{Id: uuidBytes(userID)}
-	var identity, phone string
+	var identity, phone, email string
 	err := q.QueryRow(ctx, `
-		SELECT username, full_name, coalesce(identity, ''), phone FROM users WHERE id = $1`, userID,
-	).Scan(&user.Username, &user.FullName, &identity, &phone)
+		SELECT username, full_name, coalesce(identity, ''), phone, email FROM users WHERE id = $1`, userID,
+	).Scan(&user.Username, &user.FullName, &identity, &phone, &email)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// The session interceptor checked the user a moment ago.
 		return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
@@ -461,5 +463,6 @@ func loadProfile(ctx context.Context, q querier, userID pgtype.UUID) (*dentalv1.
 		User:     user,
 		Identity: &dentalv1.PersonIdentity{Number: identity},
 		Phone:    phone,
+		Email:    email,
 	}, nil
 }

@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 38,
+    "version": 40,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -149,7 +149,8 @@
       "postalCode": "کد پستی (اختیاری)",
       "location": "موقعیت مطب روی نقشه",
       "identityCode": "کد شناسایی",
-      "ownerPhone": "تلفن همراه"
+      "ownerPhone": "تلفن همراه",
+      "ownerEmail": "ایمیل (اختیاری)"
     },
     "hints": {
       "licenseNumber": "با حروف انگلیسی و عدد، همان‌طور که روی پروانه آمده است.",
@@ -165,6 +166,7 @@
     "validation": {
       "licenseNumberFormat": "از ۳ تا ۳۲ حرف انگلیسی، عدد، نقطه، خط تیره یا / استفاده کنید.",
       "phoneFormat": "شماره تلفن باید ۷ تا ۱۵ رقم باشد (با + در ابتدا یا بدون آن).",
+      "emailFormat": "ایمیل معتبر نیست؛ مثلاً name@example.com، یا خالی بگذارید.",
       "postalCodeFormat": "کد پستی باید ۵ تا ۱۰ رقم باشد.",
       "identityCodeFormat": "کد شناسایی باید ۵ تا ۲۰ حرف انگلیسی یا عدد باشد.",
       "locationRequired": "جای مطب را روی نقشه مشخص کنید.",
