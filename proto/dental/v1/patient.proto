@@ -61,6 +61,16 @@ message Patient {
   // When these details were last changed, on the client's clock. The latest change
   // wins; times in the future are taken as the server's current time.
   google.protobuf.Timestamp updated_at = 10 [(buf.validate.field).required = true];
+  // Empty, or an email address of at most 254 characters (the rule of
+  // SignUpRequest.email). Changed together with the other details: the latest
+  // change wins, so a client must send the email it has, not an empty one.
+  string email = 11 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string = {
+      email: true
+      max_len: 254
+    }
+  ];
 }
 
 // One treatment, recorded by a clinic. Text is sent trimmed.

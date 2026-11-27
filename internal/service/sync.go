@@ -143,17 +143,17 @@ func pushPatient(ctx context.Context, tx pgx.Tx, session Session, p *dentalv1.Pa
 	// The identification code never changes: it is what the id is made from.
 	_, err := tx.Exec(ctx, `
 		INSERT INTO patients (id, identity, first_name, last_name, birth_date,
-		                      gender, phone, address, medical_notes, updated_at, updated_by, updated_in)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		                      gender, phone, email, address, medical_notes, updated_at, updated_by, updated_in)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		ON CONFLICT (id) DO UPDATE SET
 			first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name,
-			birth_date = EXCLUDED.birth_date, gender = EXCLUDED.gender, phone = EXCLUDED.phone,
+			birth_date = EXCLUDED.birth_date, gender = EXCLUDED.gender, phone = EXCLUDED.phone, email = EXCLUDED.email,
 			address = EXCLUDED.address, medical_notes = EXCLUDED.medical_notes,
 			updated_at = EXCLUDED.updated_at, updated_by = EXCLUDED.updated_by, updated_in = EXCLUDED.updated_in,
 			revision = nextval('sync_revision_seq')
 		WHERE patients.updated_at < EXCLUDED.updated_at`,
 		id, number, p.GetFirstName(), p.GetLastName(),
-		p.GetBirthDate(), genderNames[p.GetGender()], p.GetPhone(), p.GetAddress(), p.GetMedicalNotes(),
+		p.GetBirthDate(), genderNames[p.GetGender()], p.GetPhone(), p.GetEmail(), p.GetAddress(), p.GetMedicalNotes(),
 		clientTime(p.GetUpdatedAt(), now), session.UserID, session.ClinicID,
 	)
 	if err != nil {
@@ -279,7 +279,7 @@ func (s *SyncService) Pull(ctx context.Context, req *dentalv1.PullRequest) (*den
 }
 
 const patientColumns = `p.id, p.identity, p.first_name, p.last_name, p.birth_date,
-	p.gender, p.phone, p.address, p.medical_notes, p.updated_at`
+	p.gender, p.phone, p.email, p.address, p.medical_notes, p.updated_at`
 
 // queryPatients runs a query selecting patientColumns plus one bigint (a revision).
 func queryPatients(ctx context.Context, q querier, sql string, args ...any) ([]*dentalv1.Patient, []int64, error) {
@@ -309,7 +309,7 @@ func scanPatient(row pgx.Row, extra ...any) (*dentalv1.Patient, error) {
 	var updatedAt time.Time
 	p := &dentalv1.Patient{Identity: &dentalv1.PersonIdentity{}}
 	dest := append([]any{&id, &p.Identity.Number, &p.FirstName, &p.LastName, &p.BirthDate,
-		&gender, &p.Phone, &p.Address, &p.MedicalNotes, &updatedAt}, extra...)
+		&gender, &p.Phone, &p.Email, &p.Address, &p.MedicalNotes, &updatedAt}, extra...)
 	if err := row.Scan(dest...); err != nil {
 		return nil, err
 	}

@@ -96,7 +96,11 @@ type Patient struct {
 	MedicalNotes string `protobuf:"bytes,9,opt,name=medical_notes,json=medicalNotes,proto3" json:"medical_notes,omitempty"`
 	// When these details were last changed, on the client's clock. The latest change
 	// wins; times in the future are taken as the server's current time.
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Empty, or an email address of at most 254 characters (the rule of
+	// SignUpRequest.email). Changed together with the other details: the latest
+	// change wins, so a client must send the email it has, not an empty one.
+	Email         string `protobuf:"bytes,11,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -199,6 +203,13 @@ func (x *Patient) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Patient) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
 }
 
 // One treatment, recorded by a clinic. Text is sent trimmed.
@@ -492,7 +503,7 @@ var File_dental_v1_patient_proto protoreflect.FileDescriptor
 
 const file_dental_v1_patient_proto_rawDesc = "" +
 	"\n" +
-	"\x17dental/v1/patient.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xf7\x03\n" +
+	"\x17dental/v1/patient.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9c\x04\n" +
 	"\aPatient\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\x12=\n" +
 	"\bidentity\x18\x02 \x01(\v2\x19.dental.v1.PersonIdentityB\x06\xbaH\x03\xc8\x01\x01R\bidentity\x12(\n" +
@@ -507,7 +518,9 @@ const file_dental_v1_patient_proto_rawDesc = "" +
 	"\rmedical_notes\x18\t \x01(\tB\b\xbaH\x05r\x03\x18\x88'R\fmedicalNotes\x12A\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\tupdatedAt\"\xfa\x03\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampB\x06\xbaH\x03\xc8\x01\x01R\tupdatedAt\x12#\n" +
+	"\x05email\x18\v \x01(\tB\r\xbaH\n" +
+	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\"\xfa\x03\n" +
 	"\tTreatment\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\x12&\n" +
 	"\n" +

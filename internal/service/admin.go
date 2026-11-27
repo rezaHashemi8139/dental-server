@@ -382,12 +382,13 @@ const subscriptionStatusSQL = `CASE
 	WHEN $1 < s.ends_at THEN 'active'
 	ELSE 'ended' END`
 
-// ownerMatchesSQL is true when the owner u matches the search text in the
-// parameter param (lower case, see searchText).
+// ownerMatchesSQL is true when the account u (a clinic owner, or any user in ListUsers)
+// matches the search text in the parameter param (lower case, see searchText).
 func ownerMatchesSQL(param string) string {
 	return strings.NewReplacer("$q", param).Replace(`
 		strpos(lower(u.full_name), $q) > 0 OR strpos(lower(u.username), $q) > 0
-		OR strpos(lower(coalesce(u.identity, '')), $q) > 0 OR strpos(lower(u.phone), $q) > 0`)
+		OR strpos(lower(coalesce(u.identity, '')), $q) > 0 OR strpos(lower(u.phone), $q) > 0
+		OR strpos(lower(u.email), $q) > 0`)
 }
 
 // pageBounds returns the LIMIT and OFFSET of a page (from 1; 0 means 1) of size (0 means 20).

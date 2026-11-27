@@ -164,7 +164,7 @@ and their treatments are also synced with this server (`SyncService`,
   `patient_history_views` (who, which clinic and installation, when), in the same
   transaction as the read. Patient consent (an SMS code) is planned before this opens up.
 - Administrators can list and search patients in the admin panel (`AdminService.ListPatients`):
-  identification code, name, birth date, gender, phone, and how many clinics and treatments
+  identification code, name, birth date, gender, phone, email, and how many clinics and treatments
   each has. Addresses, medical notes and treatments are never sent to the panel.
 
 ## Forced updates

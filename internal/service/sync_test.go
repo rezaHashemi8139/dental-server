@@ -127,12 +127,13 @@ func TestSyncBetweenClinics(t *testing.T) {
 		t.Fatalf("A pulled %d patients, %d treatments", len(a.GetPatients()), len(a.GetTreatments()))
 	}
 	newer := testPatient(personCode(5000), "Sarah", now.Add(-time.Minute))
-	newer.Phone = "09121234567"
+	newer.Phone, newer.Email = "09121234567", "sarah@example.com"
 	if _, err := bob.Push(ctx, &dentalv1.PushRequest{Patients: []*dentalv1.Patient{newer}}); err != nil {
 		t.Fatal(err)
 	}
 	next := pullAll(t, alice, a.GetRevision())
-	if len(next.GetPatients()) != 1 || next.GetPatients()[0].GetFirstName() != "Sarah" || len(next.GetTreatments()) != 0 {
+	if len(next.GetPatients()) != 1 || next.GetPatients()[0].GetFirstName() != "Sarah" ||
+		next.GetPatients()[0].GetEmail() != "sarah@example.com" || len(next.GetTreatments()) != 0 {
 		t.Fatalf("A pulled after B's change: %v", next)
 	}
 	if again := pullAll(t, alice, next.GetRevision()); len(again.GetPatients())+len(again.GetTreatments()) != 0 {

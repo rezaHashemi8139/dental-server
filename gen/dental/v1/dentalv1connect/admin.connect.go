@@ -78,6 +78,8 @@ const (
 	// AdminServiceListPatientsProcedure is the fully-qualified name of the AdminService's ListPatients
 	// RPC.
 	AdminServiceListPatientsProcedure = "/dental.v1.AdminService/ListPatients"
+	// AdminServiceListUsersProcedure is the fully-qualified name of the AdminService's ListUsers RPC.
+	AdminServiceListUsersProcedure = "/dental.v1.AdminService/ListUsers"
 )
 
 // AdminServiceClient is a client for the dental.v1.AdminService service.
@@ -137,6 +139,10 @@ type AdminServiceClient interface {
 	// then id, both descending). Only who they are and how to reach them: never their
 	// address, medical notes or treatments.
 	ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error)
+	// The accounts of the desktop app (clinic owners and staff; not administrators),
+	// a page at a time: newest first (created_at, then id, both descending). GetUser
+	// gives one account in full.
+	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
 }
 
 // NewAdminServiceClient constructs a client for the dental.v1.AdminService service. By default, it
@@ -252,6 +258,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("ListPatients")),
 			connect.WithClientOptions(opts...),
 		),
+		listUsers: connect.NewClient[v1.ListUsersRequest, v1.ListUsersResponse](
+			httpClient,
+			baseURL+AdminServiceListUsersProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ListUsers")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -274,6 +286,7 @@ type adminServiceClient struct {
 	createPaymentAccount *connect.Client[v1.CreatePaymentAccountRequest, v1.CreatePaymentAccountResponse]
 	updatePaymentAccount *connect.Client[v1.UpdatePaymentAccountRequest, v1.UpdatePaymentAccountResponse]
 	listPatients         *connect.Client[v1.ListPatientsRequest, v1.ListPatientsResponse]
+	listUsers            *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
 }
 
 // Login calls dental.v1.AdminService.Login.
@@ -429,6 +442,15 @@ func (c *adminServiceClient) ListPatients(ctx context.Context, req *v1.ListPatie
 	return nil, err
 }
 
+// ListUsers calls dental.v1.AdminService.ListUsers.
+func (c *adminServiceClient) ListUsers(ctx context.Context, req *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+	response, err := c.listUsers.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // AdminServiceHandler is an implementation of the dental.v1.AdminService service.
 type AdminServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
@@ -486,6 +508,10 @@ type AdminServiceHandler interface {
 	// then id, both descending). Only who they are and how to reach them: never their
 	// address, medical notes or treatments.
 	ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error)
+	// The accounts of the desktop app (clinic owners and staff; not administrators),
+	// a page at a time: newest first (created_at, then id, both descending). GetUser
+	// gives one account in full.
+	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -597,6 +623,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("ListPatients")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceListUsersHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceListUsersProcedure,
+		svc.ListUsers,
+		connect.WithSchema(adminServiceMethods.ByName("ListUsers")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceLoginProcedure:
@@ -633,6 +665,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceUpdatePaymentAccountHandler.ServeHTTP(w, r)
 		case AdminServiceListPatientsProcedure:
 			adminServiceListPatientsHandler.ServeHTTP(w, r)
+		case AdminServiceListUsersProcedure:
+			adminServiceListUsersHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -708,4 +742,8 @@ func (UnimplementedAdminServiceHandler) UpdatePaymentAccount(context.Context, *v
 
 func (UnimplementedAdminServiceHandler) ListPatients(context.Context, *v1.ListPatientsRequest) (*v1.ListPatientsResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListPatients is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListUsers is not implemented"))
 }

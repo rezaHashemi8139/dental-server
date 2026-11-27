@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 32,
+    "version": 33,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -17,6 +17,7 @@
     "label": "Hauptmenü",
     "home": "Startseite",
     "patients": "Patienten",
+    "workHours": "Arbeitszeiten",
     "database": "Datenbank",
     "subscription": "Abonnement"
   },
@@ -491,6 +492,106 @@
       "notFound": "Diese Behandlung wurde nicht gefunden."
     }
   },
+  "workHours": {
+    "title": "Arbeitszeiten",
+    "description": "Erfassen Sie Kommen und Gehen und sehen Sie die Summe jedes Tages und jedes Monats. Diese Zeiten werden nur auf diesem Computer gespeichert und nie an den Server gesendet.",
+    "add": "Kommen eintragen",
+    "user": "Benutzer",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "startNow": "Kommen (jetzt)",
+    "endNow": "Gehen (jetzt)",
+    "typeExit": "Gehen eintragen",
+    "atWorkSince": "Eingestempelt seit {{time}}",
+    "notAtWork": "Nicht eingestempelt.",
+    "exitFirstHint": "Erst wenn das Gehen erfasst ist, kann ein neues Kommen erfasst werden.",
+    "loading": "Wird geladen...",
+    "empty": "In diesem Monat wurden keine Arbeitszeiten erfasst.",
+    "ongoing": "Läuft",
+    "entry": "Kommen",
+    "exit": "Gehen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "dayTotal": "Tagessumme",
+    "monthTotal": "Summe {{month}}",
+    "days": "Arbeitstage: {{days}}",
+    "duration": "{{hours}} Std. {{minutes}} Min.",
+    "now": "Jetzt",
+    "fields": {
+      "day": "Datum",
+      "start": "Kommen",
+      "end": "Gehen",
+      "notes": "Notizen"
+    },
+    "hints": {
+      "end": "Noch bei der Arbeit? Lassen Sie „Gehen“ leer. Ein Gehen vor dem Kommen bedeutet den nächsten Tag."
+    },
+    "dialog": {
+      "addTitle": "Kommen erfassen",
+      "editTitle": "Kommen und Gehen bearbeiten",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "cancel": "Abbrechen"
+    },
+    "dayNote": {
+      "title": "Notizen zum Tag",
+      "hint": "Um die Notizen zu entfernen, leeren Sie den Text und speichern Sie.",
+      "add": "Notizen zum Tag hinzufügen",
+      "edit": "Notizen zum Tag bearbeiten"
+    },
+    "deleteDialog": {
+      "title": "Kommen und Gehen löschen",
+      "description": "Kommen und Gehen „{{entry}}“ werden gelöscht.",
+      "confirm": "Löschen",
+      "working": "Wird gelöscht..."
+    },
+    "validation": {
+      "dayRequired": "Geben Sie das vollständige Datum ein.",
+      "timeFormat": "Geben Sie die Uhrzeit als Stunden:Minuten ein."
+    },
+    "errors": {
+      "notAllowed": "Nur die Praxisleitung kann die Arbeitszeiten anderer sehen oder erfassen.",
+      "unknownUser": "Dieser Benutzer ist nicht auf diesem Computer.",
+      "notFound": "Dieser Eintrag wurde nicht gefunden.",
+      "invalidStart": "Die Zeit für das Kommen ist ungültig.",
+      "invalidDay": "Das Datum ist ungültig.",
+      "inFuture": "Arbeitszeiten in der Zukunft können nicht erfasst werden.",
+      "endBeforeStart": "Das Gehen muss nach dem Kommen liegen.",
+      "tooLong": "Zwischen Kommen und Gehen dürfen höchstens 24 Stunden liegen.",
+      "overlap": "Diese Zeit überschneidet sich mit einem anderen Eintrag desselben Benutzers.",
+      "exitFirst": "Erfassen Sie zuerst das Gehen des vorherigen Eintrags, dann ein neues Kommen.",
+      "notesTooLong": "Notizen dürfen höchstens {{max}} Zeichen lang sein."
+    }
+  },
+  "members": {
+    "add": "Neuer Benutzer",
+    "fields": {
+      "temporaryPassword": "Vorläufiges Passwort"
+    },
+    "hints": {
+      "temporaryPassword": "Geben Sie dieses Passwort an den Benutzer weiter; er muss es bei der ersten Anmeldung ändern. Mindestens 8 Zeichen, mit einer Ziffer, einem Klein- und einem Großbuchstaben."
+    },
+    "dialog": {
+      "title": "Neuen Benutzer hinzufügen",
+      "description": "Legen Sie ein Konto für eine neue Kollegin oder einen neuen Kollegen an, damit sie sich in der App dieser Praxis anmelden können. Nur die Angaben dieses Benutzers werden an den Server gesendet.",
+      "submit": "Benutzer hinzufügen",
+      "working": "Wird hinzugefügt..."
+    },
+    "created": {
+      "title": "Benutzer hinzugefügt",
+      "newAccount": "Konto angelegt",
+      "newAccountHint": "Geben Sie dem Benutzer den Benutzernamen und das vorläufige Passwort unten. Er muss das Passwort bei der ersten Anmeldung ändern.",
+      "existingAccount": "Diese Person hatte bereits ein Konto",
+      "existingAccountHint": "Sie kann sich mit ihrem bestehenden Konto (Benutzername {{username}}) und ihrem eigenen Passwort in dieser Praxis anmelden. Das eingegebene vorläufige Passwort wurde nicht verwendet.",
+      "close": "Schließen"
+    },
+    "errors": {
+      "notAdmin": "Nur Administratoren der Praxis können neue Benutzer hinzufügen.",
+      "needsServer": "Zum Hinzufügen eines Benutzers wird der Server benötigt. Verbinden Sie sich mit dem Internet und versuchen Sie es erneut.",
+      "userNotFound": "Dieser Benutzer wurde auf dem Server nicht gefunden.",
+      "alreadyMember": "Dieser Benutzer hat bereits Zugriff auf diese Praxis."
+    }
+  },
   "home": {
     "welcome": "Willkommen, {{name}}",
     "role": "Rolle",
@@ -525,6 +626,20 @@
       "save": "Speichern",
       "saving": "Wird gespeichert...",
       "cancel": "Abbrechen"
+    },
+    "password": {
+      "open": "Passwort ändern",
+      "title": "Passwort ändern",
+      "description": "Geben Sie Ihr aktuelles Passwort und dann zweimal das neue ein. Das Passwort wird auf dem Server geändert, und Ihre Anmeldungen auf anderen Computern werden beendet.",
+      "currentPassword": "Aktuelles Passwort",
+      "save": "Passwort ändern",
+      "saving": "Passwort wird geändert...",
+      "back": "Zurück",
+      "changed": "Ihr Passwort wurde geändert. Verwenden Sie ab jetzt das neue.",
+      "changedLogInAgain": "Ihr Passwort wurde geändert. Melden Sie sich mit dem neuen Passwort erneut an.",
+      "errors": {
+        "wrongCurrent": "Das aktuelle Passwort ist falsch."
+      }
     },
     "lock": {
       "title": "Die App ist gesperrt",

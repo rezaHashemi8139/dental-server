@@ -188,7 +188,7 @@ func TestAdminListsPatients(t *testing.T) {
 	bobToken := e.clinicToken(2, "bob")
 	now := time.Now()
 	sara := testPatient(personCode(7001), "Sara", now)
-	sara.Phone = "09121112233"
+	sara.Phone, sara.Email = "09121112233", "Sara.Ahmadi@example.com"
 	reza := testPatient(personCode(7002), "Reza", now)
 	reza.LastName, reza.Phone = "Karimi", "09354445566"
 	mina := testPatient(personCode(7003), "Mina", now)
@@ -244,12 +244,12 @@ func TestAdminListsPatients(t *testing.T) {
 		t.Fatalf("by code = %v", res.GetPatients())
 	}
 	if got := res.GetPatients()[0]; got.GetClinicCount() != 2 || got.GetTreatmentCount() != 2 ||
-		got.GetPhone() != "09121112233" || got.GetGender() != dentalv1.Gender_GENDER_FEMALE ||
+		got.GetPhone() != "09121112233" || got.GetEmail() != "Sara.Ahmadi@example.com" || got.GetGender() != dentalv1.Gender_GENDER_FEMALE ||
 		[16]byte(got.GetId()) != [16]byte(sara.GetId()) || got.GetCreatedAt() == nil || got.GetUpdatedAt() == nil {
 		t.Errorf("sara = %v", got)
 	}
 
-	// Text in the full name, identification code or phone.
+	// Text in the full name, identification code, phone or email.
 	for _, tc := range []struct {
 		query string
 		want  uint32
@@ -257,6 +257,7 @@ func TestAdminListsPatients(t *testing.T) {
 		{"  reza KARIMI ", 1},
 		{"ahmadi", 2},
 		{"0935", 1},
+		{"SARA.AHMADI@", 1},
 		{"09", 2},
 		{personCode(7001)[:9], 3},
 		{"nobody", 0},
@@ -268,4 +269,107 @@ func TestAdminListsPatients(t *testing.T) {
 	}
 	_, err = admin.ListPatients(ctx, &dentalv1.ListPatientsRequest{PageSize: 101})
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+}
+
+func TestAdminListsUsers(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+
+	// alice owns a clinic, is subscribed and has logged in; bob has an email;
+	// carol is disabled. Created one after another: alice first, carol last.
+	inst := e.register(1, "alice")
+	e.subscribe("alice", 1, 1, 30)
+	if _, err := e.login(inst, "alice", "Passw0rd-alice"); err != nil {
+		t.Fatal(err)
+	}
+	e.signUp("bob")
+	e.signUp("carol")
+	if _, err := e.deps.DB.Exec(ctx, `
+		UPDATE users SET created_at = now() - make_interval(days => CASE username WHEN 'alice' THEN 3 WHEN 'bob' THEN 2 ELSE 1 END),
+		                 email = CASE username WHEN 'bob' THEN 'Bob@Clinic.example' ELSE '' END,
+		                 disabled_at = CASE username WHEN 'carol' THEN now() END`); err != nil {
+		t.Fatal(err)
+	}
+
+	list := func(req *dentalv1.ListUsersRequest) ([]*dentalv1.UserListItem, uint32) {
+		t.Helper()
+		res, err := admin.ListUsers(ctx, req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res.GetUsers(), res.GetTotalCount()
+	}
+	names := func(users []*dentalv1.UserListItem) []string {
+		var names []string
+		for _, u := range users {
+			names = append(names, u.GetUser().GetUsername())
+		}
+		return names
+	}
+
+	// Newest first, a page at a time, with the total on every page.
+	if users, total := list(&dentalv1.ListUsersRequest{PageSize: 2}); total != 3 || len(users) != 2 ||
+		names(users)[0] != "carol" || names(users)[1] != "bob" {
+		t.Errorf("first page = %v of %d", names(users), total)
+	}
+	if users, total := list(&dentalv1.ListUsersRequest{Page: 2, PageSize: 2}); total != 3 || len(users) != 1 ||
+		names(users)[0] != "alice" {
+		t.Errorf("second page = %v of %d", names(users), total)
+	}
+
+	users, _ := list(&dentalv1.ListUsersRequest{})
+	byName := map[string]*dentalv1.UserListItem{}
+	for _, u := range users {
+		byName[u.GetUser().GetUsername()] = u
+	}
+	alice, bob, carol := byName["alice"], byName["bob"], byName["carol"]
+	if alice.GetOwnedClinicCount() != 1 || alice.GetMemberClinicCount() != 1 || alice.GetPlanName() != "test" ||
+		alice.GetPaidUntil() == nil || time.Until(alice.GetPaidUntil().AsTime()) < 29*24*time.Hour ||
+		alice.GetLastLoginAt() == nil || alice.GetIdentity().GetNumber() != personCode(1) ||
+		alice.GetPhone() != "09121234567" || alice.GetEmail() != "" || alice.GetDisabled() ||
+		len(alice.GetUser().GetId()) != 16 || alice.GetCreatedAt() == nil {
+		t.Errorf("alice = %v", alice)
+	}
+	if bob.GetEmail() != "Bob@Clinic.example" || bob.GetPlanName() != "" || bob.GetPaidUntil() != nil ||
+		bob.GetLastLoginAt() != nil || bob.GetOwnedClinicCount() != 0 || bob.GetMemberClinicCount() != 0 || bob.GetDisabled() {
+		t.Errorf("bob = %v", bob)
+	}
+	if !carol.GetDisabled() {
+		t.Errorf("carol = %v", carol)
+	}
+
+	// Text in the full name, username, identification code, phone or email.
+	for _, tc := range []struct {
+		query string
+		want  uint32
+	}{
+		{"  DR. ALICE ", 1},
+		{"dr. ", 3},
+		{"carol", 1},
+		{personCode(1), 1},
+		{"0912", 3},
+		{"bob@clinic", 1},
+		{"nobody", 0},
+		{"%", 0},
+	} {
+		if users, total := list(&dentalv1.ListUsersRequest{Query: tc.query}); total != tc.want || len(users) != int(tc.want) {
+			t.Errorf("%q: %v of %d, want %d", tc.query, names(users), total, tc.want)
+		}
+	}
+	_, err = admin.ListUsers(ctx, &dentalv1.ListUsersRequest{PageSize: 101})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+
+	// Not without an administrator's session.
+	_, err = e.admin(adminSession{}).ListUsers(ctx, &dentalv1.ListUsersRequest{})
+	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 }

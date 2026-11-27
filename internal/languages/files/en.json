@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 32,
+    "version": 33,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -17,6 +17,7 @@
     "label": "Main menu",
     "home": "Home",
     "patients": "Patients",
+    "workHours": "Working hours",
     "database": "Database",
     "subscription": "Subscription"
   },
@@ -491,6 +492,106 @@
       "notFound": "This treatment was not found."
     }
   },
+  "workHours": {
+    "title": "Working hours",
+    "description": "Record when you come in and leave, and see each day's and each month's total. These hours are stored on this computer only and are never sent to the server.",
+    "add": "Type an entry",
+    "user": "User",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "startNow": "Clock in (now)",
+    "endNow": "Clock out (now)",
+    "typeExit": "Type the exit",
+    "atWorkSince": "Clocked in since {{time}}",
+    "notAtWork": "Not clocked in.",
+    "exitFirstHint": "No new entry can be recorded until this one has its exit.",
+    "loading": "Loading...",
+    "empty": "No working hours recorded this month.",
+    "ongoing": "In progress",
+    "entry": "In",
+    "exit": "Out",
+    "edit": "Edit",
+    "delete": "Delete",
+    "dayTotal": "Day total",
+    "monthTotal": "Total for {{month}}",
+    "days": "Days worked: {{days}}",
+    "duration": "{{hours}} h {{minutes}} min",
+    "now": "Now",
+    "fields": {
+      "day": "Date",
+      "start": "Time in",
+      "end": "Time out",
+      "notes": "Notes"
+    },
+    "hints": {
+      "end": "Still at work? Leave the time out empty. A time out earlier than the time in means the next day."
+    },
+    "dialog": {
+      "addTitle": "Record an entry",
+      "editTitle": "Edit entry and exit",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "dayNote": {
+      "title": "Notes for the day",
+      "hint": "To remove the notes, empty the text and save.",
+      "add": "Add notes for the day",
+      "edit": "Edit notes for the day"
+    },
+    "deleteDialog": {
+      "title": "Delete entry and exit",
+      "description": "The entry and exit \"{{entry}}\" will be deleted.",
+      "confirm": "Delete",
+      "working": "Deleting..."
+    },
+    "validation": {
+      "dayRequired": "Enter the full date.",
+      "timeFormat": "Enter the time as hours:minutes."
+    },
+    "errors": {
+      "notAllowed": "Only the clinic manager can see or record other people's working hours.",
+      "unknownUser": "This user is not on this computer.",
+      "notFound": "This entry was not found.",
+      "invalidStart": "The time in is not valid.",
+      "invalidDay": "The date is not valid.",
+      "inFuture": "Working hours in the future cannot be recorded.",
+      "endBeforeStart": "The time out must be after the time in.",
+      "tooLong": "The time between entry and exit cannot be more than 24 hours.",
+      "overlap": "This time overlaps another entry of the same user.",
+      "exitFirst": "Record the exit of the previous entry first, then a new entry.",
+      "notesTooLong": "Notes can be at most {{max}} characters."
+    }
+  },
+  "members": {
+    "add": "New user",
+    "fields": {
+      "temporaryPassword": "Temporary password"
+    },
+    "hints": {
+      "temporaryPassword": "Give this password to the user; they must change it at their first login. At least 8 characters, with a digit, a lowercase and an uppercase letter."
+    },
+    "dialog": {
+      "title": "Add a new user",
+      "description": "Create an account for a new colleague so they can log in to this clinic's app. Only this user's details are sent to the server.",
+      "submit": "Add user",
+      "working": "Adding..."
+    },
+    "created": {
+      "title": "User added",
+      "newAccount": "Account created",
+      "newAccountHint": "Give the user the username and temporary password below. They must change the password at their first login.",
+      "existingAccount": "This person already had an account",
+      "existingAccountHint": "They can log in to this clinic with their existing account (username {{username}}) and their own password. The temporary password you typed was not used.",
+      "close": "Close"
+    },
+    "errors": {
+      "notAdmin": "Only a clinic administrator can add new users.",
+      "needsServer": "Adding a user needs the server. Connect to the internet and try again.",
+      "userNotFound": "This user was not found on the server.",
+      "alreadyMember": "This user already has access to this clinic."
+    }
+  },
   "home": {
     "welcome": "Welcome, {{name}}",
     "role": "Role",
@@ -525,6 +626,20 @@
       "save": "Save",
       "saving": "Saving...",
       "cancel": "Cancel"
+    },
+    "password": {
+      "open": "Change password",
+      "title": "Change password",
+      "description": "Enter your current password, then the new one twice. The password is changed on the server, and your logins on other computers are ended.",
+      "currentPassword": "Current password",
+      "save": "Change password",
+      "saving": "Changing password...",
+      "back": "Back",
+      "changed": "Your password was changed. Use the new one from now on.",
+      "changedLogInAgain": "Your password was changed. Log in again with the new one.",
+      "errors": {
+        "wrongCurrent": "The current password is wrong."
+      }
     },
     "lock": {
       "title": "The app is locked",

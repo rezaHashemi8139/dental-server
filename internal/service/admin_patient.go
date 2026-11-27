@@ -21,7 +21,7 @@ func (s *AdminService) ListPatients(ctx context.Context, req *dentalv1.ListPatie
 		FROM patients p
 		WHERE $1 = ''
 		   OR strpos(lower(p.first_name || ' ' || p.last_name), $1) > 0
-		   OR strpos(lower(p.identity), $1) > 0 OR strpos(p.phone, $1) > 0`
+		   OR strpos(lower(p.identity), $1) > 0 OR strpos(p.phone, $1) > 0 OR strpos(lower(p.email), $1) > 0`
 
 	res := &dentalv1.ListPatientsResponse{}
 	var total int64
@@ -31,7 +31,7 @@ func (s *AdminService) ListPatients(ctx context.Context, req *dentalv1.ListPatie
 	res.TotalCount = uint32(total)
 
 	rows, err := s.d.DB.Query(ctx, `
-		SELECT p.id, p.identity, p.first_name, p.last_name, p.birth_date, p.gender, p.phone,
+		SELECT p.id, p.identity, p.first_name, p.last_name, p.birth_date, p.gender, p.phone, p.email,
 		       (SELECT count(*) FROM clinic_patients cp WHERE cp.patient_id = p.id),
 		       (SELECT count(*) FROM treatments t WHERE t.patient_id = p.id AND t.deleted_at IS NULL),
 		       p.created_at, p.updated_at`+from+`
@@ -48,7 +48,7 @@ func (s *AdminService) ListPatients(ctx context.Context, req *dentalv1.ListPatie
 		var createdAt, updatedAt time.Time
 		item := &dentalv1.PatientListItem{Identity: &dentalv1.PersonIdentity{}}
 		if err := rows.Scan(&id, &item.Identity.Number, &item.FirstName, &item.LastName, &item.BirthDate,
-			&gender, &item.Phone, &clinics, &treatments, &createdAt, &updatedAt); err != nil {
+			&gender, &item.Phone, &item.Email, &clinics, &treatments, &createdAt, &updatedAt); err != nil {
 			return nil, internal(err)
 		}
 		item.Id = uuidBytes(id)

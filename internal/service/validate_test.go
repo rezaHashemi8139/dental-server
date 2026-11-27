@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"buf.build/go/protovalidate"
@@ -61,6 +62,14 @@ func TestEmailRule(t *testing.T) {
 		err := protovalidate.Validate(req)
 		if got := err == nil; got != tt.want {
 			t.Errorf("email %q: valid = %v, want %v (%v)", tt.email, got, tt.want, err)
+		}
+
+		// A patient's email has the same rule.
+		patient := testPatient(personCode(1), "Sara", time.Now())
+		patient.Email = tt.email
+		err = protovalidate.Validate(patient)
+		if got := err == nil; got != tt.want {
+			t.Errorf("patient email %q: valid = %v, want %v (%v)", tt.email, got, tt.want, err)
 		}
 	}
 }

@@ -101,6 +101,11 @@ service AdminService {
   // then id, both descending). Only who they are and how to reach them: never their
   // address, medical notes or treatments.
   rpc ListPatients(ListPatientsRequest) returns (ListPatientsResponse) {}
+
+  // The accounts of the desktop app (clinic owners and staff; not administrators),
+  // a page at a time: newest first (created_at, then id, both descending). GetUser
+  // gives one account in full.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
 }
 
 message Admin {
@@ -293,7 +298,7 @@ enum SubscriptionStatus {
 message ListSubscriptionsRequest {
   // Only subscriptions in this status now; SUBSCRIPTION_STATUS_UNSPECIFIED for all.
   SubscriptionStatus status = 1 [(buf.validate.field).enum.defined_only = true];
-  // Only owners whose full name, username, identification code or phone contains
+  // Only owners whose full name, username, identification code, phone or email contains
   // this text, ignoring case and surrounding spaces; empty for all.
   string query = 2 [(buf.validate.field).string.max_len = 100];
   // Which page, from 1; 0 means 1.
@@ -329,7 +334,7 @@ message ListPaymentsRequest {
   // Replaced by page and page_size.
   reserved 2;
   reserved "limit";
-  // Only payments whose owner's full name, username, identification code or phone,
+  // Only payments whose owner's full name, username, identification code, phone or email,
   // or whose transfer reference, contains this text, ignoring case and surrounding
   // spaces; empty for all.
   string query = 3 [(buf.validate.field).string.max_len = 100];
@@ -446,8 +451,8 @@ message UpdatePaymentAccountResponse {
 }
 
 message ListPatientsRequest {
-  // Only patients whose name ("first last"), identification code or phone contains
-  // this text, ignoring case and surrounding spaces; empty for all.
+  // Only patients whose name ("first last"), identification code, phone or email
+  // contains this text, ignoring case and surrounding spaces; empty for all.
   string query = 1 [(buf.validate.field).string.max_len = 100];
   // Which page, from 1; 0 means 1.
   uint32 page = 2 [(buf.validate.field).uint32.lte = 100000];
@@ -479,4 +484,44 @@ message PatientListItem {
   google.protobuf.Timestamp created_at = 10;
   // When the details were last changed (Patient.updated_at).
   google.protobuf.Timestamp updated_at = 11;
+  // Empty when none was given.
+  string email = 12;
+}
+
+message ListUsersRequest {
+  // Only accounts whose full name, username, identification code, phone or email
+  // contains this text, ignoring case and surrounding spaces; empty for all.
+  string query = 1 [(buf.validate.field).string.max_len = 100];
+  // Which page, from 1; 0 means 1.
+  uint32 page = 2 [(buf.validate.field).uint32.lte = 100000];
+  // Accounts per page, up to 100; 0 means 20.
+  uint32 page_size = 3 [(buf.validate.field).uint32.lte = 100];
+}
+
+message ListUsersResponse {
+  repeated UserListItem users = 1;
+  // How many accounts match the search, across all pages.
+  uint32 total_count = 2;
+}
+
+message UserListItem {
+  User user = 1;
+  // Identification code, for GetUser; empty if none is on file.
+  PersonIdentity identity = 2;
+  string phone = 3;
+  // Empty when none was given.
+  string email = 4;
+  bool disabled = 5;
+  google.protobuf.Timestamp created_at = 6;
+  // Clinics the account owns.
+  uint32 owned_clinic_count = 7;
+  // Clinics the account is a member of, owned ones included.
+  uint32 member_clinic_count = 8;
+  // The plan of the subscription in force now; empty when none is.
+  string plan_name = 9;
+  // When the paid time ends: the subscription in force, plus renewals that follow
+  // it without a gap. Unset when none is in force.
+  google.protobuf.Timestamp paid_until = 10;
+  // The last login on any installation; unset if the account never logged in.
+  google.protobuf.Timestamp last_login_at = 11;
 }
