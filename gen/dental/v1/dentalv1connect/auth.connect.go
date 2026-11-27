@@ -45,6 +45,11 @@ const (
 	AuthServiceConfirmKeyRotationProcedure = "/dental.v1.AuthService/ConfirmKeyRotation"
 	// AuthServiceLogoutProcedure is the fully-qualified name of the AuthService's Logout RPC.
 	AuthServiceLogoutProcedure = "/dental.v1.AuthService/Logout"
+	// AuthServiceGetProfileProcedure is the fully-qualified name of the AuthService's GetProfile RPC.
+	AuthServiceGetProfileProcedure = "/dental.v1.AuthService/GetProfile"
+	// AuthServiceUpdateProfileProcedure is the fully-qualified name of the AuthService's UpdateProfile
+	// RPC.
+	AuthServiceUpdateProfileProcedure = "/dental.v1.AuthService/UpdateProfile"
 )
 
 // AuthServiceClient is a client for the dental.v1.AuthService service.
@@ -89,6 +94,14 @@ type AuthServiceClient interface {
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
 	// Ends the session. Needs session.
 	Logout(context.Context, *v1.LogoutRequest) (*v1.LogoutResponse, error)
+	// The logged-in user's own account details. Needs session; a billing-only
+	// session may call it too.
+	GetProfile(context.Context, *v1.GetProfileRequest) (*v1.GetProfileResponse, error)
+	// Changes the logged-in user's full name and mobile number. Needs session; a
+	// billing-only session may call it too. The username and the identification
+	// code cannot be changed. Offline grants already given keep the old name until
+	// the next login.
+	UpdateProfile(context.Context, *v1.UpdateProfileRequest) (*v1.UpdateProfileResponse, error)
 }
 
 // NewAuthServiceClient constructs a client for the dental.v1.AuthService service. By default, it
@@ -132,6 +145,18 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("Logout")),
 			connect.WithClientOptions(opts...),
 		),
+		getProfile: connect.NewClient[v1.GetProfileRequest, v1.GetProfileResponse](
+			httpClient,
+			baseURL+AuthServiceGetProfileProcedure,
+			connect.WithSchema(authServiceMethods.ByName("GetProfile")),
+			connect.WithClientOptions(opts...),
+		),
+		updateProfile: connect.NewClient[v1.UpdateProfileRequest, v1.UpdateProfileResponse](
+			httpClient,
+			baseURL+AuthServiceUpdateProfileProcedure,
+			connect.WithSchema(authServiceMethods.ByName("UpdateProfile")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -142,6 +167,8 @@ type authServiceClient struct {
 	changePassword     *connect.Client[v1.ChangePasswordRequest, v1.ChangePasswordResponse]
 	confirmKeyRotation *connect.Client[v1.ConfirmKeyRotationRequest, v1.ConfirmKeyRotationResponse]
 	logout             *connect.Client[v1.LogoutRequest, v1.LogoutResponse]
+	getProfile         *connect.Client[v1.GetProfileRequest, v1.GetProfileResponse]
+	updateProfile      *connect.Client[v1.UpdateProfileRequest, v1.UpdateProfileResponse]
 }
 
 // SignUp calls dental.v1.AuthService.SignUp.
@@ -183,6 +210,24 @@ func (c *authServiceClient) ConfirmKeyRotation(ctx context.Context, req *v1.Conf
 // Logout calls dental.v1.AuthService.Logout.
 func (c *authServiceClient) Logout(ctx context.Context, req *v1.LogoutRequest) (*v1.LogoutResponse, error) {
 	response, err := c.logout.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetProfile calls dental.v1.AuthService.GetProfile.
+func (c *authServiceClient) GetProfile(ctx context.Context, req *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
+	response, err := c.getProfile.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// UpdateProfile calls dental.v1.AuthService.UpdateProfile.
+func (c *authServiceClient) UpdateProfile(ctx context.Context, req *v1.UpdateProfileRequest) (*v1.UpdateProfileResponse, error) {
+	response, err := c.updateProfile.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -231,6 +276,14 @@ type AuthServiceHandler interface {
 	ConfirmKeyRotation(context.Context, *v1.ConfirmKeyRotationRequest) (*v1.ConfirmKeyRotationResponse, error)
 	// Ends the session. Needs session.
 	Logout(context.Context, *v1.LogoutRequest) (*v1.LogoutResponse, error)
+	// The logged-in user's own account details. Needs session; a billing-only
+	// session may call it too.
+	GetProfile(context.Context, *v1.GetProfileRequest) (*v1.GetProfileResponse, error)
+	// Changes the logged-in user's full name and mobile number. Needs session; a
+	// billing-only session may call it too. The username and the identification
+	// code cannot be changed. Offline grants already given keep the old name until
+	// the next login.
+	UpdateProfile(context.Context, *v1.UpdateProfileRequest) (*v1.UpdateProfileResponse, error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -270,6 +323,18 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("Logout")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceGetProfileHandler := connect.NewUnaryHandlerSimple(
+		AuthServiceGetProfileProcedure,
+		svc.GetProfile,
+		connect.WithSchema(authServiceMethods.ByName("GetProfile")),
+		connect.WithHandlerOptions(opts...),
+	)
+	authServiceUpdateProfileHandler := connect.NewUnaryHandlerSimple(
+		AuthServiceUpdateProfileProcedure,
+		svc.UpdateProfile,
+		connect.WithSchema(authServiceMethods.ByName("UpdateProfile")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceSignUpProcedure:
@@ -282,6 +347,10 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceConfirmKeyRotationHandler.ServeHTTP(w, r)
 		case AuthServiceLogoutProcedure:
 			authServiceLogoutHandler.ServeHTTP(w, r)
+		case AuthServiceGetProfileProcedure:
+			authServiceGetProfileHandler.ServeHTTP(w, r)
+		case AuthServiceUpdateProfileProcedure:
+			authServiceUpdateProfileHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -309,4 +378,12 @@ func (UnimplementedAuthServiceHandler) ConfirmKeyRotation(context.Context, *v1.C
 
 func (UnimplementedAuthServiceHandler) Logout(context.Context, *v1.LogoutRequest) (*v1.LogoutResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AuthService.Logout is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) GetProfile(context.Context, *v1.GetProfileRequest) (*v1.GetProfileResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AuthService.GetProfile is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) UpdateProfile(context.Context, *v1.UpdateProfileRequest) (*v1.UpdateProfileResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AuthService.UpdateProfile is not implemented"))
 }

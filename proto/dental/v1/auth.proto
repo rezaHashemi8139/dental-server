@@ -56,6 +56,16 @@ service AuthService {
 
   // Ends the session. Needs session.
   rpc Logout(LogoutRequest) returns (LogoutResponse) {}
+
+  // The logged-in user's own account details. Needs session; a billing-only
+  // session may call it too.
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {}
+
+  // Changes the logged-in user's full name and mobile number. Needs session; a
+  // billing-only session may call it too. The username and the identification
+  // code cannot be changed. Offline grants already given keep the old name until
+  // the next login.
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse) {}
 }
 
 message User {
@@ -168,3 +178,32 @@ message ConfirmKeyRotationResponse {
 message LogoutRequest {}
 
 message LogoutResponse {}
+
+// A user's own account details (AuthService.GetProfile).
+message Profile {
+  User user = 1;
+  // Identification code, unique across all accounts. Cannot be changed.
+  PersonIdentity identity = 2;
+  // Mobile number; empty for accounts made before it was asked for.
+  string phone = 3;
+}
+
+message GetProfileRequest {}
+
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+message UpdateProfileRequest {
+  // Same rules as SignUpRequest.full_name.
+  string full_name = 1 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+  // Same rules as SignUpRequest.phone.
+  string phone = 2 [(buf.validate.field).string.pattern = "^\\+?[0-9]{7,15}$"];
+}
+
+message UpdateProfileResponse {
+  Profile profile = 1;
+}

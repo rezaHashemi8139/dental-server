@@ -418,3 +418,48 @@ func (s *AuthService) Logout(ctx context.Context, _ *dentalv1.LogoutRequest) (*d
 	}
 	return &dentalv1.LogoutResponse{}, nil
 }
+
+func (s *AuthService) GetProfile(ctx context.Context, _ *dentalv1.GetProfileRequest) (*dentalv1.GetProfileResponse, error) {
+	profile, err := loadProfile(ctx, s.d.DB, sessionFrom(ctx).UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &dentalv1.GetProfileResponse{Profile: profile}, nil
+}
+
+// UpdateProfile changes the full name and phone; the username and identification
+// code stay as they are (offline logins and patients are matched by them).
+func (s *AuthService) UpdateProfile(ctx context.Context, req *dentalv1.UpdateProfileRequest) (*dentalv1.UpdateProfileResponse, error) {
+	userID := sessionFrom(ctx).UserID
+	if _, err := s.d.DB.Exec(ctx, `
+		UPDATE users SET full_name = $2, phone = $3, updated_at = now() WHERE id = $1`,
+		userID, req.GetFullName(), req.GetPhone()); err != nil {
+		return nil, internal(err)
+	}
+	profile, err := loadProfile(ctx, s.d.DB, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &dentalv1.UpdateProfileResponse{Profile: profile}, nil
+}
+
+// loadProfile reads a user's own account details.
+func loadProfile(ctx context.Context, q querier, userID pgtype.UUID) (*dentalv1.Profile, error) {
+	user := &dentalv1.User{Id: uuidBytes(userID)}
+	var identity, phone string
+	err := q.QueryRow(ctx, `
+		SELECT username, full_name, coalesce(identity, ''), phone FROM users WHERE id = $1`, userID,
+	).Scan(&user.Username, &user.FullName, &identity, &phone)
+	if errors.Is(err, pgx.ErrNoRows) {
+		// The session interceptor checked the user a moment ago.
+		return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.Profile{
+		User:     user,
+		Identity: &dentalv1.PersonIdentity{Number: identity},
+		Phone:    phone,
+	}, nil
+}

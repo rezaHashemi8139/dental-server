@@ -33,7 +33,9 @@ type sessionKey struct{}
 // billingOnlyProcedures are what a billing-only session may call, besides every
 // BillingService procedure.
 var billingOnlyProcedures = map[string]bool{
-	dentalv1connect.AuthServiceLogoutProcedure: true,
+	dentalv1connect.AuthServiceLogoutProcedure:        true,
+	dentalv1connect.AuthServiceGetProfileProcedure:    true,
+	dentalv1connect.AuthServiceUpdateProfileProcedure: true,
 }
 
 // allowedBillingOnly reports whether a billing-only session may call the procedure.

@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 30,
+    "version": 31,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -98,7 +98,8 @@
       "subscriptionInactive": "Das Abonnement des Praxisinhabers ist nicht aktiv. Wenden Sie sich zur Verlängerung an den Support.",
       "clinicLimitExceeded": "Der Praxisinhaber hat mehr Praxen, als sein Abonnement erlaubt. Erweitern Sie das Abonnement.",
       "deviceLimitExceeded": "Diese Praxis hat mehr Computer, als ihr Abonnement erlaubt. Erweitern Sie das Abonnement oder sperren Sie einen anderen Computer.",
-      "passwordUnchanged": "Das neue Passwort muss sich vom aktuellen unterscheiden."
+      "passwordUnchanged": "Das neue Passwort muss sich vom aktuellen unterscheiden.",
+      "locked": "Die App ist gesperrt. Entsperren Sie sie zuerst mit Ihrem Passwort."
     }
   },
   "setup": {
@@ -499,6 +500,39 @@
     "trial": {
       "title": "Ihr kostenloser Testzeitraum ist aktiv",
       "description": "Der Tarif {{plan}} ist bis {{date}} kostenlos aktiv. Danach können Sie auf der Seite „Abonnement“ ein Abonnement kaufen oder erweitern."
+    }
+  },
+  "account": {
+    "menu": {
+      "label": "Benutzerkonto",
+      "editProfile": "Profil bearbeiten",
+      "lock": "Sperren",
+      "logout": "Abmelden"
+    },
+    "logout": {
+      "title": "Abmelden?",
+      "description": "Um weiterzuarbeiten, müssen Sie Benutzername und Passwort erneut eingeben.",
+      "confirm": "Abmelden",
+      "working": "Wird abgemeldet...",
+      "cancel": "Abbrechen"
+    },
+    "profile": {
+      "title": "Profil bearbeiten",
+      "description": "Ändern Sie Ihren Namen und Ihre Mobilnummer. Benutzername und Identifikationscode können nicht geändert werden.",
+      "loading": "Ihre Angaben werden geladen...",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "cancel": "Abbrechen"
+    },
+    "lock": {
+      "title": "Die App ist gesperrt",
+      "description": "Geben Sie Ihr Passwort ein, um fortzufahren.",
+      "unlock": "Entsperren",
+      "unlocking": "Wird geprüft...",
+      "switchUser": "Als anderer Benutzer anmelden"
+    },
+    "errors": {
+      "needsServer": "Zum Bearbeiten des Profils wird der Server benötigt. Verbinden Sie sich mit dem Internet und versuchen Sie es erneut."
     }
   },
   "identity": {

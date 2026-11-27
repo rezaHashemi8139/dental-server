@@ -687,6 +687,247 @@ func (*LogoutResponse) Descriptor() ([]byte, []int) {
 	return file_dental_v1_auth_proto_rawDescGZIP(), []int{10}
 }
 
+// A user's own account details (AuthService.GetProfile).
+type Profile struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	User  *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	// Identification code, unique across all accounts. Cannot be changed.
+	Identity *PersonIdentity `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
+	// Mobile number; empty for accounts made before it was asked for.
+	Phone         string `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Profile) Reset() {
+	*x = Profile{}
+	mi := &file_dental_v1_auth_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Profile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Profile) ProtoMessage() {}
+
+func (x *Profile) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Profile.ProtoReflect.Descriptor instead.
+func (*Profile) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *Profile) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
+func (x *Profile) GetIdentity() *PersonIdentity {
+	if x != nil {
+		return x.Identity
+	}
+	return nil
+}
+
+func (x *Profile) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+type GetProfileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfileRequest) Reset() {
+	*x = GetProfileRequest{}
+	mi := &file_dental_v1_auth_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfileRequest) ProtoMessage() {}
+
+func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfileRequest.ProtoReflect.Descriptor instead.
+func (*GetProfileRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{12}
+}
+
+type GetProfileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Profile       *Profile               `protobuf:"bytes,1,opt,name=profile,proto3" json:"profile,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfileResponse) Reset() {
+	*x = GetProfileResponse{}
+	mi := &file_dental_v1_auth_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfileResponse) ProtoMessage() {}
+
+func (x *GetProfileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfileResponse.ProtoReflect.Descriptor instead.
+func (*GetProfileResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *GetProfileResponse) GetProfile() *Profile {
+	if x != nil {
+		return x.Profile
+	}
+	return nil
+}
+
+type UpdateProfileRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Same rules as SignUpRequest.full_name.
+	FullName string `protobuf:"bytes,1,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	// Same rules as SignUpRequest.phone.
+	Phone         string `protobuf:"bytes,2,opt,name=phone,proto3" json:"phone,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProfileRequest) Reset() {
+	*x = UpdateProfileRequest{}
+	mi := &file_dental_v1_auth_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProfileRequest) ProtoMessage() {}
+
+func (x *UpdateProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProfileRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProfileRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UpdateProfileRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *UpdateProfileRequest) GetPhone() string {
+	if x != nil {
+		return x.Phone
+	}
+	return ""
+}
+
+type UpdateProfileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Profile       *Profile               `protobuf:"bytes,1,opt,name=profile,proto3" json:"profile,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProfileResponse) Reset() {
+	*x = UpdateProfileResponse{}
+	mi := &file_dental_v1_auth_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProfileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProfileResponse) ProtoMessage() {}
+
+func (x *UpdateProfileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_auth_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProfileResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProfileResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_auth_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *UpdateProfileResponse) GetProfile() *Profile {
+	if x != nil {
+		return x.Profile
+	}
+	return nil
+}
+
 var File_dental_v1_auth_proto protoreflect.FileDescriptor
 
 const file_dental_v1_auth_proto_rawDesc = "" +
@@ -737,13 +978,28 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\x1aConfirmKeyRotationResponse\x12'\n" +
 	"\x0fcurrent_version\x18\x01 \x01(\rR\x0ecurrentVersion\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse2\x8b\x03\n" +
+	"\x0eLogoutResponse\"{\n" +
+	"\aProfile\x12#\n" +
+	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x125\n" +
+	"\bidentity\x18\x02 \x01(\v2\x19.dental.v1.PersonIdentityR\bidentity\x12\x14\n" +
+	"\x05phone\x18\x03 \x01(\tR\x05phone\"\x13\n" +
+	"\x11GetProfileRequest\"B\n" +
+	"\x12GetProfileResponse\x12,\n" +
+	"\aprofile\x18\x01 \x01(\v2\x12.dental.v1.ProfileR\aprofile\"m\n" +
+	"\x14UpdateProfileRequest\x12&\n" +
+	"\tfull_name\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12-\n" +
+	"\x05phone\x18\x02 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\"E\n" +
+	"\x15UpdateProfileResponse\x12,\n" +
+	"\aprofile\x18\x01 \x01(\v2\x12.dental.v1.ProfileR\aprofile2\xae\x04\n" +
 	"\vAuthService\x12?\n" +
 	"\x06SignUp\x12\x18.dental.v1.SignUpRequest\x1a\x19.dental.v1.SignUpResponse\"\x00\x12<\n" +
 	"\x05Login\x12\x17.dental.v1.LoginRequest\x1a\x18.dental.v1.LoginResponse\"\x00\x12W\n" +
 	"\x0eChangePassword\x12 .dental.v1.ChangePasswordRequest\x1a!.dental.v1.ChangePasswordResponse\"\x00\x12c\n" +
 	"\x12ConfirmKeyRotation\x12$.dental.v1.ConfirmKeyRotationRequest\x1a%.dental.v1.ConfirmKeyRotationResponse\"\x00\x12?\n" +
-	"\x06Logout\x12\x18.dental.v1.LogoutRequest\x1a\x19.dental.v1.LogoutResponse\"\x00B\x85\x01\n" +
+	"\x06Logout\x12\x18.dental.v1.LogoutRequest\x1a\x19.dental.v1.LogoutResponse\"\x00\x12K\n" +
+	"\n" +
+	"GetProfile\x12\x1c.dental.v1.GetProfileRequest\x1a\x1d.dental.v1.GetProfileResponse\"\x00\x12T\n" +
+	"\rUpdateProfile\x12\x1f.dental.v1.UpdateProfileRequest\x1a .dental.v1.UpdateProfileResponse\"\x00B\x85\x01\n" +
 	"\rcom.dental.v1B\tAuthProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
 	"Dental::V1b\x06proto3"
 
@@ -759,7 +1015,7 @@ func file_dental_v1_auth_proto_rawDescGZIP() []byte {
 	return file_dental_v1_auth_proto_rawDescData
 }
 
-var file_dental_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_dental_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_dental_v1_auth_proto_goTypes = []any{
 	(*User)(nil),                       // 0: dental.v1.User
 	(*SignUpRequest)(nil),              // 1: dental.v1.SignUpRequest
@@ -772,35 +1028,48 @@ var file_dental_v1_auth_proto_goTypes = []any{
 	(*ConfirmKeyRotationResponse)(nil), // 8: dental.v1.ConfirmKeyRotationResponse
 	(*LogoutRequest)(nil),              // 9: dental.v1.LogoutRequest
 	(*LogoutResponse)(nil),             // 10: dental.v1.LogoutResponse
-	(*PersonIdentity)(nil),             // 11: dental.v1.PersonIdentity
-	(*timestamppb.Timestamp)(nil),      // 12: google.protobuf.Timestamp
-	(*SealedBox)(nil),                  // 13: dental.v1.SealedBox
-	(*SignedOfflineGrant)(nil),         // 14: dental.v1.SignedOfflineGrant
+	(*Profile)(nil),                    // 11: dental.v1.Profile
+	(*GetProfileRequest)(nil),          // 12: dental.v1.GetProfileRequest
+	(*GetProfileResponse)(nil),         // 13: dental.v1.GetProfileResponse
+	(*UpdateProfileRequest)(nil),       // 14: dental.v1.UpdateProfileRequest
+	(*UpdateProfileResponse)(nil),      // 15: dental.v1.UpdateProfileResponse
+	(*PersonIdentity)(nil),             // 16: dental.v1.PersonIdentity
+	(*timestamppb.Timestamp)(nil),      // 17: google.protobuf.Timestamp
+	(*SealedBox)(nil),                  // 18: dental.v1.SealedBox
+	(*SignedOfflineGrant)(nil),         // 19: dental.v1.SignedOfflineGrant
 }
 var file_dental_v1_auth_proto_depIdxs = []int32{
-	11, // 0: dental.v1.SignUpRequest.identity:type_name -> dental.v1.PersonIdentity
+	16, // 0: dental.v1.SignUpRequest.identity:type_name -> dental.v1.PersonIdentity
 	0,  // 1: dental.v1.SignUpResponse.user:type_name -> dental.v1.User
-	12, // 2: dental.v1.LoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
+	17, // 2: dental.v1.LoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
 	0,  // 3: dental.v1.LoginResponse.user:type_name -> dental.v1.User
-	13, // 4: dental.v1.LoginResponse.database_keys:type_name -> dental.v1.SealedBox
-	14, // 5: dental.v1.LoginResponse.offline_grant:type_name -> dental.v1.SignedOfflineGrant
-	12, // 6: dental.v1.LoginResponse.server_time:type_name -> google.protobuf.Timestamp
-	12, // 7: dental.v1.LoginResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
-	1,  // 8: dental.v1.AuthService.SignUp:input_type -> dental.v1.SignUpRequest
-	3,  // 9: dental.v1.AuthService.Login:input_type -> dental.v1.LoginRequest
-	5,  // 10: dental.v1.AuthService.ChangePassword:input_type -> dental.v1.ChangePasswordRequest
-	7,  // 11: dental.v1.AuthService.ConfirmKeyRotation:input_type -> dental.v1.ConfirmKeyRotationRequest
-	9,  // 12: dental.v1.AuthService.Logout:input_type -> dental.v1.LogoutRequest
-	2,  // 13: dental.v1.AuthService.SignUp:output_type -> dental.v1.SignUpResponse
-	4,  // 14: dental.v1.AuthService.Login:output_type -> dental.v1.LoginResponse
-	6,  // 15: dental.v1.AuthService.ChangePassword:output_type -> dental.v1.ChangePasswordResponse
-	8,  // 16: dental.v1.AuthService.ConfirmKeyRotation:output_type -> dental.v1.ConfirmKeyRotationResponse
-	10, // 17: dental.v1.AuthService.Logout:output_type -> dental.v1.LogoutResponse
-	13, // [13:18] is the sub-list for method output_type
-	8,  // [8:13] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	18, // 4: dental.v1.LoginResponse.database_keys:type_name -> dental.v1.SealedBox
+	19, // 5: dental.v1.LoginResponse.offline_grant:type_name -> dental.v1.SignedOfflineGrant
+	17, // 6: dental.v1.LoginResponse.server_time:type_name -> google.protobuf.Timestamp
+	17, // 7: dental.v1.LoginResponse.subscription_ends_at:type_name -> google.protobuf.Timestamp
+	0,  // 8: dental.v1.Profile.user:type_name -> dental.v1.User
+	16, // 9: dental.v1.Profile.identity:type_name -> dental.v1.PersonIdentity
+	11, // 10: dental.v1.GetProfileResponse.profile:type_name -> dental.v1.Profile
+	11, // 11: dental.v1.UpdateProfileResponse.profile:type_name -> dental.v1.Profile
+	1,  // 12: dental.v1.AuthService.SignUp:input_type -> dental.v1.SignUpRequest
+	3,  // 13: dental.v1.AuthService.Login:input_type -> dental.v1.LoginRequest
+	5,  // 14: dental.v1.AuthService.ChangePassword:input_type -> dental.v1.ChangePasswordRequest
+	7,  // 15: dental.v1.AuthService.ConfirmKeyRotation:input_type -> dental.v1.ConfirmKeyRotationRequest
+	9,  // 16: dental.v1.AuthService.Logout:input_type -> dental.v1.LogoutRequest
+	12, // 17: dental.v1.AuthService.GetProfile:input_type -> dental.v1.GetProfileRequest
+	14, // 18: dental.v1.AuthService.UpdateProfile:input_type -> dental.v1.UpdateProfileRequest
+	2,  // 19: dental.v1.AuthService.SignUp:output_type -> dental.v1.SignUpResponse
+	4,  // 20: dental.v1.AuthService.Login:output_type -> dental.v1.LoginResponse
+	6,  // 21: dental.v1.AuthService.ChangePassword:output_type -> dental.v1.ChangePasswordResponse
+	8,  // 22: dental.v1.AuthService.ConfirmKeyRotation:output_type -> dental.v1.ConfirmKeyRotationResponse
+	10, // 23: dental.v1.AuthService.Logout:output_type -> dental.v1.LogoutResponse
+	13, // 24: dental.v1.AuthService.GetProfile:output_type -> dental.v1.GetProfileResponse
+	15, // 25: dental.v1.AuthService.UpdateProfile:output_type -> dental.v1.UpdateProfileResponse
+	19, // [19:26] is the sub-list for method output_type
+	12, // [12:19] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_auth_proto_init() }
@@ -816,7 +1085,7 @@ func file_dental_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_auth_proto_rawDesc), len(file_dental_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

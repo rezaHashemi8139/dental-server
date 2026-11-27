@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 30,
+    "version": 31,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -98,7 +98,8 @@
       "subscriptionInactive": "The clinic owner's subscription is not active. Contact support to renew it.",
       "clinicLimitExceeded": "The clinic owner has more clinics than their subscription allows. Upgrade the subscription.",
       "deviceLimitExceeded": "This clinic has more computers than its subscription allows. Upgrade the subscription or block another computer.",
-      "passwordUnchanged": "The new password must be different from the current one."
+      "passwordUnchanged": "The new password must be different from the current one.",
+      "locked": "The app is locked. Unlock it with your password first."
     }
   },
   "setup": {
@@ -499,6 +500,39 @@
     "trial": {
       "title": "Your free trial is active",
       "description": "The {{plan}} plan is active for free until {{date}}. After that, you can buy or upgrade a subscription on the Subscription page."
+    }
+  },
+  "account": {
+    "menu": {
+      "label": "User account",
+      "editProfile": "Edit profile",
+      "lock": "Lock",
+      "logout": "Log out"
+    },
+    "logout": {
+      "title": "Log out?",
+      "description": "You will need to enter your username and password again to continue.",
+      "confirm": "Log out",
+      "working": "Logging out...",
+      "cancel": "Cancel"
+    },
+    "profile": {
+      "title": "Edit profile",
+      "description": "Change your name and mobile number. The username and identification code cannot be changed.",
+      "loading": "Loading your details...",
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "lock": {
+      "title": "The app is locked",
+      "description": "Enter your password to continue.",
+      "unlock": "Unlock",
+      "unlocking": "Checking...",
+      "switchUser": "Log in as another user"
+    },
+    "errors": {
+      "needsServer": "Editing your profile needs the server. Connect to the internet and try again."
     }
   },
   "identity": {
