@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 26,
+    "version": 27,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -146,13 +146,14 @@
       "address": "Adresse",
       "postalCode": "Postleitzahl (optional)",
       "location": "Standort der Praxis auf der Karte",
-      "nationalId": "Nationale Identifikationsnummer",
+      "identityCode": "Identifikationscode",
       "ownerPhone": "Mobiltelefon"
     },
     "hints": {
       "licenseNumber": "Mit lateinischen Buchstaben und Ziffern, wie auf der Zulassung angegeben.",
       "location": "Klicken Sie auf der Karte auf den Standort der Praxis. Mit dem Mausrad vergrößern Sie die Ansicht.",
-      "existingNationalId": "Für dieses Konto ist noch keine Identifikationsnummer hinterlegt; sie wird zusammen mit der Praxis gespeichert."
+      "identityCode": "Eine nationale Identifikationsnummer oder ein anderer amtlicher Code: 5 bis 20 lateinische Buchstaben oder Ziffern.",
+      "existingIdentityCode": "Für dieses Konto ist noch kein Identifikationscode hinterlegt; er wird zusammen mit der Praxis gespeichert."
     },
     "placeholders": {
       "province": "Provinz auswählen",
@@ -163,7 +164,7 @@
       "licenseNumberFormat": "Verwenden Sie 3 bis 32 lateinische Buchstaben, Ziffern, Punkte, Bindestriche oder Schrägstriche.",
       "phoneFormat": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
       "postalCodeFormat": "Die Postleitzahl muss 5 bis 10 Ziffern haben.",
-      "nationalIdFormat": "Diese Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
+      "identityCodeFormat": "Der Code muss aus 5 bis 20 lateinischen Buchstaben oder Ziffern bestehen.",
       "locationRequired": "Markieren Sie den Standort der Praxis auf der Karte.",
       "provinceRequired": "Wählen Sie die Provinz der Praxis.",
       "cityRequired": "Wählen Sie den Ort der Praxis."
@@ -172,7 +173,7 @@
       "required": "Dieser Computer ist noch mit keiner Praxis verbunden. Melden Sie sich an und wählen Sie seine Praxis.",
       "alreadyDone": "Dieser Computer ist bereits mit einer Praxis verbunden.",
       "licenseNumberTaken": "Eine Praxis mit dieser Zulassungsnummer ist bereits registriert.",
-      "identityRequired": "Für dieses Konto ist keine Identifikationsnummer hinterlegt. Geben Sie sie ein.",
+      "identityRequired": "Für dieses Konto ist kein Identifikationscode hinterlegt. Geben Sie ihn ein.",
       "clinicNotFound": "Diese Praxis wurde nicht gefunden.",
       "cityNotFound": "Dieser Ort wurde nicht gefunden. Wählen Sie Provinz und Ort erneut.",
       "notClinicOwner": "Nur der Inhaber der Praxis kann einen Computer mit ihr verbinden."
@@ -366,11 +367,9 @@
   },
   "person": {
     "errors": {
-      "invalidNationalId": "Diese nationale Identifikationsnummer ist ungültig. Prüfen Sie die 10 Ziffern.",
-      "invalidForeignId": "Dieser FIDA-Code ist ungültig. Er muss aus 5 bis 20 lateinischen Buchstaben oder Ziffern bestehen.",
-      "invalidNationality": "Wählen Sie die Staatsangehörigkeit. Bei ausländischen Staatsangehörigen kann sie nicht Iran sein.",
-      "identityTaken": "Diese Identifikationsnummer oder dieser FIDA-Code gehört zu einem anderen Konto.",
-      "identityMismatch": "Diese Identifikationsnummer oder dieser FIDA-Code stimmt nicht mit dem für dieses Konto hinterlegten überein."
+      "invalidIdentityCode": "Der Identifikationscode muss aus 5 bis 20 lateinischen Buchstaben oder Ziffern bestehen.",
+      "identityTaken": "Dieser Identifikationscode gehört zu einem anderen Konto.",
+      "identityMismatch": "Dieser Identifikationscode stimmt nicht mit dem für dieses Konto hinterlegten überein."
     }
   },
   "patients": {
@@ -381,9 +380,9 @@
       "invalidPhone": "Die Telefonnummer muss 7 bis 15 Ziffern haben (optional mit + am Anfang).",
       "tooLong": "Dieser Text ist zu lang. Höchstens {{max}} Zeichen sind erlaubt.",
       "notFound": "Dieser Patient wurde nicht gefunden.",
-      "identityLocked": "Die Identifikationsnummer oder der FIDA-Code eines bereits auf dem Server gespeicherten Patienten kann nicht geändert werden.",
-      "identityTaken": "Ein Patient mit dieser Identifikationsnummer oder diesem FIDA-Code existiert bereits.",
-      "historyNotFound": "Keine Praxis hat einen Patienten mit dieser Identifikationsnummer oder diesem FIDA-Code.",
+      "identityLocked": "Der Identifikationscode eines bereits auf dem Server gespeicherten Patienten kann nicht geändert werden.",
+      "identityTaken": "Ein Patient mit diesem Identifikationscode existiert bereits.",
+      "historyNotFound": "Keine Praxis hat einen Patienten mit diesem Identifikationscode.",
       "historyNeedsServer": "Für die Behandlungshistorie aus anderen Praxen ist eine Verbindung zum Server nötig."
     }
   },

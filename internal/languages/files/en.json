@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 26,
+    "version": 27,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -146,13 +146,14 @@
       "address": "Address",
       "postalCode": "Postal code (optional)",
       "location": "Clinic location on the map",
-      "nationalId": "National ID",
+      "identityCode": "Identification code",
       "ownerPhone": "Mobile phone"
     },
     "hints": {
       "licenseNumber": "In Latin letters and digits, as printed on the license.",
       "location": "Click the clinic's place on the map. Zoom in with the mouse wheel.",
-      "existingNationalId": "This account has no national ID on file yet; it is saved together with the clinic."
+      "identityCode": "A national ID or any other official code: 5 to 20 English letters or digits.",
+      "existingIdentityCode": "This account has no identification code on file yet; it is saved together with the clinic."
     },
     "placeholders": {
       "province": "Choose the province",
@@ -163,7 +164,7 @@
       "licenseNumberFormat": "Use 3 to 32 Latin letters, digits, dots, dashes or slashes.",
       "phoneFormat": "The phone number must have 7 to 15 digits (optionally starting with +).",
       "postalCodeFormat": "The postal code must have 5 to 10 digits.",
-      "nationalIdFormat": "This national ID is not valid. Check its 10 digits.",
+      "identityCodeFormat": "The code must have 5 to 20 English letters or digits.",
       "locationRequired": "Mark the clinic's place on the map.",
       "provinceRequired": "Choose the clinic's province.",
       "cityRequired": "Choose the clinic's city."
@@ -172,7 +173,7 @@
       "required": "This computer is not connected to a clinic yet. Log in and choose its clinic.",
       "alreadyDone": "This computer is already connected to a clinic.",
       "licenseNumberTaken": "A clinic with this license number is already registered.",
-      "identityRequired": "This account has no national ID on file. Enter it.",
+      "identityRequired": "This account has no identification code on file. Enter it.",
       "clinicNotFound": "This clinic was not found.",
       "cityNotFound": "This city was not found. Choose the province and city again.",
       "notClinicOwner": "Only the clinic's owner can connect a computer to it."
@@ -366,11 +367,9 @@
   },
   "person": {
     "errors": {
-      "invalidNationalId": "This national ID is not valid. Check its 10 digits.",
-      "invalidForeignId": "This FIDA code is not valid. It must have 5 to 20 English letters or digits.",
-      "invalidNationality": "Choose the nationality. A foreign national's nationality cannot be Iran.",
-      "identityTaken": "This national ID or FIDA code belongs to another account.",
-      "identityMismatch": "This national ID or FIDA code does not match the one on file for this account."
+      "invalidIdentityCode": "The identification code must have 5 to 20 English letters or digits.",
+      "identityTaken": "This identification code belongs to another account.",
+      "identityMismatch": "This identification code does not match the one on file for this account."
     }
   },
   "patients": {
@@ -381,9 +380,9 @@
       "invalidPhone": "The phone number must have 7 to 15 digits (optionally starting with +).",
       "tooLong": "This text is too long. At most {{max}} characters are allowed.",
       "notFound": "This patient was not found.",
-      "identityLocked": "The national ID or FIDA code of a patient already saved on the server cannot be changed.",
-      "identityTaken": "A patient with this national ID or FIDA code already exists.",
-      "historyNotFound": "No clinic has a patient with this national ID or FIDA code.",
+      "identityLocked": "The identification code of a patient already saved on the server cannot be changed.",
+      "identityTaken": "A patient with this identification code already exists.",
+      "historyNotFound": "No clinic has a patient with this identification code.",
       "historyNeedsServer": "Seeing a patient's history in other clinics needs a connection to the server."
     }
   },
