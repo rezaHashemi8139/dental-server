@@ -49,6 +49,9 @@ const (
 	// MemberServiceSetMemberAdminProcedure is the fully-qualified name of the MemberService's
 	// SetMemberAdmin RPC.
 	MemberServiceSetMemberAdminProcedure = "/dental.v1.MemberService/SetMemberAdmin"
+	// MemberServiceSetMemberBirthDateProcedure is the fully-qualified name of the MemberService's
+	// SetMemberBirthDate RPC.
+	MemberServiceSetMemberBirthDateProcedure = "/dental.v1.MemberService/SetMemberBirthDate"
 )
 
 // MemberServiceClient is a client for the dental.v1.MemberService service.
@@ -69,6 +72,10 @@ type MemberServiceClient interface {
 	// Takes access away; the member's sessions in this clinic end at once.
 	RemoveMember(context.Context, *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error)
 	SetMemberAdmin(context.Context, *v1.SetMemberAdminRequest) (*v1.SetMemberAdminResponse, error)
+	// Sets a member's birth date (also their own, as in AuthService.UpdateProfile),
+	// for birthdays on the clinic app's calendar. It belongs to the account, so the
+	// member's other clinics see it too. Fails with NOT_FOUND "user_not_found".
+	SetMemberBirthDate(context.Context, *v1.SetMemberBirthDateRequest) (*v1.SetMemberBirthDateResponse, error)
 }
 
 // NewMemberServiceClient constructs a client for the dental.v1.MemberService service. By default,
@@ -118,17 +125,24 @@ func NewMemberServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(memberServiceMethods.ByName("SetMemberAdmin")),
 			connect.WithClientOptions(opts...),
 		),
+		setMemberBirthDate: connect.NewClient[v1.SetMemberBirthDateRequest, v1.SetMemberBirthDateResponse](
+			httpClient,
+			baseURL+MemberServiceSetMemberBirthDateProcedure,
+			connect.WithSchema(memberServiceMethods.ByName("SetMemberBirthDate")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // memberServiceClient implements MemberServiceClient.
 type memberServiceClient struct {
-	listMembers    *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
-	findUser       *connect.Client[v1.FindUserRequest, v1.FindUserResponse]
-	createUser     *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
-	addMember      *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
-	removeMember   *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
-	setMemberAdmin *connect.Client[v1.SetMemberAdminRequest, v1.SetMemberAdminResponse]
+	listMembers        *connect.Client[v1.ListMembersRequest, v1.ListMembersResponse]
+	findUser           *connect.Client[v1.FindUserRequest, v1.FindUserResponse]
+	createUser         *connect.Client[v1.CreateUserRequest, v1.CreateUserResponse]
+	addMember          *connect.Client[v1.AddMemberRequest, v1.AddMemberResponse]
+	removeMember       *connect.Client[v1.RemoveMemberRequest, v1.RemoveMemberResponse]
+	setMemberAdmin     *connect.Client[v1.SetMemberAdminRequest, v1.SetMemberAdminResponse]
+	setMemberBirthDate *connect.Client[v1.SetMemberBirthDateRequest, v1.SetMemberBirthDateResponse]
 }
 
 // ListMembers calls dental.v1.MemberService.ListMembers.
@@ -185,6 +199,15 @@ func (c *memberServiceClient) SetMemberAdmin(ctx context.Context, req *v1.SetMem
 	return nil, err
 }
 
+// SetMemberBirthDate calls dental.v1.MemberService.SetMemberBirthDate.
+func (c *memberServiceClient) SetMemberBirthDate(ctx context.Context, req *v1.SetMemberBirthDateRequest) (*v1.SetMemberBirthDateResponse, error) {
+	response, err := c.setMemberBirthDate.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // MemberServiceHandler is an implementation of the dental.v1.MemberService service.
 type MemberServiceHandler interface {
 	ListMembers(context.Context, *v1.ListMembersRequest) (*v1.ListMembersResponse, error)
@@ -203,6 +226,10 @@ type MemberServiceHandler interface {
 	// Takes access away; the member's sessions in this clinic end at once.
 	RemoveMember(context.Context, *v1.RemoveMemberRequest) (*v1.RemoveMemberResponse, error)
 	SetMemberAdmin(context.Context, *v1.SetMemberAdminRequest) (*v1.SetMemberAdminResponse, error)
+	// Sets a member's birth date (also their own, as in AuthService.UpdateProfile),
+	// for birthdays on the clinic app's calendar. It belongs to the account, so the
+	// member's other clinics see it too. Fails with NOT_FOUND "user_not_found".
+	SetMemberBirthDate(context.Context, *v1.SetMemberBirthDateRequest) (*v1.SetMemberBirthDateResponse, error)
 }
 
 // NewMemberServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -248,6 +275,12 @@ func NewMemberServiceHandler(svc MemberServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(memberServiceMethods.ByName("SetMemberAdmin")),
 		connect.WithHandlerOptions(opts...),
 	)
+	memberServiceSetMemberBirthDateHandler := connect.NewUnaryHandlerSimple(
+		MemberServiceSetMemberBirthDateProcedure,
+		svc.SetMemberBirthDate,
+		connect.WithSchema(memberServiceMethods.ByName("SetMemberBirthDate")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.MemberService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MemberServiceListMembersProcedure:
@@ -262,6 +295,8 @@ func NewMemberServiceHandler(svc MemberServiceHandler, opts ...connect.HandlerOp
 			memberServiceRemoveMemberHandler.ServeHTTP(w, r)
 		case MemberServiceSetMemberAdminProcedure:
 			memberServiceSetMemberAdminHandler.ServeHTTP(w, r)
+		case MemberServiceSetMemberBirthDateProcedure:
+			memberServiceSetMemberBirthDateHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -293,4 +328,8 @@ func (UnimplementedMemberServiceHandler) RemoveMember(context.Context, *v1.Remov
 
 func (UnimplementedMemberServiceHandler) SetMemberAdmin(context.Context, *v1.SetMemberAdminRequest) (*v1.SetMemberAdminResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.MemberService.SetMemberAdmin is not implemented"))
+}
+
+func (UnimplementedMemberServiceHandler) SetMemberBirthDate(context.Context, *v1.SetMemberBirthDateRequest) (*v1.SetMemberBirthDateResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.MemberService.SetMemberBirthDate is not implemented"))
 }

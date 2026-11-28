@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 38,
+    "version": 39,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -690,6 +690,15 @@
       "needsServer": "Zum Hinzufügen eines Benutzers wird der Server benötigt. Verbinden Sie sich mit dem Internet und versuchen Sie es erneut.",
       "userNotFound": "Dieser Benutzer wurde auf dem Server nicht gefunden.",
       "alreadyMember": "Dieser Benutzer hat bereits Zugriff auf diese Praxis."
+    },
+    "birthDate": {
+      "open": "Geburtsdatum",
+      "title": "Geburtsdatum der Mitarbeiterin / des Mitarbeiters",
+      "description": "Das Geburtsdatum von {{name}} wird im Benutzerkonto gespeichert, und der Geburtstag erscheint im Kalender der Startseite.",
+      "errors": {
+        "notAdmin": "Nur Praxisadministratoren können Geburtsdaten von Mitarbeitenden erfassen.",
+        "needsServer": "Zum Erfassen eines Geburtsdatums ist eine Verbindung zum Server nötig. Verbinden Sie sich mit dem Internet und versuchen Sie es erneut."
+      }
     }
   },
   "home": {
@@ -712,6 +721,16 @@
       "description": "Dieser Computer zeigt {{system}} an, die richtige Zeit ist aber {{actual}}. Bitte stellen Sie Datum, Uhrzeit und Zeitzone in Windows richtig ein; sonst werden erfasste Zeiten falsch gespeichert."
     }
   },
+  "calendarEvents": {
+    "title": "Anlässe im {{month}}",
+    "loading": "Anlässe werden geladen...",
+    "failed": "Die Anlässe konnten nicht geladen werden. Prüfen Sie die Internetverbindung.",
+    "retry": "Erneut versuchen",
+    "none": "Für diesen Monat sind keine Anlässe eingetragen.",
+    "holiday": "Feiertag",
+    "birthday": "Geburtstag von {{name}}",
+    "source": "Quelle: {{source}}"
+  },
   "account": {
     "menu": {
       "label": "Benutzerkonto",
@@ -732,7 +751,8 @@
       "loading": "Ihre Angaben werden geladen...",
       "save": "Speichern",
       "saving": "Wird gespeichert...",
-      "cancel": "Abbrechen"
+      "cancel": "Abbrechen",
+      "birthDate": "Geburtsdatum"
     },
     "password": {
       "open": "Passwort ändern",

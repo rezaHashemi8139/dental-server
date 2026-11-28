@@ -61,7 +61,7 @@ service AuthService {
   // session may call it too.
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {}
 
-  // Changes the logged-in user's full name, mobile number and email. Needs session; a
+  // Changes the logged-in user's full name, mobile number, email and birth date. Needs session; a
   // billing-only session may call it too. The username and the identification
   // code cannot be changed. Offline grants already given keep the old name until
   // the next login.
@@ -197,6 +197,8 @@ message Profile {
   string phone = 3;
   // Email address; empty when none was given.
   string email = 4;
+  // Gregorian "YYYY-MM-DD"; empty when not given.
+  string birth_date = 5;
 }
 
 message GetProfileRequest {}
@@ -221,6 +223,9 @@ message UpdateProfileRequest {
       max_len: 254
     }
   ];
+  // Gregorian "YYYY-MM-DD"; empty removes the birth date on file. Not sent (apps
+  // made before it existed): the birth date stays as it is.
+  optional string birth_date = 4 [(buf.validate.field).string.pattern = "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"];
 }
 
 message UpdateProfileResponse {

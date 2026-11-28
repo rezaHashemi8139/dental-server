@@ -24,7 +24,7 @@ func NewMemberService(d *Deps) *MemberService {
 }
 
 const memberColumns = `
-	u.id, u.username, u.full_name, c.owner_id = u.id, m.is_admin, m.created_at
+	u.id, u.username, u.full_name, c.owner_id = u.id, m.is_admin, m.created_at, u.birth_date
 	FROM clinic_members m
 	JOIN users u ON u.id = m.user_id
 	JOIN clinics c ON c.id = m.clinic_id`
@@ -33,7 +33,7 @@ func scanMember(row pgx.Row) (*dentalv1.Member, error) {
 	var id pgtype.UUID
 	var addedAt pgtype.Timestamptz
 	m := &dentalv1.Member{User: &dentalv1.User{}}
-	if err := row.Scan(&id, &m.User.Username, &m.User.FullName, &m.IsOwner, &m.IsAdmin, &addedAt); err != nil {
+	if err := row.Scan(&id, &m.User.Username, &m.User.FullName, &m.IsOwner, &m.IsAdmin, &addedAt, &m.BirthDate); err != nil {
 		return nil, err
 	}
 	m.User.Id = uuidBytes(id)
@@ -224,4 +224,32 @@ func (s *MemberService) SetMemberAdmin(ctx context.Context, req *dentalv1.SetMem
 	}
 	member.IsAdmin = req.GetIsAdmin()
 	return &dentalv1.SetMemberAdminResponse{Member: member}, nil
+}
+
+func (s *MemberService) SetMemberBirthDate(ctx context.Context, req *dentalv1.SetMemberBirthDateRequest) (*dentalv1.SetMemberBirthDateResponse, error) {
+	session, err := requireAdmin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, ok := toUUID(req.GetUserId())
+	if !ok {
+		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
+
+	// Only members of the admin's own clinic.
+	tag, err := s.d.DB.Exec(ctx, `
+		UPDATE users SET birth_date = $3, updated_at = now()
+		WHERE id = $2 AND EXISTS (SELECT 1 FROM clinic_members WHERE clinic_id = $1 AND user_id = $2)`,
+		session.ClinicID, userID, req.GetBirthDate())
+	if err != nil {
+		return nil, internal(err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, fail(connect.CodeNotFound, reasonUserNotFound)
+	}
+	member, err := s.getMember(ctx, session.ClinicID, userID)
+	if err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.SetMemberBirthDateResponse{Member: member}, nil
 }

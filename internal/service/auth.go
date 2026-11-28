@@ -429,13 +429,16 @@ func (s *AuthService) GetProfile(ctx context.Context, _ *dentalv1.GetProfileRequ
 	return &dentalv1.GetProfileResponse{Profile: profile}, nil
 }
 
-// UpdateProfile changes the full name, phone and email; the username and identification
-// code stay as they are (offline logins and patients are matched by them).
+// UpdateProfile changes the full name, phone, email and birth date; the username and
+// identification code stay as they are (offline logins and patients are matched by them).
+// A request without a birth date (from an older app) keeps the one on file.
 func (s *AuthService) UpdateProfile(ctx context.Context, req *dentalv1.UpdateProfileRequest) (*dentalv1.UpdateProfileResponse, error) {
 	userID := sessionFrom(ctx).UserID
+	// nil (not sent) keeps the birth date on file.
 	if _, err := s.d.DB.Exec(ctx, `
-		UPDATE users SET full_name = $2, phone = $3, email = $4, updated_at = now() WHERE id = $1`,
-		userID, req.GetFullName(), req.GetPhone(), req.GetEmail()); err != nil {
+		UPDATE users SET full_name = $2, phone = $3, email = $4, birth_date = coalesce($5, birth_date), updated_at = now()
+		WHERE id = $1`,
+		userID, req.GetFullName(), req.GetPhone(), req.GetEmail(), req.BirthDate); err != nil {
 		return nil, internal(err)
 	}
 	profile, err := loadProfile(ctx, s.d.DB, userID)
@@ -448,10 +451,10 @@ func (s *AuthService) UpdateProfile(ctx context.Context, req *dentalv1.UpdatePro
 // loadProfile reads a user's own account details.
 func loadProfile(ctx context.Context, q querier, userID pgtype.UUID) (*dentalv1.Profile, error) {
 	user := &dentalv1.User{Id: uuidBytes(userID)}
-	var identity, phone, email string
+	var identity, phone, email, birthDate string
 	err := q.QueryRow(ctx, `
-		SELECT username, full_name, coalesce(identity, ''), phone, email FROM users WHERE id = $1`, userID,
-	).Scan(&user.Username, &user.FullName, &identity, &phone, &email)
+		SELECT username, full_name, coalesce(identity, ''), phone, email, birth_date FROM users WHERE id = $1`, userID,
+	).Scan(&user.Username, &user.FullName, &identity, &phone, &email, &birthDate)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// The session interceptor checked the user a moment ago.
 		return nil, fail(connect.CodeUnauthenticated, reasonUnauthenticated)
@@ -462,7 +465,8 @@ func loadProfile(ctx context.Context, q querier, userID pgtype.UUID) (*dentalv1.
 	return &dentalv1.Profile{
 		User:     user,
 		Identity: &dentalv1.PersonIdentity{Number: identity},
-		Phone:    phone,
-		Email:    email,
+		Phone:     phone,
+		Email:     email,
+		BirthDate: birthDate,
 	}, nil
 }

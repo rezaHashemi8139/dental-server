@@ -706,7 +706,9 @@ type Profile struct {
 	// Mobile number; empty for accounts made before it was asked for.
 	Phone string `protobuf:"bytes,3,opt,name=phone,proto3" json:"phone,omitempty"`
 	// Email address; empty when none was given.
-	Email         string `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	Email string `protobuf:"bytes,4,opt,name=email,proto3" json:"email,omitempty"`
+	// Gregorian "YYYY-MM-DD"; empty when not given.
+	BirthDate     string `protobuf:"bytes,5,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -765,6 +767,13 @@ func (x *Profile) GetPhone() string {
 func (x *Profile) GetEmail() string {
 	if x != nil {
 		return x.Email
+	}
+	return ""
+}
+
+func (x *Profile) GetBirthDate() string {
+	if x != nil {
+		return x.BirthDate
 	}
 	return ""
 }
@@ -856,7 +865,10 @@ type UpdateProfileRequest struct {
 	// Same rules as SignUpRequest.phone.
 	Phone string `protobuf:"bytes,2,opt,name=phone,proto3" json:"phone,omitempty"`
 	// Same rules as SignUpRequest.email. Empty removes the email on file.
-	Email         string `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Email string `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	// Gregorian "YYYY-MM-DD"; empty removes the birth date on file. Not sent (apps
+	// made before it existed): the birth date stays as it is.
+	BirthDate     *string `protobuf:"bytes,4,opt,name=birth_date,json=birthDate,proto3,oneof" json:"birth_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -908,6 +920,13 @@ func (x *UpdateProfileRequest) GetPhone() string {
 func (x *UpdateProfileRequest) GetEmail() string {
 	if x != nil {
 		return x.Email
+	}
+	return ""
+}
+
+func (x *UpdateProfileRequest) GetBirthDate() string {
+	if x != nil && x.BirthDate != nil {
+		return *x.BirthDate
 	}
 	return ""
 }
@@ -1008,20 +1027,25 @@ const file_dental_v1_auth_proto_rawDesc = "" +
 	"\x1aConfirmKeyRotationResponse\x12'\n" +
 	"\x0fcurrent_version\x18\x01 \x01(\rR\x0ecurrentVersion\"\x0f\n" +
 	"\rLogoutRequest\"\x10\n" +
-	"\x0eLogoutResponse\"\x91\x01\n" +
+	"\x0eLogoutResponse\"\xb0\x01\n" +
 	"\aProfile\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x125\n" +
 	"\bidentity\x18\x02 \x01(\v2\x19.dental.v1.PersonIdentityR\bidentity\x12\x14\n" +
 	"\x05phone\x18\x03 \x01(\tR\x05phone\x12\x14\n" +
-	"\x05email\x18\x04 \x01(\tR\x05email\"\x13\n" +
+	"\x05email\x18\x04 \x01(\tR\x05email\x12\x1d\n" +
+	"\n" +
+	"birth_date\x18\x05 \x01(\tR\tbirthDate\"\x13\n" +
 	"\x11GetProfileRequest\"B\n" +
 	"\x12GetProfileResponse\x12,\n" +
-	"\aprofile\x18\x01 \x01(\v2\x12.dental.v1.ProfileR\aprofile\"\x92\x01\n" +
+	"\aprofile\x18\x01 \x01(\v2\x12.dental.v1.ProfileR\aprofile\"\xed\x01\n" +
 	"\x14UpdateProfileRequest\x12&\n" +
 	"\tfull_name\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\x12-\n" +
 	"\x05phone\x18\x02 \x01(\tB\x17\xbaH\x14r\x122\x10^\\+?[0-9]{7,15}$R\x05phone\x12#\n" +
 	"\x05email\x18\x03 \x01(\tB\r\xbaH\n" +
-	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\"E\n" +
+	"\xd8\x01\x01r\x05\x18\xfe\x01`\x01R\x05email\x12J\n" +
+	"\n" +
+	"birth_date\x18\x04 \x01(\tB&\xbaH#r!2\x1f^([0-9]{4}-[0-9]{2}-[0-9]{2})?$H\x00R\tbirthDate\x88\x01\x01B\r\n" +
+	"\v_birth_date\"E\n" +
 	"\x15UpdateProfileResponse\x12,\n" +
 	"\aprofile\x18\x01 \x01(\v2\x12.dental.v1.ProfileR\aprofile2\xae\x04\n" +
 	"\vAuthService\x12?\n" +
@@ -1112,6 +1136,7 @@ func file_dental_v1_auth_proto_init() {
 	}
 	file_dental_v1_crypto_proto_init()
 	file_dental_v1_person_proto_init()
+	file_dental_v1_auth_proto_msgTypes[14].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

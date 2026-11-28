@@ -29,8 +29,10 @@ type Member struct {
 	// Whether the member owns the clinic.
 	IsOwner bool `protobuf:"varint,2,opt,name=is_owner,json=isOwner,proto3" json:"is_owner,omitempty"`
 	// Whether the member may manage the clinic's members. The owner always may.
-	IsAdmin       bool                   `protobuf:"varint,3,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
-	AddedAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=added_at,json=addedAt,proto3" json:"added_at,omitempty"`
+	IsAdmin bool                   `protobuf:"varint,3,opt,name=is_admin,json=isAdmin,proto3" json:"is_admin,omitempty"`
+	AddedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=added_at,json=addedAt,proto3" json:"added_at,omitempty"`
+	// The account's birth date (Profile.birth_date): Gregorian "YYYY-MM-DD", or empty.
+	BirthDate     string `protobuf:"bytes,5,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -91,6 +93,13 @@ func (x *Member) GetAddedAt() *timestamppb.Timestamp {
 		return x.AddedAt
 	}
 	return nil
+}
+
+func (x *Member) GetBirthDate() string {
+	if x != nil {
+		return x.BirthDate
+	}
+	return ""
 }
 
 type ListMembersRequest struct {
@@ -679,16 +688,116 @@ func (x *SetMemberAdminResponse) GetMember() *Member {
 	return nil
 }
 
+type SetMemberBirthDateRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 raw UUID bytes.
+	UserId []byte `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	// Gregorian "YYYY-MM-DD"; empty removes the birth date on file.
+	BirthDate     string `protobuf:"bytes,2,opt,name=birth_date,json=birthDate,proto3" json:"birth_date,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMemberBirthDateRequest) Reset() {
+	*x = SetMemberBirthDateRequest{}
+	mi := &file_dental_v1_member_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberBirthDateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberBirthDateRequest) ProtoMessage() {}
+
+func (x *SetMemberBirthDateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberBirthDateRequest.ProtoReflect.Descriptor instead.
+func (*SetMemberBirthDateRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SetMemberBirthDateRequest) GetUserId() []byte {
+	if x != nil {
+		return x.UserId
+	}
+	return nil
+}
+
+func (x *SetMemberBirthDateRequest) GetBirthDate() string {
+	if x != nil {
+		return x.BirthDate
+	}
+	return ""
+}
+
+type SetMemberBirthDateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Member        *Member                `protobuf:"bytes,1,opt,name=member,proto3" json:"member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetMemberBirthDateResponse) Reset() {
+	*x = SetMemberBirthDateResponse{}
+	mi := &file_dental_v1_member_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetMemberBirthDateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetMemberBirthDateResponse) ProtoMessage() {}
+
+func (x *SetMemberBirthDateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_member_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetMemberBirthDateResponse.ProtoReflect.Descriptor instead.
+func (*SetMemberBirthDateResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_member_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SetMemberBirthDateResponse) GetMember() *Member {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
 var File_dental_v1_member_proto protoreflect.FileDescriptor
 
 const file_dental_v1_member_proto_rawDesc = "" +
 	"\n" +
-	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9a\x01\n" +
+	"\x16dental/v1/member.proto\x12\tdental.v1\x1a\x1bbuf/validate/validate.proto\x1a\x14dental/v1/auth.proto\x1a\x16dental/v1/person.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb9\x01\n" +
 	"\x06Member\x12#\n" +
 	"\x04user\x18\x01 \x01(\v2\x0f.dental.v1.UserR\x04user\x12\x19\n" +
 	"\bis_owner\x18\x02 \x01(\bR\aisOwner\x12\x19\n" +
 	"\bis_admin\x18\x03 \x01(\bR\aisAdmin\x125\n" +
-	"\badded_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aaddedAt\"\x14\n" +
+	"\badded_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\aaddedAt\x12\x1d\n" +
+	"\n" +
+	"birth_date\x18\x05 \x01(\tR\tbirthDate\"\x14\n" +
 	"\x12ListMembersRequest\"B\n" +
 	"\x13ListMembersResponse\x12+\n" +
 	"\amembers\x18\x01 \x03(\v2\x11.dental.v1.MemberR\amembers\"P\n" +
@@ -720,7 +829,13 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\x12\x19\n" +
 	"\bis_admin\x18\x02 \x01(\bR\aisAdmin\"C\n" +
 	"\x16SetMemberAdminResponse\x12)\n" +
-	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member2\xe9\x03\n" +
+	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member\"\x84\x01\n" +
+	"\x19SetMemberBirthDateRequest\x12 \n" +
+	"\auser_id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x06userId\x12E\n" +
+	"\n" +
+	"birth_date\x18\x02 \x01(\tB&\xbaH#r!2\x1f^([0-9]{4}-[0-9]{2}-[0-9]{2})?$R\tbirthDate\"G\n" +
+	"\x1aSetMemberBirthDateResponse\x12)\n" +
+	"\x06member\x18\x01 \x01(\v2\x11.dental.v1.MemberR\x06member2\xce\x04\n" +
 	"\rMemberService\x12N\n" +
 	"\vListMembers\x12\x1d.dental.v1.ListMembersRequest\x1a\x1e.dental.v1.ListMembersResponse\"\x00\x12E\n" +
 	"\bFindUser\x12\x1a.dental.v1.FindUserRequest\x1a\x1b.dental.v1.FindUserResponse\"\x00\x12K\n" +
@@ -728,7 +843,8 @@ const file_dental_v1_member_proto_rawDesc = "" +
 	"CreateUser\x12\x1c.dental.v1.CreateUserRequest\x1a\x1d.dental.v1.CreateUserResponse\"\x00\x12H\n" +
 	"\tAddMember\x12\x1b.dental.v1.AddMemberRequest\x1a\x1c.dental.v1.AddMemberResponse\"\x00\x12Q\n" +
 	"\fRemoveMember\x12\x1e.dental.v1.RemoveMemberRequest\x1a\x1f.dental.v1.RemoveMemberResponse\"\x00\x12W\n" +
-	"\x0eSetMemberAdmin\x12 .dental.v1.SetMemberAdminRequest\x1a!.dental.v1.SetMemberAdminResponse\"\x00B\x87\x01\n" +
+	"\x0eSetMemberAdmin\x12 .dental.v1.SetMemberAdminRequest\x1a!.dental.v1.SetMemberAdminResponse\"\x00\x12c\n" +
+	"\x12SetMemberBirthDate\x12$.dental.v1.SetMemberBirthDateRequest\x1a%.dental.v1.SetMemberBirthDateResponse\"\x00B\x87\x01\n" +
 	"\rcom.dental.v1B\vMemberProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
 	"Dental::V1b\x06proto3"
 
@@ -744,52 +860,57 @@ func file_dental_v1_member_proto_rawDescGZIP() []byte {
 	return file_dental_v1_member_proto_rawDescData
 }
 
-var file_dental_v1_member_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_dental_v1_member_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_dental_v1_member_proto_goTypes = []any{
-	(*Member)(nil),                 // 0: dental.v1.Member
-	(*ListMembersRequest)(nil),     // 1: dental.v1.ListMembersRequest
-	(*ListMembersResponse)(nil),    // 2: dental.v1.ListMembersResponse
-	(*FindUserRequest)(nil),        // 3: dental.v1.FindUserRequest
-	(*FindUserResponse)(nil),       // 4: dental.v1.FindUserResponse
-	(*CreateUserRequest)(nil),      // 5: dental.v1.CreateUserRequest
-	(*CreateUserResponse)(nil),     // 6: dental.v1.CreateUserResponse
-	(*AddMemberRequest)(nil),       // 7: dental.v1.AddMemberRequest
-	(*AddMemberResponse)(nil),      // 8: dental.v1.AddMemberResponse
-	(*RemoveMemberRequest)(nil),    // 9: dental.v1.RemoveMemberRequest
-	(*RemoveMemberResponse)(nil),   // 10: dental.v1.RemoveMemberResponse
-	(*SetMemberAdminRequest)(nil),  // 11: dental.v1.SetMemberAdminRequest
-	(*SetMemberAdminResponse)(nil), // 12: dental.v1.SetMemberAdminResponse
-	(*User)(nil),                   // 13: dental.v1.User
-	(*timestamppb.Timestamp)(nil),  // 14: google.protobuf.Timestamp
-	(*PersonIdentity)(nil),         // 15: dental.v1.PersonIdentity
+	(*Member)(nil),                     // 0: dental.v1.Member
+	(*ListMembersRequest)(nil),         // 1: dental.v1.ListMembersRequest
+	(*ListMembersResponse)(nil),        // 2: dental.v1.ListMembersResponse
+	(*FindUserRequest)(nil),            // 3: dental.v1.FindUserRequest
+	(*FindUserResponse)(nil),           // 4: dental.v1.FindUserResponse
+	(*CreateUserRequest)(nil),          // 5: dental.v1.CreateUserRequest
+	(*CreateUserResponse)(nil),         // 6: dental.v1.CreateUserResponse
+	(*AddMemberRequest)(nil),           // 7: dental.v1.AddMemberRequest
+	(*AddMemberResponse)(nil),          // 8: dental.v1.AddMemberResponse
+	(*RemoveMemberRequest)(nil),        // 9: dental.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),       // 10: dental.v1.RemoveMemberResponse
+	(*SetMemberAdminRequest)(nil),      // 11: dental.v1.SetMemberAdminRequest
+	(*SetMemberAdminResponse)(nil),     // 12: dental.v1.SetMemberAdminResponse
+	(*SetMemberBirthDateRequest)(nil),  // 13: dental.v1.SetMemberBirthDateRequest
+	(*SetMemberBirthDateResponse)(nil), // 14: dental.v1.SetMemberBirthDateResponse
+	(*User)(nil),                       // 15: dental.v1.User
+	(*timestamppb.Timestamp)(nil),      // 16: google.protobuf.Timestamp
+	(*PersonIdentity)(nil),             // 17: dental.v1.PersonIdentity
 }
 var file_dental_v1_member_proto_depIdxs = []int32{
-	13, // 0: dental.v1.Member.user:type_name -> dental.v1.User
-	14, // 1: dental.v1.Member.added_at:type_name -> google.protobuf.Timestamp
+	15, // 0: dental.v1.Member.user:type_name -> dental.v1.User
+	16, // 1: dental.v1.Member.added_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: dental.v1.ListMembersResponse.members:type_name -> dental.v1.Member
-	15, // 3: dental.v1.FindUserRequest.identity:type_name -> dental.v1.PersonIdentity
-	13, // 4: dental.v1.FindUserResponse.user:type_name -> dental.v1.User
-	15, // 5: dental.v1.CreateUserRequest.identity:type_name -> dental.v1.PersonIdentity
-	13, // 6: dental.v1.CreateUserResponse.user:type_name -> dental.v1.User
+	17, // 3: dental.v1.FindUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	15, // 4: dental.v1.FindUserResponse.user:type_name -> dental.v1.User
+	17, // 5: dental.v1.CreateUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	15, // 6: dental.v1.CreateUserResponse.user:type_name -> dental.v1.User
 	0,  // 7: dental.v1.AddMemberResponse.member:type_name -> dental.v1.Member
 	0,  // 8: dental.v1.SetMemberAdminResponse.member:type_name -> dental.v1.Member
-	1,  // 9: dental.v1.MemberService.ListMembers:input_type -> dental.v1.ListMembersRequest
-	3,  // 10: dental.v1.MemberService.FindUser:input_type -> dental.v1.FindUserRequest
-	5,  // 11: dental.v1.MemberService.CreateUser:input_type -> dental.v1.CreateUserRequest
-	7,  // 12: dental.v1.MemberService.AddMember:input_type -> dental.v1.AddMemberRequest
-	9,  // 13: dental.v1.MemberService.RemoveMember:input_type -> dental.v1.RemoveMemberRequest
-	11, // 14: dental.v1.MemberService.SetMemberAdmin:input_type -> dental.v1.SetMemberAdminRequest
-	2,  // 15: dental.v1.MemberService.ListMembers:output_type -> dental.v1.ListMembersResponse
-	4,  // 16: dental.v1.MemberService.FindUser:output_type -> dental.v1.FindUserResponse
-	6,  // 17: dental.v1.MemberService.CreateUser:output_type -> dental.v1.CreateUserResponse
-	8,  // 18: dental.v1.MemberService.AddMember:output_type -> dental.v1.AddMemberResponse
-	10, // 19: dental.v1.MemberService.RemoveMember:output_type -> dental.v1.RemoveMemberResponse
-	12, // 20: dental.v1.MemberService.SetMemberAdmin:output_type -> dental.v1.SetMemberAdminResponse
-	15, // [15:21] is the sub-list for method output_type
-	9,  // [9:15] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	0,  // 9: dental.v1.SetMemberBirthDateResponse.member:type_name -> dental.v1.Member
+	1,  // 10: dental.v1.MemberService.ListMembers:input_type -> dental.v1.ListMembersRequest
+	3,  // 11: dental.v1.MemberService.FindUser:input_type -> dental.v1.FindUserRequest
+	5,  // 12: dental.v1.MemberService.CreateUser:input_type -> dental.v1.CreateUserRequest
+	7,  // 13: dental.v1.MemberService.AddMember:input_type -> dental.v1.AddMemberRequest
+	9,  // 14: dental.v1.MemberService.RemoveMember:input_type -> dental.v1.RemoveMemberRequest
+	11, // 15: dental.v1.MemberService.SetMemberAdmin:input_type -> dental.v1.SetMemberAdminRequest
+	13, // 16: dental.v1.MemberService.SetMemberBirthDate:input_type -> dental.v1.SetMemberBirthDateRequest
+	2,  // 17: dental.v1.MemberService.ListMembers:output_type -> dental.v1.ListMembersResponse
+	4,  // 18: dental.v1.MemberService.FindUser:output_type -> dental.v1.FindUserResponse
+	6,  // 19: dental.v1.MemberService.CreateUser:output_type -> dental.v1.CreateUserResponse
+	8,  // 20: dental.v1.MemberService.AddMember:output_type -> dental.v1.AddMemberResponse
+	10, // 21: dental.v1.MemberService.RemoveMember:output_type -> dental.v1.RemoveMemberResponse
+	12, // 22: dental.v1.MemberService.SetMemberAdmin:output_type -> dental.v1.SetMemberAdminResponse
+	14, // 23: dental.v1.MemberService.SetMemberBirthDate:output_type -> dental.v1.SetMemberBirthDateResponse
+	17, // [17:24] is the sub-list for method output_type
+	10, // [10:17] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_member_proto_init() }
@@ -805,7 +926,7 @@ func file_dental_v1_member_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_member_proto_rawDesc), len(file_dental_v1_member_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

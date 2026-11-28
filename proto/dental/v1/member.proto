@@ -41,6 +41,11 @@ service MemberService {
   rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse) {}
 
   rpc SetMemberAdmin(SetMemberAdminRequest) returns (SetMemberAdminResponse) {}
+
+  // Sets a member's birth date (also their own, as in AuthService.UpdateProfile),
+  // for birthdays on the clinic app's calendar. It belongs to the account, so the
+  // member's other clinics see it too. Fails with NOT_FOUND "user_not_found".
+  rpc SetMemberBirthDate(SetMemberBirthDateRequest) returns (SetMemberBirthDateResponse) {}
 }
 
 message Member {
@@ -50,6 +55,8 @@ message Member {
   // Whether the member may manage the clinic's members. The owner always may.
   bool is_admin = 3;
   google.protobuf.Timestamp added_at = 4;
+  // The account's birth date (Profile.birth_date): Gregorian "YYYY-MM-DD", or empty.
+  string birth_date = 5;
 }
 
 message ListMembersRequest {}
@@ -129,5 +136,16 @@ message SetMemberAdminRequest {
 }
 
 message SetMemberAdminResponse {
+  Member member = 1;
+}
+
+message SetMemberBirthDateRequest {
+  // 16 raw UUID bytes.
+  bytes user_id = 1 [(buf.validate.field).bytes.len = 16];
+  // Gregorian "YYYY-MM-DD"; empty removes the birth date on file.
+  string birth_date = 2 [(buf.validate.field).string.pattern = "^([0-9]{4}-[0-9]{2}-[0-9]{2})?$"];
+}
+
+message SetMemberBirthDateResponse {
   Member member = 1;
 }
