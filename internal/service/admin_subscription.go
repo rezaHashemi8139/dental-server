@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -12,7 +14,7 @@ import (
 	dentalv1 "dental-server/gen/dental/v1"
 )
 
-// One subscription in full. ListSubscriptions (admin.go) lists them.
+// One subscription, or one clinic, in full. ListSubscriptions (admin.go) lists subscriptions.
 
 func (s *AdminService) GetSubscription(ctx context.Context, req *dentalv1.GetSubscriptionRequest) (*dentalv1.GetSubscriptionResponse, error) {
 	id, ok := toUUID(req.GetId())
@@ -32,24 +34,72 @@ func (s *AdminService) GetSubscription(ctx context.Context, req *dentalv1.GetSub
 	if err := s.d.DB.QueryRow(ctx, `SELECT email FROM users WHERE id = $1`, ownerID).Scan(&res.Email); err != nil {
 		return nil, internal(err)
 	}
-	if res.Clinics, err = clinicDetailsOf(ctx, s.d.DB, ownerID, sub); err != nil {
+	limits := &paidTime{MaxClinics: int32(sub.GetMaxClinics()), MaxDevicesPerClinic: int32(sub.GetMaxDevicesPerClinic())}
+	if res.Clinics, err = clinicDetails(ctx, s.d.DB, `c.owner_id = $1`, ownerID, limits); err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-// clinicDetailsOf returns the owner's clinics, oldest first, with all their installations,
-// and which of them are beyond the limits of the subscription sub (see checkClinicAccess).
-func clinicDetailsOf(ctx context.Context, q querier, ownerID pgtype.UUID, sub *dentalv1.Subscription) ([]*dentalv1.ClinicDetail, error) {
+func (s *AdminService) GetClinic(ctx context.Context, req *dentalv1.GetClinicRequest) (*dentalv1.GetClinicResponse, error) {
+	id, ok := toUUID(req.GetId())
+	if !ok {
+		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
+	var ownerID pgtype.UUID
+	res := &dentalv1.GetClinicResponse{Owner: &dentalv1.User{}, OwnerIdentity: &dentalv1.PersonIdentity{}}
+	err := s.d.DB.QueryRow(ctx, `
+		SELECT u.id, u.username, u.full_name, coalesce(u.identity, ''), u.phone, u.email, u.disabled_at IS NOT NULL
+		FROM clinics c JOIN users u ON u.id = c.owner_id
+		WHERE c.id = $1`, id,
+	).Scan(&ownerID, &res.Owner.Username, &res.Owner.FullName, &res.OwnerIdentity.Number, &res.OwnerPhone,
+		&res.OwnerEmail, &res.OwnerDisabled)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fail(connect.CodeNotFound, reasonClinicNotFound)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+	res.Owner.Id = uuidBytes(ownerID)
+
+	// The limits Login checks now; none when no subscription is in force.
+	paid, inForce, err := paidTimeAt(ctx, s.d.DB, ownerID, s.d.Now())
+	if err != nil {
+		return nil, internal(err)
+	}
+	var limits *paidTime
+	if inForce {
+		limits = &paid
+		res.PaidUntil = timestamppb.New(paid.EndsAt)
+		res.MaxClinics, res.MaxDevicesPerClinic = uint32(paid.MaxClinics), uint32(paid.MaxDevicesPerClinic)
+	}
+
+	clinics, err := clinicDetails(ctx, s.d.DB, `c.id = $1`, id, limits)
+	if err != nil {
+		return nil, err
+	}
+	if len(clinics) == 0 { // deleted meanwhile
+		return nil, fail(connect.CodeNotFound, reasonClinicNotFound)
+	}
+	res.Clinic = clinics[0]
+	return res, nil
+}
+
+// clinicDetails returns the clinics that filter (an SQL condition on the clinic c, with
+// arg as $1) selects, oldest first, with all their installations, and which of them are
+// beyond limits (as checkClinicAccess counts them); with nil limits, none are.
+func clinicDetails(ctx context.Context, q querier, filter string, arg any, limits *paidTime) ([]*dentalv1.ClinicDetail, error) {
+	// The rank is the clinic's position among its owner's clinics, oldest first.
 	rows, err := q.Query(ctx, `
 		SELECT c.id, c.name, c.license_number, c.phone, coalesce(pr.name, ''), c.city, c.address, c.postal_code,
 		       c.latitude, c.longitude, c.created_at, c.updated_at,
 		       (SELECT count(*) FROM clinic_members m WHERE m.clinic_id = c.id),
-		       (SELECT count(*) FROM clinic_patients cp WHERE cp.clinic_id = c.id)
+		       (SELECT count(*) FROM clinic_patients cp WHERE cp.clinic_id = c.id),
+		       (SELECT count(*) FROM clinics o WHERE o.owner_id = c.owner_id AND (o.created_at, o.id) <= (c.created_at, c.id))
 		FROM clinics c
 		LEFT JOIN provinces pr ON pr.id = c.province_id
-		WHERE c.owner_id = $1
-		ORDER BY c.created_at, c.id`, ownerID)
+		WHERE `+filter+`
+		ORDER BY c.created_at, c.id`, arg)
 	if err != nil {
 		return nil, internal(err)
 	}
@@ -62,10 +112,10 @@ func clinicDetailsOf(ctx context.Context, q querier, ownerID pgtype.UUID, sub *d
 		var id pgtype.UUID
 		var latitude, longitude pgtype.Float8
 		var createdAt, updatedAt time.Time
-		var members, patients int64
+		var members, patients, rank int64
 		c := &dentalv1.ClinicDetail{}
 		if err := rows.Scan(&id, &c.Name, &c.LicenseNumber, &c.Phone, &c.Province, &c.City, &c.Address, &c.PostalCode,
-			&latitude, &longitude, &createdAt, &updatedAt, &members, &patients); err != nil {
+			&latitude, &longitude, &createdAt, &updatedAt, &members, &patients, &rank); err != nil {
 			return nil, internal(err)
 		}
 		c.Id = uuidBytes(id)
@@ -74,7 +124,7 @@ func clinicDetailsOf(ctx context.Context, q querier, ownerID pgtype.UUID, sub *d
 		}
 		c.CreatedAt, c.UpdatedAt = timestamppb.New(createdAt), timestamppb.New(updatedAt)
 		c.MemberCount, c.PatientCount = uint32(members), uint32(patients)
-		c.OverClinicLimit = int64(len(clinics)+1) > int64(sub.GetMaxClinics())
+		c.OverClinicLimit = limits != nil && rank > int64(limits.MaxClinics)
 		byClinic[id] = c
 		ids = append(ids, id)
 		clinics = append(clinics, c)
@@ -135,7 +185,7 @@ func clinicDetailsOf(ctx context.Context, q querier, ownerID pgtype.UUID, sub *d
 			inst.LastLoginAt = timestamppb.New(loginAt.Time)
 			inst.LastLoginUser = &dentalv1.User{Id: uuidBytes(loginUserID), Username: loginUsername.String, FullName: loginFullName.String}
 		}
-		inst.OverDeviceLimit = rank.Valid && rank.Int64 > int64(sub.GetMaxDevicesPerClinic())
+		inst.OverDeviceLimit = limits != nil && rank.Valid && rank.Int64 > int64(limits.MaxDevicesPerClinic)
 		c := byClinic[clinicID]
 		c.Installations = append(c.Installations, inst)
 	}

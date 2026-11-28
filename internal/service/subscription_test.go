@@ -487,4 +487,45 @@ func TestAdminGetsSubscription(t *testing.T) {
 	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
 	_, err = e.admin(adminSession{}).GetSubscription(ctx, &dentalv1.GetSubscriptionRequest{Id: sold.GetSubscription().GetId()})
 	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
+
+	// One clinic, with the limits of the subscription in force now and its owner.
+	getClinic := func(id []byte) *dentalv1.GetClinicResponse {
+		t.Helper()
+		res, err := admin.GetClinic(ctx, &dentalv1.GetClinicRequest{Id: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	gotB := getClinic(b.GetClinicId())
+	if !bytes.Equal(gotB.GetClinic().GetId(), b.GetClinicId()) || !gotB.GetClinic().GetOverClinicLimit() ||
+		len(gotB.GetClinic().GetInstallations()) != 1 || gotB.GetOwner().GetUsername() != "doctor" ||
+		!bytes.Equal(gotB.GetOwner().GetId(), user.GetUser().GetId()) || gotB.GetOwnerIdentity().GetNumber() != personCode(1) ||
+		gotB.GetOwnerPhone() == "" || gotB.GetOwnerEmail() != "doctor@clinic.example" || gotB.GetOwnerDisabled() ||
+		!gotB.GetPaidUntil().AsTime().Equal(sold.GetSubscription().GetEndsAt().AsTime()) ||
+		gotB.GetMaxClinics() != 1 || gotB.GetMaxDevicesPerClinic() != 1 {
+		t.Errorf("clinic B alone = %v", gotB)
+	}
+	gotA := getClinic(a1.GetClinicId()).GetClinic()
+	if gotA.GetOverClinicLimit() || gotA.GetPatientCount() != 1 || len(gotA.GetInstallations()) != 3 ||
+		!gotA.GetInstallations()[0].GetOverDeviceLimit() || gotA.GetInstallations()[1].GetOverDeviceLimit() ||
+		gotA.GetInstallations()[1].GetLastLoginUser().GetUsername() != "doctor" {
+		t.Errorf("clinic A alone = %v", gotA)
+	}
+
+	// Without a subscription in force, nothing is beyond a limit.
+	other := e.register(5, "dentist")
+	gotOther := getClinic(other.GetClinicId())
+	if gotOther.GetPaidUntil() != nil || gotOther.GetMaxClinics() != 0 || gotOther.GetClinic().GetOverClinicLimit() ||
+		len(gotOther.GetClinic().GetInstallations()) != 1 || gotOther.GetClinic().GetInstallations()[0].GetOverDeviceLimit() ||
+		gotOther.GetOwner().GetUsername() != "dentist" {
+		t.Errorf("clinic without a subscription = %v", gotOther)
+	}
+
+	_, err = admin.GetClinic(ctx, &dentalv1.GetClinicRequest{Id: bytes.Repeat([]byte{3}, 16)})
+	wantCode(t, err, connect.CodeNotFound, reasonClinicNotFound)
+	_, err = admin.GetClinic(ctx, &dentalv1.GetClinicRequest{Id: []byte{1}})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	_, err = e.admin(adminSession{}).GetClinic(ctx, &dentalv1.GetClinicRequest{Id: b.GetClinicId()})
+	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 }

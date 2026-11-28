@@ -74,6 +74,10 @@ service AdminService {
   // clinics with all their installations. Fails with NOT_FOUND "subscription_not_found".
   rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse) {}
 
+  // One clinic in full, with all its installations and its owner. Its limits are the
+  // ones of the owner's subscription in force now. Fails with NOT_FOUND "clinic_not_found".
+  rpc GetClinic(GetClinicRequest) returns (GetClinicResponse) {}
+
   // Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
   // a page at a time. Asking for pending ones lists them oldest first (the queue to
   // review); otherwise newest first. Ties are ordered by id, so pages are stable.
@@ -347,8 +351,34 @@ message GetSubscriptionResponse {
   SubscriptionListItem item = 1;
   // The owner's email; empty when none was given.
   string email = 2;
-  // The owner's clinics now, oldest first.
+  // The owner's clinics now, oldest first. Their limits are this subscription's.
   repeated ClinicDetail clinics = 3;
+}
+
+message GetClinicRequest {
+  // 16 raw UUID bytes (ClinicSummary.id or ClinicDetail.id).
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message GetClinicResponse {
+  // Its limits are the ones of the owner's subscription in force now: none are
+  // exceeded when no subscription is in force.
+  ClinicDetail clinic = 1;
+  // The owner.
+  User owner = 2;
+  // The owner's identification code, for GetUser; empty if none is on file.
+  PersonIdentity owner_identity = 3;
+  string owner_phone = 4;
+  // Empty when none was given.
+  string owner_email = 5;
+  bool owner_disabled = 6;
+  // When the owner's paid time ends: the subscription in force, plus renewals that
+  // follow it without a gap. Unset when none is in force (logins fail with
+  // "subscription_inactive").
+  google.protobuf.Timestamp paid_until = 7;
+  // What the subscription in force allows; 0 when none is in force.
+  uint32 max_clinics = 8;
+  uint32 max_devices_per_clinic = 9;
 }
 
 // A clinic in full, as the admin panel shows it under a subscription.
@@ -372,9 +402,9 @@ message ClinicDetail {
   uint32 member_count = 12;
   // Patients synced from the clinic.
   uint32 patient_count = 13;
-  // Beyond this subscription's max_clinics, counting the owner's clinics oldest first
-  // as AuthService.Login does: while it is in force, logins there fail with
-  // "clinic_limit_exceeded".
+  // Beyond max_clinics of the subscription it is shown with (see GetSubscriptionResponse
+  // and GetClinicResponse), counting the owner's clinics oldest first as AuthService.Login
+  // does: while that subscription is in force, logins there fail with "clinic_limit_exceeded".
   bool over_clinic_limit = 14;
   // All installations, revoked ones included: not revoked first, then newest first.
   repeated InstallationDetail installations = 15;
@@ -406,9 +436,10 @@ message InstallationDetail {
   google.protobuf.Timestamp last_login_at = 15;
   // Who made the last login; unset with last_login_at.
   User last_login_user = 16;
-  // Not revoked, but beyond this subscription's max_devices_per_clinic, counting the
-  // clinic's installations that are not revoked oldest first as AuthService.Login does:
-  // while it is in force, logins there fail with "device_limit_exceeded".
+  // Not revoked, but beyond max_devices_per_clinic of the subscription its clinic is shown
+  // with, counting the clinic's installations that are not revoked oldest first as
+  // AuthService.Login does: while that subscription is in force, logins there fail with
+  // "device_limit_exceeded".
   bool over_device_limit = 17;
 }
 
