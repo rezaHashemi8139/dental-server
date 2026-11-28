@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 39,
+    "version": 41,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -722,7 +722,7 @@
     }
   },
   "calendarEvents": {
-    "title": "Occasions in {{month}}",
+    "title": "Occasions in {{month}} {{year}}",
     "loading": "Loading occasions...",
     "failed": "Could not load the occasions. Check the internet connection.",
     "retry": "Try again",
@@ -912,7 +912,10 @@
     "nextMonth": "Next month",
     "previousYear": "Previous year",
     "nextYear": "Next year",
-    "chooseMonth": "Choose month"
+    "chooseMonth": "Choose month",
+    "chooseYear": "Choose year",
+    "previousYears": "Earlier years",
+    "nextYears": "Later years"
   },
   "currency": {
     "label": "Currency",

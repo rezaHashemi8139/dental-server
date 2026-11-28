@@ -4,7 +4,7 @@
     "name": "فارسی",
     "abbr": "FA",
     "dir": "rtl",
-    "version": 53,
+    "version": 55,
     "currency": {
       "default": "IRT",
       "minorUnit": false
@@ -722,7 +722,7 @@
     }
   },
   "calendarEvents": {
-    "title": "مناسبت‌های {{month}}",
+    "title": "مناسبت‌های {{month}} ماه {{year}}",
     "loading": "در حال دریافت مناسبت‌ها...",
     "failed": "مناسبت‌ها دریافت نشد. اتصال اینترنت را بررسی کنید.",
     "retry": "تلاش دوباره",
@@ -912,7 +912,10 @@
     "nextMonth": "ماه بعد",
     "previousYear": "سال قبل",
     "nextYear": "سال بعد",
-    "chooseMonth": "انتخاب ماه"
+    "chooseMonth": "انتخاب ماه",
+    "chooseYear": "انتخاب سال",
+    "previousYears": "سال‌های قبل",
+    "nextYears": "سال‌های بعد"
   },
   "currency": {
     "label": "واحد پول",

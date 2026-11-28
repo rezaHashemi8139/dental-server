@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 39,
+    "version": 41,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -722,7 +722,7 @@
     }
   },
   "calendarEvents": {
-    "title": "Anlässe im {{month}}",
+    "title": "Anlässe im {{month}} {{year}}",
     "loading": "Anlässe werden geladen...",
     "failed": "Die Anlässe konnten nicht geladen werden. Prüfen Sie die Internetverbindung.",
     "retry": "Erneut versuchen",
@@ -912,7 +912,10 @@
     "nextMonth": "Nächster Monat",
     "previousYear": "Vorheriges Jahr",
     "nextYear": "Nächstes Jahr",
-    "chooseMonth": "Monat wählen"
+    "chooseMonth": "Monat wählen",
+    "chooseYear": "Jahr wählen",
+    "previousYears": "Frühere Jahre",
+    "nextYears": "Spätere Jahre"
   },
   "currency": {
     "label": "Währung",
