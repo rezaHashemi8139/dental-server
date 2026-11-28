@@ -4,9 +4,11 @@ package dental.v1;
 
 import "buf/validate/validate.proto";
 import "dental/v1/auth.proto";
+import "dental/v1/installation.proto";
 import "dental/v1/patient.proto";
 import "dental/v1/person.proto";
 import "dental/v1/subscription.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // The admin panel: system administrators, subscription plans, selling
@@ -67,6 +69,10 @@ service AdminService {
   // Subscriptions of every user, a page at a time: newest first (starts_at, then id,
   // both descending), with their owner and the payment that bought them.
   rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse) {}
+
+  // One subscription in full: its owner, the payment that bought it, and the owner's
+  // clinics with all their installations. Fails with NOT_FOUND "subscription_not_found".
+  rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse) {}
 
   // Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
   // a page at a time. Asking for pending ones lists them oldest first (the queue to
@@ -326,6 +332,84 @@ message SubscriptionListItem {
   // The approved payment that bought it (Payment.subscription_id); unset when it was
   // sold in the admin panel (SellSubscription).
   Payment purchase = 7;
+  // Clinics the owner owns now, oldest first, with their installations that are not
+  // revoked (as GetUser.owned_clinics). Rows of the same owner repeat them.
+  repeated ClinicSummary owned_clinics = 8;
+}
+
+message GetSubscriptionRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message GetSubscriptionResponse {
+  // As ListSubscriptions gives it (owned_clinics included).
+  SubscriptionListItem item = 1;
+  // The owner's email; empty when none was given.
+  string email = 2;
+  // The owner's clinics now, oldest first.
+  repeated ClinicDetail clinics = 3;
+}
+
+// A clinic in full, as the admin panel shows it under a subscription.
+message ClinicDetail {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  string name = 2;
+  string license_number = 3;
+  string phone = 4;
+  // Province name; empty for clinics registered before cities were picked from a list.
+  string province = 5;
+  string city = 6;
+  string address = 7;
+  // Empty when none was given.
+  string postal_code = 8;
+  // Unset when the clinic has none.
+  GeoLocation location = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  // Accounts that are members of the clinic, the owner included.
+  uint32 member_count = 12;
+  // Patients synced from the clinic.
+  uint32 patient_count = 13;
+  // Beyond this subscription's max_clinics, counting the owner's clinics oldest first
+  // as AuthService.Login does: while it is in force, logins there fail with
+  // "clinic_limit_exceeded".
+  bool over_clinic_limit = 14;
+  // All installations, revoked ones included: not revoked first, then newest first.
+  repeated InstallationDetail installations = 15;
+}
+
+// An installation of the desktop app, as the admin panel shows it. Never its secret.
+message InstallationDetail {
+  // 16 raw UUID bytes.
+  bytes id = 1;
+  // SHA-256 of the Windows MachineGuid: the same computer has the same hash across
+  // reinstalls of the app.
+  bytes machine_id_hash = 2;
+  string hostname = 3;
+  string os_name = 4;
+  string os_version = 5;
+  string cpu_model = 6;
+  uint32 cpu_cores = 7;
+  uint64 memory_bytes = 8;
+  repeated string mac_addresses = 9;
+  // Desktop app version when it registered.
+  string app_version = 10;
+  // How long a login on this installation keeps working offline.
+  google.protobuf.Duration offline_access = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp last_seen_at = 13;
+  // Unset unless revoked.
+  google.protobuf.Timestamp revoked_at = 14;
+  // The last login on this installation; unset if nobody logged in on it.
+  google.protobuf.Timestamp last_login_at = 15;
+  // Who made the last login; unset with last_login_at.
+  User last_login_user = 16;
+  // Not revoked, but beyond this subscription's max_devices_per_clinic, counting the
+  // clinic's installations that are not revoked oldest first as AuthService.Login does:
+  // while it is in force, logins there fail with "device_limit_exceeded".
+  bool over_device_limit = 17;
 }
 
 message ListPaymentsRequest {
@@ -524,4 +608,6 @@ message UserListItem {
   google.protobuf.Timestamp paid_until = 10;
   // The last login on any installation; unset if the account never logged in.
   google.protobuf.Timestamp last_login_at = 11;
+  // Installations that are not revoked, across the clinics the account owns.
+  uint32 installation_count = 12;
 }

@@ -34,6 +34,8 @@ func (s *AdminService) ListUsers(ctx context.Context, req *dentalv1.ListUsersReq
 		       u.disabled_at IS NOT NULL, u.created_at,
 		       (SELECT count(*) FROM clinics c WHERE c.owner_id = u.id),
 		       (SELECT count(*) FROM clinic_members m WHERE m.user_id = u.id),
+		       (SELECT count(*) FROM installations i JOIN clinics c ON c.id = i.clinic_id
+		        WHERE c.owner_id = u.id AND i.revoked_at IS NULL),
 		       (SELECT p.name FROM subscriptions s JOIN plans p ON p.id = s.plan_id
 		        WHERE s.user_id = u.id AND s.canceled_at IS NULL AND s.starts_at <= $4 AND $4 < s.ends_at
 		        ORDER BY s.starts_at DESC LIMIT 1),
@@ -49,17 +51,18 @@ func (s *AdminService) ListUsers(ctx context.Context, req *dentalv1.ListUsersReq
 	for rows.Next() {
 		var id pgtype.UUID
 		var createdAt time.Time
-		var owned, member int64
+		var owned, member, installations int64
 		var planName pgtype.Text
 		var lastLogin pgtype.Timestamptz
 		item := &dentalv1.UserListItem{User: &dentalv1.User{}, Identity: &dentalv1.PersonIdentity{}}
 		if err := rows.Scan(&id, &item.User.Username, &item.User.FullName, &item.Identity.Number, &item.Phone,
-			&item.Email, &item.Disabled, &createdAt, &owned, &member, &planName, &lastLogin); err != nil {
+			&item.Email, &item.Disabled, &createdAt, &owned, &member, &installations, &planName, &lastLogin); err != nil {
 			return nil, internal(err)
 		}
 		item.User.Id = uuidBytes(id)
 		item.CreatedAt = timestamppb.New(createdAt)
 		item.OwnedClinicCount, item.MemberClinicCount = uint32(owned), uint32(member)
+		item.InstallationCount = uint32(installations)
 		item.PlanName = planName.String
 		if lastLogin.Valid {
 			item.LastLoginAt = timestamppb.New(lastLogin.Time)

@@ -57,6 +57,9 @@ const (
 	// AdminServiceListSubscriptionsProcedure is the fully-qualified name of the AdminService's
 	// ListSubscriptions RPC.
 	AdminServiceListSubscriptionsProcedure = "/dental.v1.AdminService/ListSubscriptions"
+	// AdminServiceGetSubscriptionProcedure is the fully-qualified name of the AdminService's
+	// GetSubscription RPC.
+	AdminServiceGetSubscriptionProcedure = "/dental.v1.AdminService/GetSubscription"
 	// AdminServiceListPaymentsProcedure is the fully-qualified name of the AdminService's ListPayments
 	// RPC.
 	AdminServiceListPaymentsProcedure = "/dental.v1.AdminService/ListPayments"
@@ -112,6 +115,9 @@ type AdminServiceClient interface {
 	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
 	// both descending), with their owner and the payment that bought them.
 	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
+	// One subscription in full: its owner, the payment that bought it, and the owner's
+	// clinics with all their installations. Fails with NOT_FOUND "subscription_not_found".
+	GetSubscription(context.Context, *v1.GetSubscriptionRequest) (*v1.GetSubscriptionResponse, error)
 	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
 	// a page at a time. Asking for pending ones lists them oldest first (the queue to
 	// review); otherwise newest first. Ties are ordered by id, so pages are stable.
@@ -216,6 +222,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("ListSubscriptions")),
 			connect.WithClientOptions(opts...),
 		),
+		getSubscription: connect.NewClient[v1.GetSubscriptionRequest, v1.GetSubscriptionResponse](
+			httpClient,
+			baseURL+AdminServiceGetSubscriptionProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("GetSubscription")),
+			connect.WithClientOptions(opts...),
+		),
 		listPayments: connect.NewClient[v1.ListPaymentsRequest, v1.ListPaymentsResponse](
 			httpClient,
 			baseURL+AdminServiceListPaymentsProcedure,
@@ -279,6 +291,7 @@ type adminServiceClient struct {
 	sellSubscription     *connect.Client[v1.SellSubscriptionRequest, v1.SellSubscriptionResponse]
 	cancelSubscription   *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
 	listSubscriptions    *connect.Client[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse]
+	getSubscription      *connect.Client[v1.GetSubscriptionRequest, v1.GetSubscriptionResponse]
 	listPayments         *connect.Client[v1.ListPaymentsRequest, v1.ListPaymentsResponse]
 	approvePayment       *connect.Client[v1.ApprovePaymentRequest, v1.ApprovePaymentResponse]
 	rejectPayment        *connect.Client[v1.RejectPaymentRequest, v1.RejectPaymentResponse]
@@ -373,6 +386,15 @@ func (c *adminServiceClient) CancelSubscription(ctx context.Context, req *v1.Can
 // ListSubscriptions calls dental.v1.AdminService.ListSubscriptions.
 func (c *adminServiceClient) ListSubscriptions(ctx context.Context, req *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error) {
 	response, err := c.listSubscriptions.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// GetSubscription calls dental.v1.AdminService.GetSubscription.
+func (c *adminServiceClient) GetSubscription(ctx context.Context, req *v1.GetSubscriptionRequest) (*v1.GetSubscriptionResponse, error) {
+	response, err := c.getSubscription.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -481,6 +503,9 @@ type AdminServiceHandler interface {
 	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
 	// both descending), with their owner and the payment that bought them.
 	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
+	// One subscription in full: its owner, the payment that bought it, and the owner's
+	// clinics with all their installations. Fails with NOT_FOUND "subscription_not_found".
+	GetSubscription(context.Context, *v1.GetSubscriptionRequest) (*v1.GetSubscriptionResponse, error)
 	// Payments reported by clinic owners (BillingService.CreatePayment), with who paid,
 	// a page at a time. Asking for pending ones lists them oldest first (the queue to
 	// review); otherwise newest first. Ties are ordered by id, so pages are stable.
@@ -581,6 +606,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("ListSubscriptions")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceGetSubscriptionHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceGetSubscriptionProcedure,
+		svc.GetSubscription,
+		connect.WithSchema(adminServiceMethods.ByName("GetSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
 	adminServiceListPaymentsHandler := connect.NewUnaryHandlerSimple(
 		AdminServiceListPaymentsProcedure,
 		svc.ListPayments,
@@ -651,6 +682,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceCancelSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceListSubscriptionsProcedure:
 			adminServiceListSubscriptionsHandler.ServeHTTP(w, r)
+		case AdminServiceGetSubscriptionProcedure:
+			adminServiceGetSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceListPaymentsProcedure:
 			adminServiceListPaymentsHandler.ServeHTTP(w, r)
 		case AdminServiceApprovePaymentProcedure:
@@ -714,6 +747,10 @@ func (UnimplementedAdminServiceHandler) CancelSubscription(context.Context, *v1.
 
 func (UnimplementedAdminServiceHandler) ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListSubscriptions is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) GetSubscription(context.Context, *v1.GetSubscriptionRequest) (*v1.GetSubscriptionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.GetSubscription is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) ListPayments(context.Context, *v1.ListPaymentsRequest) (*v1.ListPaymentsResponse, error) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -343,4 +344,147 @@ func TestIdentificationCodes(t *testing.T) {
 	again.GetExistingOwner().Identity = personIdentity("ABC99999")
 	_, err = e.installation.Register(ctx, again)
 	wantCode(t, err, connect.CodeFailedPrecondition, reasonIdentityMismatch)
+}
+
+func TestAdminGetsSubscription(t *testing.T) {
+	e := newTestEnv(t)
+	ctx := context.Background()
+	if _, err := AddFirstAdmin(ctx, e.deps.DB, &dentalv1.CreateAdminRequest{
+		Username: "root", Password: "Passw0rd-root", FullName: "Root",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	session, _, err := e.adminLogin("root", "Passw0rd-root")
+	if err != nil {
+		t.Fatal(err)
+	}
+	admin := e.admin(session)
+
+	// Clinic A with three installations (the last one revoked), then clinic B with one.
+	a1 := e.register(1, "doctor")
+	toClinicA := func(machine byte) *dentalv1.RegisterResponse {
+		t.Helper()
+		res, err := e.installation.Register(ctx, existingOwnerOf(&dentalv1.RegisterRequest{
+			Machine: registerRequest(machine, "doctor").GetMachine(),
+			Target:  &dentalv1.RegisterRequest_ExistingClinic{ExistingClinic: &dentalv1.ExistingClinic{LicenseNumber: "LIC-1"}},
+		}, "doctor", 1))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res
+	}
+	a2, a3 := toClinicA(2), toClinicA(3)
+	b, err := e.installation.Register(ctx, existingOwnerOf(registerRequest(4, "unused"), "doctor", 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	revokedID, _ := toUUID(a3.GetInstallationId())
+	if _, err := e.deps.DB.Exec(ctx, `UPDATE installations SET revoked_at = now() WHERE id = $1`, revokedID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.deps.DB.Exec(ctx, `UPDATE users SET email = 'doctor@clinic.example' WHERE username = 'doctor'`); err != nil {
+		t.Fatal(err)
+	}
+
+	// One clinic with one installation: clinic B and the second installation of A are beyond it.
+	plan, err := admin.CreatePlan(ctx, &dentalv1.CreatePlanRequest{
+		Name: "Basic", MaxClinics: 1, MaxDevicesPerClinic: 1, DurationDays: 30, PriceRials: 10_000_000,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	user, err := admin.GetUser(ctx, &dentalv1.GetUserRequest{Identity: personIdentity(personCode(1))})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sold, err := admin.SellSubscription(ctx, &dentalv1.SellSubscriptionRequest{
+		UserId: user.GetUser().GetId(), PlanId: plan.GetPlan().GetId(), Note: "receipt 7",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The doctor logs in on the first installation and syncs a patient.
+	login, err := e.login(a1, "doctor", "Passw0rd-doctor")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.sync(login.res.GetSessionToken()).Push(ctx, &dentalv1.PushRequest{
+		Patients: []*dentalv1.Patient{testPatient(personCode(5000), "Sara", time.Now())},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := admin.GetSubscription(ctx, &dentalv1.GetSubscriptionRequest{Id: sold.GetSubscription().GetId()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	item := res.GetItem()
+	if !bytes.Equal(item.GetSubscription().GetId(), sold.GetSubscription().GetId()) ||
+		item.GetSubscription().GetNote() != "receipt 7" ||
+		item.GetStatus() != dentalv1.SubscriptionStatus_SUBSCRIPTION_STATUS_ACTIVE ||
+		item.GetUser().GetUsername() != "doctor" || item.GetIdentity().GetNumber() != personCode(1) ||
+		item.GetPhone() == "" || item.GetUserDisabled() || item.GetPurchase() != nil || len(item.GetOwnedClinics()) != 2 {
+		t.Errorf("item = %v", item)
+	}
+	if res.GetEmail() != "doctor@clinic.example" {
+		t.Errorf("email = %q", res.GetEmail())
+	}
+
+	// The clinics oldest first: A, then B beyond the clinic limit.
+	if len(res.GetClinics()) != 2 {
+		t.Fatalf("clinics = %v", res.GetClinics())
+	}
+	clinicA, clinicB := res.GetClinics()[0], res.GetClinics()[1]
+	if !bytes.Equal(clinicA.GetId(), a1.GetClinicId()) || clinicA.GetName() != "Clinic doctor" ||
+		clinicA.GetLicenseNumber() != "LIC-1" || clinicA.GetPhone() != "02112345678" ||
+		clinicA.GetProvince() == "" || clinicA.GetCity() == "" || clinicA.GetAddress() != "1 Test Street" ||
+		clinicA.GetLocation().GetLatitude() != 35.6892 || clinicA.GetLocation().GetLongitude() != 51.3890 ||
+		clinicA.GetCreatedAt() == nil || clinicA.GetUpdatedAt() == nil ||
+		clinicA.GetMemberCount() != 1 || clinicA.GetPatientCount() != 1 || clinicA.GetOverClinicLimit() {
+		t.Errorf("clinic A = %v", clinicA)
+	}
+	if !bytes.Equal(clinicB.GetId(), b.GetClinicId()) || !clinicB.GetOverClinicLimit() ||
+		clinicB.GetPatientCount() != 0 || len(clinicB.GetInstallations()) != 1 ||
+		clinicB.GetInstallations()[0].GetOverDeviceLimit() {
+		t.Errorf("clinic B = %v", clinicB)
+	}
+
+	// A's installations: not revoked newest first, then the revoked one. Only the oldest
+	// one that is not revoked is within the device limit.
+	installations := clinicA.GetInstallations()
+	if len(installations) != 3 {
+		t.Fatalf("installations of A = %v", installations)
+	}
+	for i, want := range []struct {
+		inst       *dentalv1.RegisterResponse
+		overLimit  bool
+		revoked    bool
+		loggedInBy string
+	}{
+		{a2, true, false, ""},
+		{a1, false, false, "doctor"},
+		{a3, false, true, ""},
+	} {
+		got := installations[i]
+		if !bytes.Equal(got.GetId(), want.inst.GetInstallationId()) || got.GetOverDeviceLimit() != want.overLimit ||
+			(got.GetRevokedAt() != nil) != want.revoked || got.GetLastLoginUser().GetUsername() != want.loggedInBy ||
+			(got.GetLastLoginAt() != nil) != (want.loggedInBy != "") {
+			t.Errorf("installation %d = %v", i, got)
+		}
+	}
+	first := installations[1]
+	if !bytes.Equal(first.GetMachineIdHash(), bytes.Repeat([]byte{1}, 32)) || first.GetHostname() != "clinic-pc" ||
+		len(first.GetMacAddresses()) != 1 || first.GetMacAddresses()[0] != "AA:BB:CC:DD:EE:FF" ||
+		first.GetOfflineAccess().AsDuration() != 7*24*time.Hour || first.GetCreatedAt() == nil ||
+		first.GetLastSeenAt() == nil || len(first.GetLastLoginUser().GetId()) != 16 {
+		t.Errorf("first installation = %v", first)
+	}
+
+	_, err = admin.GetSubscription(ctx, &dentalv1.GetSubscriptionRequest{Id: bytes.Repeat([]byte{3}, 16)})
+	wantCode(t, err, connect.CodeNotFound, reasonSubscriptionNotFound)
+	_, err = admin.GetSubscription(ctx, &dentalv1.GetSubscriptionRequest{Id: []byte{1}})
+	wantCode(t, err, connect.CodeInvalidArgument, reasonInvalidArgument)
+	_, err = e.admin(adminSession{}).GetSubscription(ctx, &dentalv1.GetSubscriptionRequest{Id: sold.GetSubscription().GetId()})
+	wantCode(t, err, connect.CodeUnauthenticated, reasonUnauthenticated)
 }

@@ -65,6 +65,19 @@ func TestAdminListsPages(t *testing.T) {
 		alice.GetId(), planID, active, bob.GetId(), accountID); err != nil {
 		t.Fatal(err)
 	}
+	// alice owns two clinics: the older one with two installations, one of them revoked.
+	if _, err := e.deps.DB.Exec(ctx, `
+		WITH c AS (
+			INSERT INTO clinics (name, license_number, phone, city, address, owner_id, created_at)
+			VALUES ('Old Clinic', 'LIC-OLD', '02112345678', 'Tehran', '1 Test Street', $1, now() - interval '2 days'),
+			       ('New Clinic', 'LIC-NEW', '02112345678', 'Tehran', '2 Test Street', $1, now() - interval '1 day')
+			RETURNING id, name)
+		INSERT INTO installations (secret_hash, machine_id_hash, clinic_id, revoked_at)
+		SELECT sha256(gen_random_uuid()::text::bytea), sha256(gen_random_uuid()::text::bytea), c.id, v.revoked_at
+		FROM c, (VALUES (NULL::timestamptz), (now())) v (revoked_at)
+		WHERE c.name = 'Old Clinic'`, alice.GetId()); err != nil {
+		t.Fatal(err)
+	}
 
 	list := func(req *dentalv1.ListSubscriptionsRequest) *dentalv1.ListSubscriptionsResponse {
 		t.Helper()
@@ -109,6 +122,17 @@ func TestAdminListsPages(t *testing.T) {
 		}
 		if item.GetIdentity().GetNumber() == "" || item.GetPhone() == "" || item.GetUser().GetUsername() == "" {
 			t.Errorf("owner of %x = %v", id, item)
+		}
+		// The owner's clinics, oldest first, on every row of that owner.
+		clinics := item.GetOwnedClinics()
+		if id == canceled {
+			if len(clinics) != 0 {
+				t.Errorf("clinics of bob = %v", clinics)
+			}
+		} else if len(clinics) != 2 || clinics[0].GetName() != "Old Clinic" || clinics[0].GetInstallationCount() != 1 ||
+			clinics[1].GetName() != "New Clinic" || clinics[1].GetInstallationCount() != 0 ||
+			len(clinics[0].GetId()) != 16 || clinics[0].GetLicenseNumber() != "LIC-OLD" || clinics[0].GetCreatedAt() == nil {
+			t.Errorf("clinics of alice on %x = %v", id, clinics)
 		}
 	}
 
@@ -300,6 +324,13 @@ func TestAdminListsUsers(t *testing.T) {
 		                 disabled_at = CASE username WHEN 'carol' THEN now() END`); err != nil {
 		t.Fatal(err)
 	}
+	// A revoked installation in alice's clinic does not count.
+	if _, err := e.deps.DB.Exec(ctx, `
+		INSERT INTO installations (secret_hash, machine_id_hash, clinic_id, revoked_at)
+		SELECT sha256('revoked'::bytea), sha256('revoked-machine'::bytea), c.id, now()
+		FROM clinics c JOIN users u ON u.id = c.owner_id WHERE u.username = 'alice'`); err != nil {
+		t.Fatal(err)
+	}
 
 	list := func(req *dentalv1.ListUsersRequest) ([]*dentalv1.UserListItem, uint32) {
 		t.Helper()
@@ -333,7 +364,8 @@ func TestAdminListsUsers(t *testing.T) {
 		byName[u.GetUser().GetUsername()] = u
 	}
 	alice, bob, carol := byName["alice"], byName["bob"], byName["carol"]
-	if alice.GetOwnedClinicCount() != 1 || alice.GetMemberClinicCount() != 1 || alice.GetPlanName() != "test" ||
+	if alice.GetOwnedClinicCount() != 1 || alice.GetMemberClinicCount() != 1 || alice.GetInstallationCount() != 1 ||
+		alice.GetPlanName() != "test" ||
 		alice.GetPaidUntil() == nil || time.Until(alice.GetPaidUntil().AsTime()) < 29*24*time.Hour ||
 		alice.GetLastLoginAt() == nil || alice.GetIdentity().GetNumber() != personCode(1) ||
 		alice.GetPhone() != "09121234567" || alice.GetEmail() != "" || alice.GetDisabled() ||
@@ -341,7 +373,8 @@ func TestAdminListsUsers(t *testing.T) {
 		t.Errorf("alice = %v", alice)
 	}
 	if bob.GetEmail() != "Bob@Clinic.example" || bob.GetPlanName() != "" || bob.GetPaidUntil() != nil ||
-		bob.GetLastLoginAt() != nil || bob.GetOwnedClinicCount() != 0 || bob.GetMemberClinicCount() != 0 || bob.GetDisabled() {
+		bob.GetLastLoginAt() != nil || bob.GetOwnedClinicCount() != 0 || bob.GetMemberClinicCount() != 0 ||
+		bob.GetInstallationCount() != 0 || bob.GetDisabled() {
 		t.Errorf("bob = %v", bob)
 	}
 	if !carol.GetDisabled() {

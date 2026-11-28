@@ -234,6 +234,35 @@ func scanSubscription(row pgx.Row, extra ...any) (*dentalv1.Subscription, error)
 	return sub, nil
 }
 
+// ownedClinicsOf returns the clinics each of the owners owns, oldest first, with their
+// installations that are not revoked; owners without clinics are not in the map.
+func ownedClinicsOf(ctx context.Context, q querier, ownerIDs []pgtype.UUID) (map[pgtype.UUID][]*dentalv1.ClinicSummary, error) {
+	rows, err := q.Query(ctx, `
+		SELECT c.owner_id, c.id, c.name, c.license_number, c.city, c.created_at,
+		       (SELECT count(*) FROM installations i WHERE i.clinic_id = c.id AND i.revoked_at IS NULL)
+		FROM clinics c WHERE c.owner_id = ANY($1) ORDER BY c.created_at, c.id`, ownerIDs)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer rows.Close()
+	byOwner := map[pgtype.UUID][]*dentalv1.ClinicSummary{}
+	for rows.Next() {
+		var ownerID, clinicID pgtype.UUID
+		var createdAt time.Time
+		var installations int64
+		c := &dentalv1.ClinicSummary{}
+		if err := rows.Scan(&ownerID, &clinicID, &c.Name, &c.LicenseNumber, &c.City, &createdAt, &installations); err != nil {
+			return nil, internal(err)
+		}
+		c.Id, c.CreatedAt, c.InstallationCount = uuidBytes(clinicID), timestamppb.New(createdAt), uint32(installations)
+		byOwner[ownerID] = append(byOwner[ownerID], c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, internal(err)
+	}
+	return byOwner, nil
+}
+
 func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest) (*dentalv1.GetUserResponse, error) {
 	var id pgtype.UUID
 	var identity pgtype.Text
@@ -255,28 +284,11 @@ func (s *AdminService) GetUser(ctx context.Context, req *dentalv1.GetUserRequest
 	res.Disabled = disabledAt.Valid
 	res.CreatedAt = timestamppb.New(createdAt)
 
-	clinics, err := s.d.DB.Query(ctx, `
-		SELECT c.id, c.name, c.license_number, c.city, c.created_at,
-		       (SELECT count(*) FROM installations i WHERE i.clinic_id = c.id AND i.revoked_at IS NULL)
-		FROM clinics c WHERE c.owner_id = $1 ORDER BY c.created_at, c.id`, id)
+	clinics, err := ownedClinicsOf(ctx, s.d.DB, []pgtype.UUID{id})
 	if err != nil {
-		return nil, internal(err)
+		return nil, err
 	}
-	defer clinics.Close()
-	for clinics.Next() {
-		var clinicID pgtype.UUID
-		var clinicCreated time.Time
-		var installations int64
-		c := &dentalv1.ClinicSummary{}
-		if err := clinics.Scan(&clinicID, &c.Name, &c.LicenseNumber, &c.City, &clinicCreated, &installations); err != nil {
-			return nil, internal(err)
-		}
-		c.Id, c.CreatedAt, c.InstallationCount = uuidBytes(clinicID), timestamppb.New(clinicCreated), uint32(installations)
-		res.OwnedClinics = append(res.OwnedClinics, c)
-	}
-	if err := clinics.Err(); err != nil {
-		return nil, internal(err)
-	}
+	res.OwnedClinics = clinics[id]
 
 	subs, err := s.d.DB.Query(ctx, `SELECT`+subscriptionColumns+` WHERE s.user_id = $1 ORDER BY s.starts_at DESC`, id)
 	if err != nil {
@@ -407,37 +419,55 @@ func searchText(query string) string {
 	return strings.ToLower(strings.TrimSpace(query))
 }
 
+// subscriptionItemsFrom is what subscriptionItems selects from: the subscription s,
+// its plan p and its owner u.
+const subscriptionItemsFrom = `
+	FROM subscriptions s
+	JOIN plans p ON p.id = s.plan_id
+	JOIN users u ON u.id = s.user_id`
+
 func (s *AdminService) ListSubscriptions(ctx context.Context, req *dentalv1.ListSubscriptionsRequest) (*dentalv1.ListSubscriptionsResponse, error) {
 	now := s.d.Now()
 	status := subscriptionStatusNames[req.GetStatus()] // "" for all
 	query := searchText(req.GetQuery())
 	limit, offset := pageBounds(req.GetPage(), req.GetPageSize())
 
-	from := `
-		FROM subscriptions s
-		JOIN plans p ON p.id = s.plan_id
-		JOIN users u ON u.id = s.user_id
+	where := `
 		WHERE ($2 = '' OR $2 = ` + subscriptionStatusSQL + `)
 		  AND ($3 = '' OR ` + ownerMatchesSQL("$3") + `)`
 
 	res := &dentalv1.ListSubscriptionsResponse{}
 	var total int64
-	if err := s.d.DB.QueryRow(ctx, `SELECT count(*)`+from, now, status, query).Scan(&total); err != nil {
+	if err := s.d.DB.QueryRow(ctx, `SELECT count(*)`+subscriptionItemsFrom+where, now, status, query).Scan(&total); err != nil {
 		return nil, internal(err)
 	}
 	res.TotalCount = uint32(total)
 
-	rows, err := s.d.DB.Query(ctx, `SELECT`+subscriptionFields+`, `+subscriptionStatusSQL+`,
-		u.username, u.full_name, coalesce(u.identity, ''), u.phone, u.disabled_at IS NOT NULL`+from+`
+	items, err := s.subscriptionItems(ctx, where+`
 		ORDER BY s.starts_at DESC, s.id DESC
 		LIMIT $4 OFFSET $5`, now, status, query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	res.Items = items
+	return res, nil
+}
+
+// subscriptionItems returns the subscriptions that rest (the WHERE, ORDER BY and LIMIT
+// after subscriptionItemsFrom) selects, with their status, owner, the payment that
+// bought them and the owner's clinics. args[0] is now: $1 in subscriptionStatusSQL.
+func (s *AdminService) subscriptionItems(ctx context.Context, rest string, args ...any) ([]*dentalv1.SubscriptionListItem, error) {
+	rows, err := s.d.DB.Query(ctx, `SELECT`+subscriptionFields+`, `+subscriptionStatusSQL+`,
+		u.username, u.full_name, coalesce(u.identity, ''), u.phone, u.disabled_at IS NOT NULL`+
+		subscriptionItemsFrom+rest, args...)
 	if err != nil {
 		return nil, internal(err)
 	}
 	defer rows.Close()
 
+	var items []*dentalv1.SubscriptionListItem
 	bySubscription := map[pgtype.UUID]*dentalv1.SubscriptionListItem{}
-	var ids []pgtype.UUID
+	var ids, ownerIDs []pgtype.UUID
 	for rows.Next() {
 		var statusName string
 		item := &dentalv1.SubscriptionListItem{User: &dentalv1.User{}, Identity: &dentalv1.PersonIdentity{}}
@@ -448,15 +478,16 @@ func (s *AdminService) ListSubscriptions(ctx context.Context, req *dentalv1.List
 		}
 		item.Subscription, item.Status, item.User.Id = sub, subscriptionStatusFromName(statusName), sub.GetUserId()
 		id, _ := toUUID(sub.GetId())
+		ownerID, _ := toUUID(sub.GetUserId())
 		bySubscription[id] = item
-		ids = append(ids, id)
-		res.Items = append(res.Items, item)
+		ids, ownerIDs = append(ids, id), append(ownerIDs, ownerID)
+		items = append(items, item)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, internal(err)
 	}
 	if len(ids) == 0 {
-		return res, nil
+		return items, nil
 	}
 
 	// The payments that bought them; subscriptions sold in the panel have none.
@@ -476,5 +507,14 @@ func (s *AdminService) ListSubscriptions(ctx context.Context, req *dentalv1.List
 	if err := payments.Err(); err != nil {
 		return nil, internal(err)
 	}
-	return res, nil
+
+	// The owners' clinics, in one query for all of them.
+	clinics, err := ownedClinicsOf(ctx, s.d.DB, ownerIDs)
+	if err != nil {
+		return nil, err
+	}
+	for i, item := range items {
+		item.OwnedClinics = clinics[ownerIDs[i]]
+	}
+	return items, nil
 }
