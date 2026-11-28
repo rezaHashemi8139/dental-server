@@ -95,6 +95,59 @@ func (s *AdminService) Logout(ctx context.Context, _ *dentalv1.AdminServiceLogou
 	return &dentalv1.AdminServiceLogoutResponse{}, nil
 }
 
+func (s *AdminService) UpdateProfile(ctx context.Context, req *dentalv1.AdminServiceUpdateProfileRequest) (*dentalv1.AdminServiceUpdateProfileResponse, error) {
+	adminID := adminSessionFrom(ctx).AdminID
+	_, err := s.d.DB.Exec(ctx, `
+		UPDATE admins SET username = $2, full_name = $3, updated_at = now() WHERE id = $1`,
+		adminID, req.GetUsername(), req.GetFullName())
+	if uniqueViolation(err, "admins_username_key") {
+		return nil, fail(connect.CodeAlreadyExists, reasonUsernameTaken)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.AdminServiceUpdateProfileResponse{Admin: &dentalv1.Admin{
+		Id: uuidBytes(adminID), Username: req.GetUsername(), FullName: req.GetFullName(),
+	}}, nil
+}
+
+// ChangePassword fails with PERMISSION_DENIED, not UNAUTHENTICATED, on a wrong current
+// password: UNAUTHENTICATED means the session has ended, and the panel logs out on it.
+func (s *AdminService) ChangePassword(ctx context.Context, req *dentalv1.AdminServiceChangePasswordRequest) (*dentalv1.AdminServiceChangePasswordResponse, error) {
+	session := adminSessionFrom(ctx)
+	tx, err := s.d.DB.Begin(ctx)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer tx.Rollback(ctx)
+
+	var passwordHash string
+	if err := tx.QueryRow(ctx, `SELECT password_hash FROM admins WHERE id = $1 FOR UPDATE`, session.AdminID).
+		Scan(&passwordHash); err != nil {
+		return nil, internal(err)
+	}
+	if !secure.VerifyPassword(req.GetCurrentPassword(), passwordHash) {
+		return nil, fail(connect.CodePermissionDenied, reasonInvalidCredentials)
+	}
+	if req.GetNewPassword() == req.GetCurrentPassword() {
+		return nil, fail(connect.CodeInvalidArgument, reasonPasswordUnchanged)
+	}
+
+	if _, err := tx.Exec(ctx, `UPDATE admins SET password_hash = $2, updated_at = now() WHERE id = $1`,
+		session.AdminID, secure.HashPassword(req.GetNewPassword())); err != nil {
+		return nil, internal(err)
+	}
+	if _, err := tx.Exec(ctx, `
+		UPDATE admin_sessions SET revoked_at = $3 WHERE admin_id = $1 AND id <> $2 AND revoked_at IS NULL`,
+		session.AdminID, session.ID, s.d.Now()); err != nil {
+		return nil, internal(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.AdminServiceChangePasswordResponse{}, nil
+}
+
 func (s *AdminService) CreateAdmin(ctx context.Context, req *dentalv1.CreateAdminRequest) (*dentalv1.CreateAdminResponse, error) {
 	admin, err := insertAdmin(ctx, s.d.DB, req, adminSessionFrom(ctx).AdminID)
 	if err != nil {

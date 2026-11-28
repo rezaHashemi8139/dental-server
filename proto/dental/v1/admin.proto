@@ -38,6 +38,18 @@ service AdminService {
   // Ends the session at once and removes its cookie.
   rpc Logout(AdminServiceLogoutRequest) returns (AdminServiceLogoutResponse) {}
 
+  // Changes the logged-in administrator's own username and full name. Sessions
+  // keep working. Fails with "invalid_argument" or ALREADY_EXISTS "username_taken".
+  rpc UpdateProfile(AdminServiceUpdateProfileRequest) returns (AdminServiceUpdateProfileResponse) {}
+
+  // Changes the logged-in administrator's own password, proven with the current one.
+  // Ends every other session of the administrator; this one keeps working.
+  //
+  // Fails with "weak_password", PERMISSION_DENIED "invalid_credentials" (the current
+  // password is wrong; not UNAUTHENTICATED, as the session itself is fine) or
+  // INVALID_ARGUMENT "password_unchanged" (the new password equals the current one).
+  rpc ChangePassword(AdminServiceChangePasswordRequest) returns (AdminServiceChangePasswordResponse) {}
+
   // Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
   rpc CreateAdmin(CreateAdminRequest) returns (CreateAdminResponse) {}
 
@@ -65,6 +77,12 @@ service AdminService {
   // subscription is in force. Canceling twice changes nothing.
   // Fails with NOT_FOUND "subscription_not_found".
   rpc CancelSubscription(CancelSubscriptionRequest) returns (CancelSubscriptionResponse) {}
+
+  // Deletes a subscription for good, with the approved payment that bought it, if
+  // any. Its clinics lose access if no other subscription is in force. Unlike
+  // CancelSubscription nothing is kept, and a subscription that an upgrade ended
+  // early stays ended. Fails with NOT_FOUND "subscription_not_found".
+  rpc DeleteSubscription(DeleteSubscriptionRequest) returns (DeleteSubscriptionResponse) {}
 
   // Subscriptions of every user, a page at a time: newest first (starts_at, then id,
   // both descending), with their owner and the payment that bought them.
@@ -116,6 +134,13 @@ service AdminService {
   // a page at a time: newest first (created_at, then id, both descending). GetUser
   // gives one account in full.
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+
+  // Deletes an account for good, with everything it owns: its subscriptions and
+  // payments, and its clinics with their installations, memberships and treatments.
+  // Patients left in no clinic are deleted too; patients still in another clinic
+  // stay. Members of its clinics keep their accounts, without those clinics. It
+  // cannot be undone. Fails with NOT_FOUND "user_not_found".
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
 }
 
 message Admin {
@@ -159,6 +184,35 @@ message AdminServiceLoginResponse {
 message AdminServiceLogoutRequest {}
 
 message AdminServiceLogoutResponse {}
+
+message AdminServiceUpdateProfileRequest {
+  // Same rules as CreateAdminRequest.username.
+  string username = 1 [(buf.validate.field).string.pattern = "^[A-Za-z0-9._-]{3,32}$"];
+  // 1–100 characters.
+  string full_name = 2 [(buf.validate.field).string = {
+    min_len: 1
+    max_len: 100
+  }];
+}
+
+message AdminServiceUpdateProfileResponse {
+  Admin admin = 1;
+}
+
+message AdminServiceChangePasswordRequest {
+  string current_password = 1 [(buf.validate.field).string.max_bytes = 1024];
+  // Same rules as CreateAdminRequest.password.
+  string new_password = 2 [
+    (buf.validate.field).string.max_len = 256,
+    (buf.validate.field).cel = {
+      id: "weak_password"
+      message: "must have at least 8 characters, a lowercase letter, an uppercase letter and a digit"
+      expression: "size(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')"
+    }
+  ];
+}
+
+message AdminServiceChangePasswordResponse {}
 
 message CreateAdminRequest {
   // Same rules as SignUpRequest.username.
@@ -291,6 +345,13 @@ message CancelSubscriptionRequest {
 message CancelSubscriptionResponse {
   Subscription subscription = 1;
 }
+
+message DeleteSubscriptionRequest {
+  // 16 raw UUID bytes.
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message DeleteSubscriptionResponse {}
 
 // Where a subscription stands, on the server's clock.
 enum SubscriptionStatus {
@@ -642,3 +703,10 @@ message UserListItem {
   // Installations that are not revoked, across the clinics the account owns.
   uint32 installation_count = 12;
 }
+
+message DeleteUserRequest {
+  // 16 raw UUID bytes (UserListItem.user or GetUserResponse.user).
+  bytes id = 1 [(buf.validate.field).bytes.len = 16];
+}
+
+message DeleteUserResponse {}

@@ -4,7 +4,7 @@
     "name": "Deutsch",
     "abbr": "DE",
     "dir": "ltr",
-    "version": 34,
+    "version": 38,
     "currency": {
       "default": "EUR",
       "minorUnit": true
@@ -17,7 +17,8 @@
     "label": "Hauptmenü",
     "home": "Startseite",
     "patients": "Patienten",
-    "workHours": "Arbeitszeiten",
+    "workHours": "Zeiterfassung",
+    "workHoursReport": "Arbeitszeitbericht",
     "database": "Datenbank",
     "subscription": "Abonnement"
   },
@@ -494,13 +495,77 @@
       "notFound": "Diese Behandlung wurde nicht gefunden."
     }
   },
-  "workHours": {
-    "title": "Arbeitszeiten",
-    "description": "Kommen, Gehen und Summen der Arbeitszeit. Nur auf diesem Computer gespeichert, nie an den Server gesendet.",
-    "tabs": {
-      "person": "Zeiterfassung",
-      "team": "Alle Mitarbeitenden"
+  "payments": {
+    "title": "Zahlungen und Erstattungen",
+    "localOnly": "Finanzdaten werden nur auf diesem Computer gespeichert und nie an den Server gesendet.",
+    "add": "Zahlung erfassen",
+    "addRefund": "Erstattung",
+    "empty": "Für diesen Patienten sind noch keine Zahlungen oder Erstattungen erfasst.",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "now": "Jetzt",
+    "recordedBy": "Erfasst von {{name}}",
+    "kinds": {
+      "payment": "Vom Patienten erhalten",
+      "refund": "An den Patienten erstattet"
     },
+    "methods": {
+      "cash": "Bar",
+      "pos": "Kartenterminal",
+      "cardToCard": "Karte zu Karte",
+      "accountTransfer": "Kontoübertrag",
+      "bankTransfer": "Banküberweisung",
+      "online": "Online-Zahlung",
+      "cheque": "Scheck",
+      "other": "Sonstiges"
+    },
+    "totals": {
+      "received": "Erhalten gesamt",
+      "refunded": "Erstattet gesamt",
+      "balance": "Netto erhalten"
+    },
+    "fields": {
+      "amount": "Erhaltener Betrag",
+      "refundAmount": "Erstatteter Betrag",
+      "paidOn": "Zahlungsdatum",
+      "refundedOn": "Erstattungsdatum",
+      "time": "Uhrzeit",
+      "method": "Zahlungsart",
+      "reference": "Referenznummer",
+      "notes": "Notizen"
+    },
+    "hints": {
+      "reference": "Optional. Referenznummer, Transaktionsnummer oder Schecknummer.",
+      "refund": "Dieser Betrag wird von den Zahlungen des Patienten abgezogen."
+    },
+    "dialog": {
+      "addTitle": "Zahlung erfassen",
+      "editTitle": "Zahlung bearbeiten",
+      "refundTitle": "Erstattung erfassen",
+      "editRefundTitle": "Erstattung bearbeiten"
+    },
+    "deleteDialog": {
+      "title": "Zahlung löschen",
+      "refundTitle": "Erstattung löschen",
+      "description": "{{amount}} vom {{date}} wird endgültig gelöscht und im Konto des Patienten nicht mehr berücksichtigt.",
+      "confirm": "Löschen",
+      "working": "Wird gelöscht..."
+    },
+    "errors": {
+      "invalidKind": "Die Art der Buchung ist ungültig.",
+      "invalidAmount": "Geben Sie einen Betrag größer als null ein.",
+      "invalidMethod": "Die Zahlungsart ist ungültig.",
+      "invalidDate": "Das Datum ist ungültig.",
+      "invalidTime": "Die Uhrzeit ist ungültig.",
+      "invalidReference": "Die Referenznummer darf nur lateinische Buchstaben, Ziffern, Bindestriche, / und Punkte enthalten, höchstens 64 Zeichen.",
+      "notFound": "Dieser Eintrag wurde nicht gefunden.",
+      "notAllowed": "Nur wer diesen Eintrag erfasst hat oder die Praxisleitung kann ihn ändern oder löschen."
+    }
+  },
+  "workHours": {
+    "title": "Arbeitszeiten erfassen",
+    "description": "Kommen und Gehen erfassen, von Hand oder mit einem Klick. Nur auf diesem Computer gespeichert, nie an den Server gesendet.",
+    "openReport": "Arbeitszeitbericht",
     "user": "Benutzer",
     "me": "(Sie)",
     "previousMonth": "Vorheriger Monat",
@@ -517,6 +582,11 @@
     "viewOnly": "Nur Ansicht: Nur die Praxisleitung kann die Arbeitszeiten anderer ändern.",
     "loading": "Wird geladen...",
     "empty": "In diesem Monat wurden keine Arbeitszeiten erfasst.",
+    "recent": {
+      "title": "Letzte sieben Tage",
+      "total": "Summe: {{total}}",
+      "hint": "Für frühere Tage ändern Sie das Datum unter „Manuell erfassen oder bearbeiten“ oder nutzen Sie den Arbeitszeitbericht."
+    },
     "monthTotal": "Monatssumme",
     "days": "Arbeitstage",
     "average": "Tagesdurchschnitt",
@@ -549,6 +619,27 @@
       "hint": "Um die Notizen zu entfernen, leeren Sie den Text und speichern Sie.",
       "add": "Notizen zum Tag hinzufügen",
       "edit": "Notizen zum Tag bearbeiten"
+    },
+    "report": {
+      "title": "Arbeitszeitbericht",
+      "description": "Arbeitszeiten Monat für Monat, für eine Person oder alle Mitarbeitenden. Wählen Sie einen Tag, um Kommen, Gehen und Notizen zu sehen.",
+      "back": "Arbeitszeiten erfassen",
+      "tabs": {
+        "days": "Tag für Tag",
+        "staff": "Nach Mitarbeitenden"
+      },
+      "allUsers": "Alle Mitarbeitenden",
+      "people": "Mitarbeitende mit Arbeitszeit",
+      "noEntries": "Kein Kommen oder Gehen",
+      "openDetails": "Details zu {{day}}, {{name}}"
+    },
+    "details": {
+      "entries": "Kommen und Gehen",
+      "duration": "Dauer",
+      "total": "Tagessumme",
+      "noNotes": "Für diesen Tag gibt es keine Notizen.",
+      "editEntries": "Kommen und Gehen bearbeiten",
+      "close": "Schließen"
     },
     "validation": {
       "dayRequired": "Geben Sie das vollständige Datum ein.",
@@ -612,6 +703,13 @@
     "trial": {
       "title": "Ihr kostenloser Testzeitraum ist aktiv",
       "description": "Der Tarif {{plan}} ist bis {{date}} kostenlos aktiv. Danach können Sie auf der Seite „Abonnement“ ein Abonnement kaufen oder erweitern."
+    }
+  },
+  "clock": {
+    "fromNetwork": "Genaue Zeit aus dem Internet ({{source}})",
+    "wrong": {
+      "title": "Die Systemuhr ist nicht richtig eingestellt",
+      "description": "Dieser Computer zeigt {{system}} an, die richtige Zeit ist aber {{actual}}. Bitte stellen Sie Datum, Uhrzeit und Zeitzone in Windows richtig ein; sonst werden erfasste Zeiten falsch gespeichert."
     }
   },
   "account": {
@@ -787,7 +885,14 @@
     "day": "Tag",
     "month": "Monat",
     "year": "Jahr",
-    "clear": "Datum löschen"
+    "clear": "Datum löschen",
+    "openCalendar": "Aus dem Kalender wählen",
+    "today": "Heute",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "previousYear": "Vorheriges Jahr",
+    "nextYear": "Nächstes Jahr",
+    "chooseMonth": "Monat wählen"
   },
   "currency": {
     "label": "Währung",

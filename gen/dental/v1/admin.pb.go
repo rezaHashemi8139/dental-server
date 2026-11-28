@@ -418,6 +418,193 @@ func (*AdminServiceLogoutResponse) Descriptor() ([]byte, []int) {
 	return file_dental_v1_admin_proto_rawDescGZIP(), []int{5}
 }
 
+type AdminServiceUpdateProfileRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Same rules as CreateAdminRequest.username.
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	// 1–100 characters.
+	FullName      string `protobuf:"bytes,2,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminServiceUpdateProfileRequest) Reset() {
+	*x = AdminServiceUpdateProfileRequest{}
+	mi := &file_dental_v1_admin_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminServiceUpdateProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminServiceUpdateProfileRequest) ProtoMessage() {}
+
+func (x *AdminServiceUpdateProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminServiceUpdateProfileRequest.ProtoReflect.Descriptor instead.
+func (*AdminServiceUpdateProfileRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *AdminServiceUpdateProfileRequest) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *AdminServiceUpdateProfileRequest) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+type AdminServiceUpdateProfileResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Admin         *Admin                 `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminServiceUpdateProfileResponse) Reset() {
+	*x = AdminServiceUpdateProfileResponse{}
+	mi := &file_dental_v1_admin_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminServiceUpdateProfileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminServiceUpdateProfileResponse) ProtoMessage() {}
+
+func (x *AdminServiceUpdateProfileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminServiceUpdateProfileResponse.ProtoReflect.Descriptor instead.
+func (*AdminServiceUpdateProfileResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AdminServiceUpdateProfileResponse) GetAdmin() *Admin {
+	if x != nil {
+		return x.Admin
+	}
+	return nil
+}
+
+type AdminServiceChangePasswordRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CurrentPassword string                 `protobuf:"bytes,1,opt,name=current_password,json=currentPassword,proto3" json:"current_password,omitempty"`
+	// Same rules as CreateAdminRequest.password.
+	NewPassword   string `protobuf:"bytes,2,opt,name=new_password,json=newPassword,proto3" json:"new_password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminServiceChangePasswordRequest) Reset() {
+	*x = AdminServiceChangePasswordRequest{}
+	mi := &file_dental_v1_admin_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminServiceChangePasswordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminServiceChangePasswordRequest) ProtoMessage() {}
+
+func (x *AdminServiceChangePasswordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminServiceChangePasswordRequest.ProtoReflect.Descriptor instead.
+func (*AdminServiceChangePasswordRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *AdminServiceChangePasswordRequest) GetCurrentPassword() string {
+	if x != nil {
+		return x.CurrentPassword
+	}
+	return ""
+}
+
+func (x *AdminServiceChangePasswordRequest) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+type AdminServiceChangePasswordResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminServiceChangePasswordResponse) Reset() {
+	*x = AdminServiceChangePasswordResponse{}
+	mi := &file_dental_v1_admin_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminServiceChangePasswordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminServiceChangePasswordResponse) ProtoMessage() {}
+
+func (x *AdminServiceChangePasswordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminServiceChangePasswordResponse.ProtoReflect.Descriptor instead.
+func (*AdminServiceChangePasswordResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{9}
+}
+
 type CreateAdminRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Same rules as SignUpRequest.username.
@@ -432,7 +619,7 @@ type CreateAdminRequest struct {
 
 func (x *CreateAdminRequest) Reset() {
 	*x = CreateAdminRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[6]
+	mi := &file_dental_v1_admin_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -444,7 +631,7 @@ func (x *CreateAdminRequest) String() string {
 func (*CreateAdminRequest) ProtoMessage() {}
 
 func (x *CreateAdminRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[6]
+	mi := &file_dental_v1_admin_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -457,7 +644,7 @@ func (x *CreateAdminRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminRequest.ProtoReflect.Descriptor instead.
 func (*CreateAdminRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{6}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateAdminRequest) GetUsername() string {
@@ -490,7 +677,7 @@ type CreateAdminResponse struct {
 
 func (x *CreateAdminResponse) Reset() {
 	*x = CreateAdminResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[7]
+	mi := &file_dental_v1_admin_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -502,7 +689,7 @@ func (x *CreateAdminResponse) String() string {
 func (*CreateAdminResponse) ProtoMessage() {}
 
 func (x *CreateAdminResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[7]
+	mi := &file_dental_v1_admin_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -515,7 +702,7 @@ func (x *CreateAdminResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAdminResponse.ProtoReflect.Descriptor instead.
 func (*CreateAdminResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{7}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *CreateAdminResponse) GetAdmin() *Admin {
@@ -533,7 +720,7 @@ type ListPlansRequest struct {
 
 func (x *ListPlansRequest) Reset() {
 	*x = ListPlansRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[8]
+	mi := &file_dental_v1_admin_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -545,7 +732,7 @@ func (x *ListPlansRequest) String() string {
 func (*ListPlansRequest) ProtoMessage() {}
 
 func (x *ListPlansRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[8]
+	mi := &file_dental_v1_admin_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -558,7 +745,7 @@ func (x *ListPlansRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlansRequest.ProtoReflect.Descriptor instead.
 func (*ListPlansRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{8}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{12}
 }
 
 type ListPlansResponse struct {
@@ -570,7 +757,7 @@ type ListPlansResponse struct {
 
 func (x *ListPlansResponse) Reset() {
 	*x = ListPlansResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[9]
+	mi := &file_dental_v1_admin_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -582,7 +769,7 @@ func (x *ListPlansResponse) String() string {
 func (*ListPlansResponse) ProtoMessage() {}
 
 func (x *ListPlansResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[9]
+	mi := &file_dental_v1_admin_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -595,7 +782,7 @@ func (x *ListPlansResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPlansResponse.ProtoReflect.Descriptor instead.
 func (*ListPlansResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{9}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ListPlansResponse) GetPlans() []*Plan {
@@ -626,7 +813,7 @@ type CreatePlanRequest struct {
 
 func (x *CreatePlanRequest) Reset() {
 	*x = CreatePlanRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[10]
+	mi := &file_dental_v1_admin_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -638,7 +825,7 @@ func (x *CreatePlanRequest) String() string {
 func (*CreatePlanRequest) ProtoMessage() {}
 
 func (x *CreatePlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[10]
+	mi := &file_dental_v1_admin_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -651,7 +838,7 @@ func (x *CreatePlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlanRequest.ProtoReflect.Descriptor instead.
 func (*CreatePlanRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{10}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreatePlanRequest) GetName() string {
@@ -705,7 +892,7 @@ type CreatePlanResponse struct {
 
 func (x *CreatePlanResponse) Reset() {
 	*x = CreatePlanResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[11]
+	mi := &file_dental_v1_admin_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -717,7 +904,7 @@ func (x *CreatePlanResponse) String() string {
 func (*CreatePlanResponse) ProtoMessage() {}
 
 func (x *CreatePlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[11]
+	mi := &file_dental_v1_admin_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -730,7 +917,7 @@ func (x *CreatePlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePlanResponse.ProtoReflect.Descriptor instead.
 func (*CreatePlanResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{11}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreatePlanResponse) GetPlan() *Plan {
@@ -758,7 +945,7 @@ type UpdatePlanRequest struct {
 
 func (x *UpdatePlanRequest) Reset() {
 	*x = UpdatePlanRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[12]
+	mi := &file_dental_v1_admin_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -770,7 +957,7 @@ func (x *UpdatePlanRequest) String() string {
 func (*UpdatePlanRequest) ProtoMessage() {}
 
 func (x *UpdatePlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[12]
+	mi := &file_dental_v1_admin_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -783,7 +970,7 @@ func (x *UpdatePlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlanRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePlanRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{12}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdatePlanRequest) GetId() []byte {
@@ -851,7 +1038,7 @@ type UpdatePlanResponse struct {
 
 func (x *UpdatePlanResponse) Reset() {
 	*x = UpdatePlanResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[13]
+	mi := &file_dental_v1_admin_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -863,7 +1050,7 @@ func (x *UpdatePlanResponse) String() string {
 func (*UpdatePlanResponse) ProtoMessage() {}
 
 func (x *UpdatePlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[13]
+	mi := &file_dental_v1_admin_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -876,7 +1063,7 @@ func (x *UpdatePlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePlanResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePlanResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{13}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *UpdatePlanResponse) GetPlan() *Plan {
@@ -895,7 +1082,7 @@ type GetUserRequest struct {
 
 func (x *GetUserRequest) Reset() {
 	*x = GetUserRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[14]
+	mi := &file_dental_v1_admin_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -907,7 +1094,7 @@ func (x *GetUserRequest) String() string {
 func (*GetUserRequest) ProtoMessage() {}
 
 func (x *GetUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[14]
+	mi := &file_dental_v1_admin_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -920,7 +1107,7 @@ func (x *GetUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserRequest.ProtoReflect.Descriptor instead.
 func (*GetUserRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{14}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetUserRequest) GetIdentity() *PersonIdentity {
@@ -951,7 +1138,7 @@ type GetUserResponse struct {
 
 func (x *GetUserResponse) Reset() {
 	*x = GetUserResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[15]
+	mi := &file_dental_v1_admin_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -963,7 +1150,7 @@ func (x *GetUserResponse) String() string {
 func (*GetUserResponse) ProtoMessage() {}
 
 func (x *GetUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[15]
+	mi := &file_dental_v1_admin_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -976,7 +1163,7 @@ func (x *GetUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserResponse.ProtoReflect.Descriptor instead.
 func (*GetUserResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{15}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetUserResponse) GetUser() *User {
@@ -1056,7 +1243,7 @@ type SellSubscriptionRequest struct {
 
 func (x *SellSubscriptionRequest) Reset() {
 	*x = SellSubscriptionRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[16]
+	mi := &file_dental_v1_admin_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1068,7 +1255,7 @@ func (x *SellSubscriptionRequest) String() string {
 func (*SellSubscriptionRequest) ProtoMessage() {}
 
 func (x *SellSubscriptionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[16]
+	mi := &file_dental_v1_admin_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1081,7 +1268,7 @@ func (x *SellSubscriptionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SellSubscriptionRequest.ProtoReflect.Descriptor instead.
 func (*SellSubscriptionRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{16}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SellSubscriptionRequest) GetUserId() []byte {
@@ -1114,7 +1301,7 @@ type SellSubscriptionResponse struct {
 
 func (x *SellSubscriptionResponse) Reset() {
 	*x = SellSubscriptionResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[17]
+	mi := &file_dental_v1_admin_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1126,7 +1313,7 @@ func (x *SellSubscriptionResponse) String() string {
 func (*SellSubscriptionResponse) ProtoMessage() {}
 
 func (x *SellSubscriptionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[17]
+	mi := &file_dental_v1_admin_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1139,7 +1326,7 @@ func (x *SellSubscriptionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SellSubscriptionResponse.ProtoReflect.Descriptor instead.
 func (*SellSubscriptionResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{17}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SellSubscriptionResponse) GetSubscription() *Subscription {
@@ -1159,7 +1346,7 @@ type CancelSubscriptionRequest struct {
 
 func (x *CancelSubscriptionRequest) Reset() {
 	*x = CancelSubscriptionRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[18]
+	mi := &file_dental_v1_admin_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1171,7 +1358,7 @@ func (x *CancelSubscriptionRequest) String() string {
 func (*CancelSubscriptionRequest) ProtoMessage() {}
 
 func (x *CancelSubscriptionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[18]
+	mi := &file_dental_v1_admin_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1184,7 +1371,7 @@ func (x *CancelSubscriptionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelSubscriptionRequest.ProtoReflect.Descriptor instead.
 func (*CancelSubscriptionRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{18}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CancelSubscriptionRequest) GetId() []byte {
@@ -1203,7 +1390,7 @@ type CancelSubscriptionResponse struct {
 
 func (x *CancelSubscriptionResponse) Reset() {
 	*x = CancelSubscriptionResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[19]
+	mi := &file_dental_v1_admin_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1215,7 +1402,7 @@ func (x *CancelSubscriptionResponse) String() string {
 func (*CancelSubscriptionResponse) ProtoMessage() {}
 
 func (x *CancelSubscriptionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[19]
+	mi := &file_dental_v1_admin_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1228,7 +1415,7 @@ func (x *CancelSubscriptionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CancelSubscriptionResponse.ProtoReflect.Descriptor instead.
 func (*CancelSubscriptionResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{19}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CancelSubscriptionResponse) GetSubscription() *Subscription {
@@ -1236,6 +1423,87 @@ func (x *CancelSubscriptionResponse) GetSubscription() *Subscription {
 		return x.Subscription
 	}
 	return nil
+}
+
+type DeleteSubscriptionRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 raw UUID bytes.
+	Id            []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSubscriptionRequest) Reset() {
+	*x = DeleteSubscriptionRequest{}
+	mi := &file_dental_v1_admin_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSubscriptionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSubscriptionRequest) ProtoMessage() {}
+
+func (x *DeleteSubscriptionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSubscriptionRequest.ProtoReflect.Descriptor instead.
+func (*DeleteSubscriptionRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *DeleteSubscriptionRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+type DeleteSubscriptionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSubscriptionResponse) Reset() {
+	*x = DeleteSubscriptionResponse{}
+	mi := &file_dental_v1_admin_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSubscriptionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSubscriptionResponse) ProtoMessage() {}
+
+func (x *DeleteSubscriptionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSubscriptionResponse.ProtoReflect.Descriptor instead.
+func (*DeleteSubscriptionResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{25}
 }
 
 type ListSubscriptionsRequest struct {
@@ -1255,7 +1523,7 @@ type ListSubscriptionsRequest struct {
 
 func (x *ListSubscriptionsRequest) Reset() {
 	*x = ListSubscriptionsRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[20]
+	mi := &file_dental_v1_admin_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1267,7 +1535,7 @@ func (x *ListSubscriptionsRequest) String() string {
 func (*ListSubscriptionsRequest) ProtoMessage() {}
 
 func (x *ListSubscriptionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[20]
+	mi := &file_dental_v1_admin_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1280,7 +1548,7 @@ func (x *ListSubscriptionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSubscriptionsRequest.ProtoReflect.Descriptor instead.
 func (*ListSubscriptionsRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{20}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ListSubscriptionsRequest) GetStatus() SubscriptionStatus {
@@ -1322,7 +1590,7 @@ type ListSubscriptionsResponse struct {
 
 func (x *ListSubscriptionsResponse) Reset() {
 	*x = ListSubscriptionsResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[21]
+	mi := &file_dental_v1_admin_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1334,7 +1602,7 @@ func (x *ListSubscriptionsResponse) String() string {
 func (*ListSubscriptionsResponse) ProtoMessage() {}
 
 func (x *ListSubscriptionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[21]
+	mi := &file_dental_v1_admin_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1347,7 +1615,7 @@ func (x *ListSubscriptionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSubscriptionsResponse.ProtoReflect.Descriptor instead.
 func (*ListSubscriptionsResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{21}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ListSubscriptionsResponse) GetItems() []*SubscriptionListItem {
@@ -1387,7 +1655,7 @@ type SubscriptionListItem struct {
 
 func (x *SubscriptionListItem) Reset() {
 	*x = SubscriptionListItem{}
-	mi := &file_dental_v1_admin_proto_msgTypes[22]
+	mi := &file_dental_v1_admin_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1399,7 +1667,7 @@ func (x *SubscriptionListItem) String() string {
 func (*SubscriptionListItem) ProtoMessage() {}
 
 func (x *SubscriptionListItem) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[22]
+	mi := &file_dental_v1_admin_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1412,7 +1680,7 @@ func (x *SubscriptionListItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscriptionListItem.ProtoReflect.Descriptor instead.
 func (*SubscriptionListItem) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{22}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SubscriptionListItem) GetSubscription() *Subscription {
@@ -1481,7 +1749,7 @@ type GetSubscriptionRequest struct {
 
 func (x *GetSubscriptionRequest) Reset() {
 	*x = GetSubscriptionRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[23]
+	mi := &file_dental_v1_admin_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1493,7 +1761,7 @@ func (x *GetSubscriptionRequest) String() string {
 func (*GetSubscriptionRequest) ProtoMessage() {}
 
 func (x *GetSubscriptionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[23]
+	mi := &file_dental_v1_admin_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1506,7 +1774,7 @@ func (x *GetSubscriptionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSubscriptionRequest.ProtoReflect.Descriptor instead.
 func (*GetSubscriptionRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{23}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *GetSubscriptionRequest) GetId() []byte {
@@ -1530,7 +1798,7 @@ type GetSubscriptionResponse struct {
 
 func (x *GetSubscriptionResponse) Reset() {
 	*x = GetSubscriptionResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[24]
+	mi := &file_dental_v1_admin_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1542,7 +1810,7 @@ func (x *GetSubscriptionResponse) String() string {
 func (*GetSubscriptionResponse) ProtoMessage() {}
 
 func (x *GetSubscriptionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[24]
+	mi := &file_dental_v1_admin_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1555,7 +1823,7 @@ func (x *GetSubscriptionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSubscriptionResponse.ProtoReflect.Descriptor instead.
 func (*GetSubscriptionResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{24}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *GetSubscriptionResponse) GetItem() *SubscriptionListItem {
@@ -1589,7 +1857,7 @@ type GetClinicRequest struct {
 
 func (x *GetClinicRequest) Reset() {
 	*x = GetClinicRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[25]
+	mi := &file_dental_v1_admin_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1601,7 +1869,7 @@ func (x *GetClinicRequest) String() string {
 func (*GetClinicRequest) ProtoMessage() {}
 
 func (x *GetClinicRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[25]
+	mi := &file_dental_v1_admin_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1614,7 +1882,7 @@ func (x *GetClinicRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClinicRequest.ProtoReflect.Descriptor instead.
 func (*GetClinicRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{25}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *GetClinicRequest) GetId() []byte {
@@ -1650,7 +1918,7 @@ type GetClinicResponse struct {
 
 func (x *GetClinicResponse) Reset() {
 	*x = GetClinicResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[26]
+	mi := &file_dental_v1_admin_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1662,7 +1930,7 @@ func (x *GetClinicResponse) String() string {
 func (*GetClinicResponse) ProtoMessage() {}
 
 func (x *GetClinicResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[26]
+	mi := &file_dental_v1_admin_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1675,7 +1943,7 @@ func (x *GetClinicResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClinicResponse.ProtoReflect.Descriptor instead.
 func (*GetClinicResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{26}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetClinicResponse) GetClinic() *ClinicDetail {
@@ -1775,7 +2043,7 @@ type ClinicDetail struct {
 
 func (x *ClinicDetail) Reset() {
 	*x = ClinicDetail{}
-	mi := &file_dental_v1_admin_proto_msgTypes[27]
+	mi := &file_dental_v1_admin_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1787,7 +2055,7 @@ func (x *ClinicDetail) String() string {
 func (*ClinicDetail) ProtoMessage() {}
 
 func (x *ClinicDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[27]
+	mi := &file_dental_v1_admin_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1800,7 +2068,7 @@ func (x *ClinicDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClinicDetail.ProtoReflect.Descriptor instead.
 func (*ClinicDetail) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{27}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ClinicDetail) GetId() []byte {
@@ -1946,7 +2214,7 @@ type InstallationDetail struct {
 
 func (x *InstallationDetail) Reset() {
 	*x = InstallationDetail{}
-	mi := &file_dental_v1_admin_proto_msgTypes[28]
+	mi := &file_dental_v1_admin_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1958,7 +2226,7 @@ func (x *InstallationDetail) String() string {
 func (*InstallationDetail) ProtoMessage() {}
 
 func (x *InstallationDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[28]
+	mi := &file_dental_v1_admin_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1971,7 +2239,7 @@ func (x *InstallationDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstallationDetail.ProtoReflect.Descriptor instead.
 func (*InstallationDetail) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{28}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *InstallationDetail) GetId() []byte {
@@ -2111,7 +2379,7 @@ type ListPaymentsRequest struct {
 
 func (x *ListPaymentsRequest) Reset() {
 	*x = ListPaymentsRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[29]
+	mi := &file_dental_v1_admin_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2123,7 +2391,7 @@ func (x *ListPaymentsRequest) String() string {
 func (*ListPaymentsRequest) ProtoMessage() {}
 
 func (x *ListPaymentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[29]
+	mi := &file_dental_v1_admin_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2136,7 +2404,7 @@ func (x *ListPaymentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPaymentsRequest.ProtoReflect.Descriptor instead.
 func (*ListPaymentsRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{29}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ListPaymentsRequest) GetStatus() PaymentStatus {
@@ -2178,7 +2446,7 @@ type ListPaymentsResponse struct {
 
 func (x *ListPaymentsResponse) Reset() {
 	*x = ListPaymentsResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[30]
+	mi := &file_dental_v1_admin_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2190,7 +2458,7 @@ func (x *ListPaymentsResponse) String() string {
 func (*ListPaymentsResponse) ProtoMessage() {}
 
 func (x *ListPaymentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[30]
+	mi := &file_dental_v1_admin_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2203,7 +2471,7 @@ func (x *ListPaymentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPaymentsResponse.ProtoReflect.Descriptor instead.
 func (*ListPaymentsResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{30}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ListPaymentsResponse) GetPayments() []*PaymentReview {
@@ -2236,7 +2504,7 @@ type PaymentReview struct {
 
 func (x *PaymentReview) Reset() {
 	*x = PaymentReview{}
-	mi := &file_dental_v1_admin_proto_msgTypes[31]
+	mi := &file_dental_v1_admin_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2248,7 +2516,7 @@ func (x *PaymentReview) String() string {
 func (*PaymentReview) ProtoMessage() {}
 
 func (x *PaymentReview) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[31]
+	mi := &file_dental_v1_admin_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2261,7 +2529,7 @@ func (x *PaymentReview) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PaymentReview.ProtoReflect.Descriptor instead.
 func (*PaymentReview) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{31}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PaymentReview) GetPayment() *Payment {
@@ -2311,7 +2579,7 @@ type ApprovePaymentRequest struct {
 
 func (x *ApprovePaymentRequest) Reset() {
 	*x = ApprovePaymentRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[32]
+	mi := &file_dental_v1_admin_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2323,7 +2591,7 @@ func (x *ApprovePaymentRequest) String() string {
 func (*ApprovePaymentRequest) ProtoMessage() {}
 
 func (x *ApprovePaymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[32]
+	mi := &file_dental_v1_admin_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2336,7 +2604,7 @@ func (x *ApprovePaymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovePaymentRequest.ProtoReflect.Descriptor instead.
 func (*ApprovePaymentRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{32}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ApprovePaymentRequest) GetId() []byte {
@@ -2364,7 +2632,7 @@ type ApprovePaymentResponse struct {
 
 func (x *ApprovePaymentResponse) Reset() {
 	*x = ApprovePaymentResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[33]
+	mi := &file_dental_v1_admin_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2376,7 +2644,7 @@ func (x *ApprovePaymentResponse) String() string {
 func (*ApprovePaymentResponse) ProtoMessage() {}
 
 func (x *ApprovePaymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[33]
+	mi := &file_dental_v1_admin_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2389,7 +2657,7 @@ func (x *ApprovePaymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovePaymentResponse.ProtoReflect.Descriptor instead.
 func (*ApprovePaymentResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{33}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ApprovePaymentResponse) GetPayment() *Payment {
@@ -2418,7 +2686,7 @@ type RejectPaymentRequest struct {
 
 func (x *RejectPaymentRequest) Reset() {
 	*x = RejectPaymentRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[34]
+	mi := &file_dental_v1_admin_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2430,7 +2698,7 @@ func (x *RejectPaymentRequest) String() string {
 func (*RejectPaymentRequest) ProtoMessage() {}
 
 func (x *RejectPaymentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[34]
+	mi := &file_dental_v1_admin_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2443,7 +2711,7 @@ func (x *RejectPaymentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectPaymentRequest.ProtoReflect.Descriptor instead.
 func (*RejectPaymentRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{34}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *RejectPaymentRequest) GetId() []byte {
@@ -2469,7 +2737,7 @@ type RejectPaymentResponse struct {
 
 func (x *RejectPaymentResponse) Reset() {
 	*x = RejectPaymentResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[35]
+	mi := &file_dental_v1_admin_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2481,7 +2749,7 @@ func (x *RejectPaymentResponse) String() string {
 func (*RejectPaymentResponse) ProtoMessage() {}
 
 func (x *RejectPaymentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[35]
+	mi := &file_dental_v1_admin_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2494,7 +2762,7 @@ func (x *RejectPaymentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RejectPaymentResponse.ProtoReflect.Descriptor instead.
 func (*RejectPaymentResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{35}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *RejectPaymentResponse) GetPayment() *Payment {
@@ -2512,7 +2780,7 @@ type ListPaymentAccountsRequest struct {
 
 func (x *ListPaymentAccountsRequest) Reset() {
 	*x = ListPaymentAccountsRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[36]
+	mi := &file_dental_v1_admin_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2524,7 +2792,7 @@ func (x *ListPaymentAccountsRequest) String() string {
 func (*ListPaymentAccountsRequest) ProtoMessage() {}
 
 func (x *ListPaymentAccountsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[36]
+	mi := &file_dental_v1_admin_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2537,7 +2805,7 @@ func (x *ListPaymentAccountsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPaymentAccountsRequest.ProtoReflect.Descriptor instead.
 func (*ListPaymentAccountsRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{36}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{42}
 }
 
 type ListPaymentAccountsResponse struct {
@@ -2549,7 +2817,7 @@ type ListPaymentAccountsResponse struct {
 
 func (x *ListPaymentAccountsResponse) Reset() {
 	*x = ListPaymentAccountsResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[37]
+	mi := &file_dental_v1_admin_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2561,7 +2829,7 @@ func (x *ListPaymentAccountsResponse) String() string {
 func (*ListPaymentAccountsResponse) ProtoMessage() {}
 
 func (x *ListPaymentAccountsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[37]
+	mi := &file_dental_v1_admin_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2574,7 +2842,7 @@ func (x *ListPaymentAccountsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPaymentAccountsResponse.ProtoReflect.Descriptor instead.
 func (*ListPaymentAccountsResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{37}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ListPaymentAccountsResponse) GetAccounts() []*PaymentAccount {
@@ -2601,7 +2869,7 @@ type CreatePaymentAccountRequest struct {
 
 func (x *CreatePaymentAccountRequest) Reset() {
 	*x = CreatePaymentAccountRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[38]
+	mi := &file_dental_v1_admin_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2613,7 +2881,7 @@ func (x *CreatePaymentAccountRequest) String() string {
 func (*CreatePaymentAccountRequest) ProtoMessage() {}
 
 func (x *CreatePaymentAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[38]
+	mi := &file_dental_v1_admin_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2626,7 +2894,7 @@ func (x *CreatePaymentAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePaymentAccountRequest.ProtoReflect.Descriptor instead.
 func (*CreatePaymentAccountRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{38}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *CreatePaymentAccountRequest) GetBankName() string {
@@ -2673,7 +2941,7 @@ type CreatePaymentAccountResponse struct {
 
 func (x *CreatePaymentAccountResponse) Reset() {
 	*x = CreatePaymentAccountResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[39]
+	mi := &file_dental_v1_admin_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2685,7 +2953,7 @@ func (x *CreatePaymentAccountResponse) String() string {
 func (*CreatePaymentAccountResponse) ProtoMessage() {}
 
 func (x *CreatePaymentAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[39]
+	mi := &file_dental_v1_admin_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2698,7 +2966,7 @@ func (x *CreatePaymentAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreatePaymentAccountResponse.ProtoReflect.Descriptor instead.
 func (*CreatePaymentAccountResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{39}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *CreatePaymentAccountResponse) GetAccount() *PaymentAccount {
@@ -2725,7 +2993,7 @@ type UpdatePaymentAccountRequest struct {
 
 func (x *UpdatePaymentAccountRequest) Reset() {
 	*x = UpdatePaymentAccountRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[40]
+	mi := &file_dental_v1_admin_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2737,7 +3005,7 @@ func (x *UpdatePaymentAccountRequest) String() string {
 func (*UpdatePaymentAccountRequest) ProtoMessage() {}
 
 func (x *UpdatePaymentAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[40]
+	mi := &file_dental_v1_admin_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2750,7 +3018,7 @@ func (x *UpdatePaymentAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePaymentAccountRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePaymentAccountRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{40}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *UpdatePaymentAccountRequest) GetId() []byte {
@@ -2811,7 +3079,7 @@ type UpdatePaymentAccountResponse struct {
 
 func (x *UpdatePaymentAccountResponse) Reset() {
 	*x = UpdatePaymentAccountResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[41]
+	mi := &file_dental_v1_admin_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2823,7 +3091,7 @@ func (x *UpdatePaymentAccountResponse) String() string {
 func (*UpdatePaymentAccountResponse) ProtoMessage() {}
 
 func (x *UpdatePaymentAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[41]
+	mi := &file_dental_v1_admin_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2836,7 +3104,7 @@ func (x *UpdatePaymentAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdatePaymentAccountResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePaymentAccountResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{41}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *UpdatePaymentAccountResponse) GetAccount() *PaymentAccount {
@@ -2861,7 +3129,7 @@ type ListPatientsRequest struct {
 
 func (x *ListPatientsRequest) Reset() {
 	*x = ListPatientsRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[42]
+	mi := &file_dental_v1_admin_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2873,7 +3141,7 @@ func (x *ListPatientsRequest) String() string {
 func (*ListPatientsRequest) ProtoMessage() {}
 
 func (x *ListPatientsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[42]
+	mi := &file_dental_v1_admin_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2886,7 +3154,7 @@ func (x *ListPatientsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPatientsRequest.ProtoReflect.Descriptor instead.
 func (*ListPatientsRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{42}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ListPatientsRequest) GetQuery() string {
@@ -2921,7 +3189,7 @@ type ListPatientsResponse struct {
 
 func (x *ListPatientsResponse) Reset() {
 	*x = ListPatientsResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[43]
+	mi := &file_dental_v1_admin_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2933,7 +3201,7 @@ func (x *ListPatientsResponse) String() string {
 func (*ListPatientsResponse) ProtoMessage() {}
 
 func (x *ListPatientsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[43]
+	mi := &file_dental_v1_admin_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2946,7 +3214,7 @@ func (x *ListPatientsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListPatientsResponse.ProtoReflect.Descriptor instead.
 func (*ListPatientsResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{43}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ListPatientsResponse) GetPatients() []*PatientListItem {
@@ -2990,7 +3258,7 @@ type PatientListItem struct {
 
 func (x *PatientListItem) Reset() {
 	*x = PatientListItem{}
-	mi := &file_dental_v1_admin_proto_msgTypes[44]
+	mi := &file_dental_v1_admin_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3002,7 +3270,7 @@ func (x *PatientListItem) String() string {
 func (*PatientListItem) ProtoMessage() {}
 
 func (x *PatientListItem) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[44]
+	mi := &file_dental_v1_admin_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3015,7 +3283,7 @@ func (x *PatientListItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PatientListItem.ProtoReflect.Descriptor instead.
 func (*PatientListItem) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{44}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *PatientListItem) GetId() []byte {
@@ -3117,7 +3385,7 @@ type ListUsersRequest struct {
 
 func (x *ListUsersRequest) Reset() {
 	*x = ListUsersRequest{}
-	mi := &file_dental_v1_admin_proto_msgTypes[45]
+	mi := &file_dental_v1_admin_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3129,7 +3397,7 @@ func (x *ListUsersRequest) String() string {
 func (*ListUsersRequest) ProtoMessage() {}
 
 func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[45]
+	mi := &file_dental_v1_admin_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3142,7 +3410,7 @@ func (x *ListUsersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersRequest.ProtoReflect.Descriptor instead.
 func (*ListUsersRequest) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{45}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *ListUsersRequest) GetQuery() string {
@@ -3177,7 +3445,7 @@ type ListUsersResponse struct {
 
 func (x *ListUsersResponse) Reset() {
 	*x = ListUsersResponse{}
-	mi := &file_dental_v1_admin_proto_msgTypes[46]
+	mi := &file_dental_v1_admin_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3189,7 +3457,7 @@ func (x *ListUsersResponse) String() string {
 func (*ListUsersResponse) ProtoMessage() {}
 
 func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[46]
+	mi := &file_dental_v1_admin_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3202,7 +3470,7 @@ func (x *ListUsersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListUsersResponse.ProtoReflect.Descriptor instead.
 func (*ListUsersResponse) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{46}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *ListUsersResponse) GetUsers() []*UserListItem {
@@ -3248,7 +3516,7 @@ type UserListItem struct {
 
 func (x *UserListItem) Reset() {
 	*x = UserListItem{}
-	mi := &file_dental_v1_admin_proto_msgTypes[47]
+	mi := &file_dental_v1_admin_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3260,7 +3528,7 @@ func (x *UserListItem) String() string {
 func (*UserListItem) ProtoMessage() {}
 
 func (x *UserListItem) ProtoReflect() protoreflect.Message {
-	mi := &file_dental_v1_admin_proto_msgTypes[47]
+	mi := &file_dental_v1_admin_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3273,7 +3541,7 @@ func (x *UserListItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserListItem.ProtoReflect.Descriptor instead.
 func (*UserListItem) Descriptor() ([]byte, []int) {
-	return file_dental_v1_admin_proto_rawDescGZIP(), []int{47}
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *UserListItem) GetUser() *User {
@@ -3360,6 +3628,87 @@ func (x *UserListItem) GetInstallationCount() uint32 {
 	return 0
 }
 
+type DeleteUserRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 16 raw UUID bytes (UserListItem.user or GetUserResponse.user).
+	Id            []byte `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteUserRequest) Reset() {
+	*x = DeleteUserRequest{}
+	mi := &file_dental_v1_admin_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteUserRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteUserRequest) ProtoMessage() {}
+
+func (x *DeleteUserRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteUserRequest.ProtoReflect.Descriptor instead.
+func (*DeleteUserRequest) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *DeleteUserRequest) GetId() []byte {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+type DeleteUserResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteUserResponse) Reset() {
+	*x = DeleteUserResponse{}
+	mi := &file_dental_v1_admin_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteUserResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteUserResponse) ProtoMessage() {}
+
+func (x *DeleteUserResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dental_v1_admin_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteUserResponse.ProtoReflect.Descriptor instead.
+func (*DeleteUserResponse) Descriptor() ([]byte, []int) {
+	return file_dental_v1_admin_proto_rawDescGZIP(), []int{55}
+}
+
 var File_dental_v1_admin_proto protoreflect.FileDescriptor
 
 const file_dental_v1_admin_proto_rawDesc = "" +
@@ -3386,7 +3735,17 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\n" +
 	"csrf_token\x18\x04 \x01(\tR\tcsrfTokenJ\x04\b\x01\x10\x02R\rsession_token\"\x1b\n" +
 	"\x19AdminServiceLogoutRequest\"\x1c\n" +
-	"\x1aAdminServiceLogoutResponse\"\xe5\x02\n" +
+	"\x1aAdminServiceLogoutResponse\"\x85\x01\n" +
+	" AdminServiceUpdateProfileRequest\x129\n" +
+	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12&\n" +
+	"\tfull_name\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18dR\bfullName\"K\n" +
+	"!AdminServiceUpdateProfileResponse\x12&\n" +
+	"\x05admin\x18\x01 \x01(\v2\x10.dental.v1.AdminR\x05admin\"\xcd\x02\n" +
+	"!AdminServiceChangePasswordRequest\x123\n" +
+	"\x10current_password\x18\x01 \x01(\tB\b\xbaH\x05r\x03(\x80\bR\x0fcurrentPassword\x12\xf2\x01\n" +
+	"\fnew_password\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
+	"\rweak_password\x12Tmust have at least 8 characters, a lowercase letter, an uppercase letter and a digit\x1aZsize(this) >= 8 && this.matches('[a-z]') && this.matches('[A-Z]') && this.matches('[0-9]')r\x03\x18\x80\x02R\vnewPassword\"$\n" +
+	"\"AdminServiceChangePasswordResponse\"\xe5\x02\n" +
 	"\x12CreateAdminRequest\x129\n" +
 	"\busername\x18\x01 \x01(\tB\x1d\xbaH\x1ar\x182\x16^[A-Za-z0-9._-]{3,32}$R\busername\x12\xeb\x01\n" +
 	"\bpassword\x18\x02 \x01(\tB\xce\x01\xbaH\xca\x01\xba\x01\xc1\x01\n" +
@@ -3449,7 +3808,10 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\x19CancelSubscriptionRequest\x12\x17\n" +
 	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\"Y\n" +
 	"\x1aCancelSubscriptionResponse\x12;\n" +
-	"\fsubscription\x18\x01 \x01(\v2\x17.dental.v1.SubscriptionR\fsubscription\"\xbf\x01\n" +
+	"\fsubscription\x18\x01 \x01(\v2\x17.dental.v1.SubscriptionR\fsubscription\"4\n" +
+	"\x19DeleteSubscriptionRequest\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\"\x1c\n" +
+	"\x1aDeleteSubscriptionResponse\"\xbf\x01\n" +
 	"\x18ListSubscriptionsRequest\x12?\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x1d.dental.v1.SubscriptionStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\x12\x1d\n" +
 	"\x05query\x18\x02 \x01(\tB\a\xbaH\x04r\x02\x18dR\x05query\x12\x1d\n" +
@@ -3637,16 +3999,21 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"paid_until\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tpaidUntil\x12>\n" +
 	"\rlast_login_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vlastLoginAt\x12-\n" +
-	"\x12installation_count\x18\f \x01(\rR\x11installationCount*\xbc\x01\n" +
+	"\x12installation_count\x18\f \x01(\rR\x11installationCount\",\n" +
+	"\x11DeleteUserRequest\x12\x17\n" +
+	"\x02id\x18\x01 \x01(\fB\a\xbaH\x04z\x02h\x10R\x02id\"\x14\n" +
+	"\x12DeleteUserResponse*\xbc\x01\n" +
 	"\x12SubscriptionStatus\x12#\n" +
 	"\x1fSUBSCRIPTION_STATUS_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aSUBSCRIPTION_STATUS_ACTIVE\x10\x01\x12 \n" +
 	"\x1cSUBSCRIPTION_STATUS_UPCOMING\x10\x02\x12\x1d\n" +
 	"\x19SUBSCRIPTION_STATUS_ENDED\x10\x03\x12 \n" +
-	"\x1cSUBSCRIPTION_STATUS_CANCELED\x10\x042\xde\r\n" +
+	"\x1cSUBSCRIPTION_STATUS_CANCELED\x10\x042\xef\x10\n" +
 	"\fAdminService\x12T\n" +
 	"\x05Login\x12#.dental.v1.AdminServiceLoginRequest\x1a$.dental.v1.AdminServiceLoginResponse\"\x00\x12W\n" +
-	"\x06Logout\x12$.dental.v1.AdminServiceLogoutRequest\x1a%.dental.v1.AdminServiceLogoutResponse\"\x00\x12N\n" +
+	"\x06Logout\x12$.dental.v1.AdminServiceLogoutRequest\x1a%.dental.v1.AdminServiceLogoutResponse\"\x00\x12l\n" +
+	"\rUpdateProfile\x12+.dental.v1.AdminServiceUpdateProfileRequest\x1a,.dental.v1.AdminServiceUpdateProfileResponse\"\x00\x12o\n" +
+	"\x0eChangePassword\x12,.dental.v1.AdminServiceChangePasswordRequest\x1a-.dental.v1.AdminServiceChangePasswordResponse\"\x00\x12N\n" +
 	"\vCreateAdmin\x12\x1d.dental.v1.CreateAdminRequest\x1a\x1e.dental.v1.CreateAdminResponse\"\x00\x12H\n" +
 	"\tListPlans\x12\x1b.dental.v1.ListPlansRequest\x1a\x1c.dental.v1.ListPlansResponse\"\x00\x12K\n" +
 	"\n" +
@@ -3655,7 +4022,8 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"UpdatePlan\x12\x1c.dental.v1.UpdatePlanRequest\x1a\x1d.dental.v1.UpdatePlanResponse\"\x00\x12B\n" +
 	"\aGetUser\x12\x19.dental.v1.GetUserRequest\x1a\x1a.dental.v1.GetUserResponse\"\x00\x12]\n" +
 	"\x10SellSubscription\x12\".dental.v1.SellSubscriptionRequest\x1a#.dental.v1.SellSubscriptionResponse\"\x00\x12c\n" +
-	"\x12CancelSubscription\x12$.dental.v1.CancelSubscriptionRequest\x1a%.dental.v1.CancelSubscriptionResponse\"\x00\x12`\n" +
+	"\x12CancelSubscription\x12$.dental.v1.CancelSubscriptionRequest\x1a%.dental.v1.CancelSubscriptionResponse\"\x00\x12c\n" +
+	"\x12DeleteSubscription\x12$.dental.v1.DeleteSubscriptionRequest\x1a%.dental.v1.DeleteSubscriptionResponse\"\x00\x12`\n" +
 	"\x11ListSubscriptions\x12#.dental.v1.ListSubscriptionsRequest\x1a$.dental.v1.ListSubscriptionsResponse\"\x00\x12Z\n" +
 	"\x0fGetSubscription\x12!.dental.v1.GetSubscriptionRequest\x1a\".dental.v1.GetSubscriptionResponse\"\x00\x12H\n" +
 	"\tGetClinic\x12\x1b.dental.v1.GetClinicRequest\x1a\x1c.dental.v1.GetClinicResponse\"\x00\x12Q\n" +
@@ -3666,7 +4034,9 @@ const file_dental_v1_admin_proto_rawDesc = "" +
 	"\x14CreatePaymentAccount\x12&.dental.v1.CreatePaymentAccountRequest\x1a'.dental.v1.CreatePaymentAccountResponse\"\x00\x12i\n" +
 	"\x14UpdatePaymentAccount\x12&.dental.v1.UpdatePaymentAccountRequest\x1a'.dental.v1.UpdatePaymentAccountResponse\"\x00\x12Q\n" +
 	"\fListPatients\x12\x1e.dental.v1.ListPatientsRequest\x1a\x1f.dental.v1.ListPatientsResponse\"\x00\x12H\n" +
-	"\tListUsers\x12\x1b.dental.v1.ListUsersRequest\x1a\x1c.dental.v1.ListUsersResponse\"\x00B\x86\x01\n" +
+	"\tListUsers\x12\x1b.dental.v1.ListUsersRequest\x1a\x1c.dental.v1.ListUsersResponse\"\x00\x12K\n" +
+	"\n" +
+	"DeleteUser\x12\x1c.dental.v1.DeleteUserRequest\x1a\x1d.dental.v1.DeleteUserResponse\"\x00B\x86\x01\n" +
 	"\rcom.dental.v1B\n" +
 	"AdminProtoP\x01Z$dental-server/gen/dental/v1;dentalv1\xa2\x02\x03DXX\xaa\x02\tDental.V1\xca\x02\tDental\\V1\xe2\x02\x15Dental\\V1\\GPBMetadata\xea\x02\n" +
 	"Dental::V1b\x06proto3"
@@ -3684,178 +4054,195 @@ func file_dental_v1_admin_proto_rawDescGZIP() []byte {
 }
 
 var file_dental_v1_admin_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dental_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
+var file_dental_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
 var file_dental_v1_admin_proto_goTypes = []any{
-	(SubscriptionStatus)(0),              // 0: dental.v1.SubscriptionStatus
-	(*Admin)(nil),                        // 1: dental.v1.Admin
-	(*ClinicSummary)(nil),                // 2: dental.v1.ClinicSummary
-	(*AdminServiceLoginRequest)(nil),     // 3: dental.v1.AdminServiceLoginRequest
-	(*AdminServiceLoginResponse)(nil),    // 4: dental.v1.AdminServiceLoginResponse
-	(*AdminServiceLogoutRequest)(nil),    // 5: dental.v1.AdminServiceLogoutRequest
-	(*AdminServiceLogoutResponse)(nil),   // 6: dental.v1.AdminServiceLogoutResponse
-	(*CreateAdminRequest)(nil),           // 7: dental.v1.CreateAdminRequest
-	(*CreateAdminResponse)(nil),          // 8: dental.v1.CreateAdminResponse
-	(*ListPlansRequest)(nil),             // 9: dental.v1.ListPlansRequest
-	(*ListPlansResponse)(nil),            // 10: dental.v1.ListPlansResponse
-	(*CreatePlanRequest)(nil),            // 11: dental.v1.CreatePlanRequest
-	(*CreatePlanResponse)(nil),           // 12: dental.v1.CreatePlanResponse
-	(*UpdatePlanRequest)(nil),            // 13: dental.v1.UpdatePlanRequest
-	(*UpdatePlanResponse)(nil),           // 14: dental.v1.UpdatePlanResponse
-	(*GetUserRequest)(nil),               // 15: dental.v1.GetUserRequest
-	(*GetUserResponse)(nil),              // 16: dental.v1.GetUserResponse
-	(*SellSubscriptionRequest)(nil),      // 17: dental.v1.SellSubscriptionRequest
-	(*SellSubscriptionResponse)(nil),     // 18: dental.v1.SellSubscriptionResponse
-	(*CancelSubscriptionRequest)(nil),    // 19: dental.v1.CancelSubscriptionRequest
-	(*CancelSubscriptionResponse)(nil),   // 20: dental.v1.CancelSubscriptionResponse
-	(*ListSubscriptionsRequest)(nil),     // 21: dental.v1.ListSubscriptionsRequest
-	(*ListSubscriptionsResponse)(nil),    // 22: dental.v1.ListSubscriptionsResponse
-	(*SubscriptionListItem)(nil),         // 23: dental.v1.SubscriptionListItem
-	(*GetSubscriptionRequest)(nil),       // 24: dental.v1.GetSubscriptionRequest
-	(*GetSubscriptionResponse)(nil),      // 25: dental.v1.GetSubscriptionResponse
-	(*GetClinicRequest)(nil),             // 26: dental.v1.GetClinicRequest
-	(*GetClinicResponse)(nil),            // 27: dental.v1.GetClinicResponse
-	(*ClinicDetail)(nil),                 // 28: dental.v1.ClinicDetail
-	(*InstallationDetail)(nil),           // 29: dental.v1.InstallationDetail
-	(*ListPaymentsRequest)(nil),          // 30: dental.v1.ListPaymentsRequest
-	(*ListPaymentsResponse)(nil),         // 31: dental.v1.ListPaymentsResponse
-	(*PaymentReview)(nil),                // 32: dental.v1.PaymentReview
-	(*ApprovePaymentRequest)(nil),        // 33: dental.v1.ApprovePaymentRequest
-	(*ApprovePaymentResponse)(nil),       // 34: dental.v1.ApprovePaymentResponse
-	(*RejectPaymentRequest)(nil),         // 35: dental.v1.RejectPaymentRequest
-	(*RejectPaymentResponse)(nil),        // 36: dental.v1.RejectPaymentResponse
-	(*ListPaymentAccountsRequest)(nil),   // 37: dental.v1.ListPaymentAccountsRequest
-	(*ListPaymentAccountsResponse)(nil),  // 38: dental.v1.ListPaymentAccountsResponse
-	(*CreatePaymentAccountRequest)(nil),  // 39: dental.v1.CreatePaymentAccountRequest
-	(*CreatePaymentAccountResponse)(nil), // 40: dental.v1.CreatePaymentAccountResponse
-	(*UpdatePaymentAccountRequest)(nil),  // 41: dental.v1.UpdatePaymentAccountRequest
-	(*UpdatePaymentAccountResponse)(nil), // 42: dental.v1.UpdatePaymentAccountResponse
-	(*ListPatientsRequest)(nil),          // 43: dental.v1.ListPatientsRequest
-	(*ListPatientsResponse)(nil),         // 44: dental.v1.ListPatientsResponse
-	(*PatientListItem)(nil),              // 45: dental.v1.PatientListItem
-	(*ListUsersRequest)(nil),             // 46: dental.v1.ListUsersRequest
-	(*ListUsersResponse)(nil),            // 47: dental.v1.ListUsersResponse
-	(*UserListItem)(nil),                 // 48: dental.v1.UserListItem
-	(*timestamppb.Timestamp)(nil),        // 49: google.protobuf.Timestamp
-	(*Plan)(nil),                         // 50: dental.v1.Plan
-	(*PersonIdentity)(nil),               // 51: dental.v1.PersonIdentity
-	(*User)(nil),                         // 52: dental.v1.User
-	(*Subscription)(nil),                 // 53: dental.v1.Subscription
-	(*Payment)(nil),                      // 54: dental.v1.Payment
-	(*GeoLocation)(nil),                  // 55: dental.v1.GeoLocation
-	(*durationpb.Duration)(nil),          // 56: google.protobuf.Duration
-	(PaymentStatus)(0),                   // 57: dental.v1.PaymentStatus
-	(*PaymentAccount)(nil),               // 58: dental.v1.PaymentAccount
-	(Gender)(0),                          // 59: dental.v1.Gender
+	(SubscriptionStatus)(0),                    // 0: dental.v1.SubscriptionStatus
+	(*Admin)(nil),                              // 1: dental.v1.Admin
+	(*ClinicSummary)(nil),                      // 2: dental.v1.ClinicSummary
+	(*AdminServiceLoginRequest)(nil),           // 3: dental.v1.AdminServiceLoginRequest
+	(*AdminServiceLoginResponse)(nil),          // 4: dental.v1.AdminServiceLoginResponse
+	(*AdminServiceLogoutRequest)(nil),          // 5: dental.v1.AdminServiceLogoutRequest
+	(*AdminServiceLogoutResponse)(nil),         // 6: dental.v1.AdminServiceLogoutResponse
+	(*AdminServiceUpdateProfileRequest)(nil),   // 7: dental.v1.AdminServiceUpdateProfileRequest
+	(*AdminServiceUpdateProfileResponse)(nil),  // 8: dental.v1.AdminServiceUpdateProfileResponse
+	(*AdminServiceChangePasswordRequest)(nil),  // 9: dental.v1.AdminServiceChangePasswordRequest
+	(*AdminServiceChangePasswordResponse)(nil), // 10: dental.v1.AdminServiceChangePasswordResponse
+	(*CreateAdminRequest)(nil),                 // 11: dental.v1.CreateAdminRequest
+	(*CreateAdminResponse)(nil),                // 12: dental.v1.CreateAdminResponse
+	(*ListPlansRequest)(nil),                   // 13: dental.v1.ListPlansRequest
+	(*ListPlansResponse)(nil),                  // 14: dental.v1.ListPlansResponse
+	(*CreatePlanRequest)(nil),                  // 15: dental.v1.CreatePlanRequest
+	(*CreatePlanResponse)(nil),                 // 16: dental.v1.CreatePlanResponse
+	(*UpdatePlanRequest)(nil),                  // 17: dental.v1.UpdatePlanRequest
+	(*UpdatePlanResponse)(nil),                 // 18: dental.v1.UpdatePlanResponse
+	(*GetUserRequest)(nil),                     // 19: dental.v1.GetUserRequest
+	(*GetUserResponse)(nil),                    // 20: dental.v1.GetUserResponse
+	(*SellSubscriptionRequest)(nil),            // 21: dental.v1.SellSubscriptionRequest
+	(*SellSubscriptionResponse)(nil),           // 22: dental.v1.SellSubscriptionResponse
+	(*CancelSubscriptionRequest)(nil),          // 23: dental.v1.CancelSubscriptionRequest
+	(*CancelSubscriptionResponse)(nil),         // 24: dental.v1.CancelSubscriptionResponse
+	(*DeleteSubscriptionRequest)(nil),          // 25: dental.v1.DeleteSubscriptionRequest
+	(*DeleteSubscriptionResponse)(nil),         // 26: dental.v1.DeleteSubscriptionResponse
+	(*ListSubscriptionsRequest)(nil),           // 27: dental.v1.ListSubscriptionsRequest
+	(*ListSubscriptionsResponse)(nil),          // 28: dental.v1.ListSubscriptionsResponse
+	(*SubscriptionListItem)(nil),               // 29: dental.v1.SubscriptionListItem
+	(*GetSubscriptionRequest)(nil),             // 30: dental.v1.GetSubscriptionRequest
+	(*GetSubscriptionResponse)(nil),            // 31: dental.v1.GetSubscriptionResponse
+	(*GetClinicRequest)(nil),                   // 32: dental.v1.GetClinicRequest
+	(*GetClinicResponse)(nil),                  // 33: dental.v1.GetClinicResponse
+	(*ClinicDetail)(nil),                       // 34: dental.v1.ClinicDetail
+	(*InstallationDetail)(nil),                 // 35: dental.v1.InstallationDetail
+	(*ListPaymentsRequest)(nil),                // 36: dental.v1.ListPaymentsRequest
+	(*ListPaymentsResponse)(nil),               // 37: dental.v1.ListPaymentsResponse
+	(*PaymentReview)(nil),                      // 38: dental.v1.PaymentReview
+	(*ApprovePaymentRequest)(nil),              // 39: dental.v1.ApprovePaymentRequest
+	(*ApprovePaymentResponse)(nil),             // 40: dental.v1.ApprovePaymentResponse
+	(*RejectPaymentRequest)(nil),               // 41: dental.v1.RejectPaymentRequest
+	(*RejectPaymentResponse)(nil),              // 42: dental.v1.RejectPaymentResponse
+	(*ListPaymentAccountsRequest)(nil),         // 43: dental.v1.ListPaymentAccountsRequest
+	(*ListPaymentAccountsResponse)(nil),        // 44: dental.v1.ListPaymentAccountsResponse
+	(*CreatePaymentAccountRequest)(nil),        // 45: dental.v1.CreatePaymentAccountRequest
+	(*CreatePaymentAccountResponse)(nil),       // 46: dental.v1.CreatePaymentAccountResponse
+	(*UpdatePaymentAccountRequest)(nil),        // 47: dental.v1.UpdatePaymentAccountRequest
+	(*UpdatePaymentAccountResponse)(nil),       // 48: dental.v1.UpdatePaymentAccountResponse
+	(*ListPatientsRequest)(nil),                // 49: dental.v1.ListPatientsRequest
+	(*ListPatientsResponse)(nil),               // 50: dental.v1.ListPatientsResponse
+	(*PatientListItem)(nil),                    // 51: dental.v1.PatientListItem
+	(*ListUsersRequest)(nil),                   // 52: dental.v1.ListUsersRequest
+	(*ListUsersResponse)(nil),                  // 53: dental.v1.ListUsersResponse
+	(*UserListItem)(nil),                       // 54: dental.v1.UserListItem
+	(*DeleteUserRequest)(nil),                  // 55: dental.v1.DeleteUserRequest
+	(*DeleteUserResponse)(nil),                 // 56: dental.v1.DeleteUserResponse
+	(*timestamppb.Timestamp)(nil),              // 57: google.protobuf.Timestamp
+	(*Plan)(nil),                               // 58: dental.v1.Plan
+	(*PersonIdentity)(nil),                     // 59: dental.v1.PersonIdentity
+	(*User)(nil),                               // 60: dental.v1.User
+	(*Subscription)(nil),                       // 61: dental.v1.Subscription
+	(*Payment)(nil),                            // 62: dental.v1.Payment
+	(*GeoLocation)(nil),                        // 63: dental.v1.GeoLocation
+	(*durationpb.Duration)(nil),                // 64: google.protobuf.Duration
+	(PaymentStatus)(0),                         // 65: dental.v1.PaymentStatus
+	(*PaymentAccount)(nil),                     // 66: dental.v1.PaymentAccount
+	(Gender)(0),                                // 67: dental.v1.Gender
 }
 var file_dental_v1_admin_proto_depIdxs = []int32{
-	49, // 0: dental.v1.ClinicSummary.created_at:type_name -> google.protobuf.Timestamp
-	49, // 1: dental.v1.AdminServiceLoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
+	57, // 0: dental.v1.ClinicSummary.created_at:type_name -> google.protobuf.Timestamp
+	57, // 1: dental.v1.AdminServiceLoginResponse.session_expires_at:type_name -> google.protobuf.Timestamp
 	1,  // 2: dental.v1.AdminServiceLoginResponse.admin:type_name -> dental.v1.Admin
-	1,  // 3: dental.v1.CreateAdminResponse.admin:type_name -> dental.v1.Admin
-	50, // 4: dental.v1.ListPlansResponse.plans:type_name -> dental.v1.Plan
-	50, // 5: dental.v1.CreatePlanResponse.plan:type_name -> dental.v1.Plan
-	50, // 6: dental.v1.UpdatePlanResponse.plan:type_name -> dental.v1.Plan
-	51, // 7: dental.v1.GetUserRequest.identity:type_name -> dental.v1.PersonIdentity
-	52, // 8: dental.v1.GetUserResponse.user:type_name -> dental.v1.User
-	51, // 9: dental.v1.GetUserResponse.identity:type_name -> dental.v1.PersonIdentity
-	49, // 10: dental.v1.GetUserResponse.created_at:type_name -> google.protobuf.Timestamp
-	2,  // 11: dental.v1.GetUserResponse.owned_clinics:type_name -> dental.v1.ClinicSummary
-	53, // 12: dental.v1.GetUserResponse.subscriptions:type_name -> dental.v1.Subscription
-	54, // 13: dental.v1.GetUserResponse.payments:type_name -> dental.v1.Payment
-	53, // 14: dental.v1.SellSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
-	53, // 15: dental.v1.CancelSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
-	0,  // 16: dental.v1.ListSubscriptionsRequest.status:type_name -> dental.v1.SubscriptionStatus
-	23, // 17: dental.v1.ListSubscriptionsResponse.items:type_name -> dental.v1.SubscriptionListItem
-	53, // 18: dental.v1.SubscriptionListItem.subscription:type_name -> dental.v1.Subscription
-	0,  // 19: dental.v1.SubscriptionListItem.status:type_name -> dental.v1.SubscriptionStatus
-	52, // 20: dental.v1.SubscriptionListItem.user:type_name -> dental.v1.User
-	51, // 21: dental.v1.SubscriptionListItem.identity:type_name -> dental.v1.PersonIdentity
-	54, // 22: dental.v1.SubscriptionListItem.purchase:type_name -> dental.v1.Payment
-	2,  // 23: dental.v1.SubscriptionListItem.owned_clinics:type_name -> dental.v1.ClinicSummary
-	23, // 24: dental.v1.GetSubscriptionResponse.item:type_name -> dental.v1.SubscriptionListItem
-	28, // 25: dental.v1.GetSubscriptionResponse.clinics:type_name -> dental.v1.ClinicDetail
-	28, // 26: dental.v1.GetClinicResponse.clinic:type_name -> dental.v1.ClinicDetail
-	52, // 27: dental.v1.GetClinicResponse.owner:type_name -> dental.v1.User
-	51, // 28: dental.v1.GetClinicResponse.owner_identity:type_name -> dental.v1.PersonIdentity
-	49, // 29: dental.v1.GetClinicResponse.paid_until:type_name -> google.protobuf.Timestamp
-	55, // 30: dental.v1.ClinicDetail.location:type_name -> dental.v1.GeoLocation
-	49, // 31: dental.v1.ClinicDetail.created_at:type_name -> google.protobuf.Timestamp
-	49, // 32: dental.v1.ClinicDetail.updated_at:type_name -> google.protobuf.Timestamp
-	29, // 33: dental.v1.ClinicDetail.installations:type_name -> dental.v1.InstallationDetail
-	56, // 34: dental.v1.InstallationDetail.offline_access:type_name -> google.protobuf.Duration
-	49, // 35: dental.v1.InstallationDetail.created_at:type_name -> google.protobuf.Timestamp
-	49, // 36: dental.v1.InstallationDetail.last_seen_at:type_name -> google.protobuf.Timestamp
-	49, // 37: dental.v1.InstallationDetail.revoked_at:type_name -> google.protobuf.Timestamp
-	49, // 38: dental.v1.InstallationDetail.last_login_at:type_name -> google.protobuf.Timestamp
-	52, // 39: dental.v1.InstallationDetail.last_login_user:type_name -> dental.v1.User
-	57, // 40: dental.v1.ListPaymentsRequest.status:type_name -> dental.v1.PaymentStatus
-	32, // 41: dental.v1.ListPaymentsResponse.payments:type_name -> dental.v1.PaymentReview
-	54, // 42: dental.v1.PaymentReview.payment:type_name -> dental.v1.Payment
-	52, // 43: dental.v1.PaymentReview.user:type_name -> dental.v1.User
-	51, // 44: dental.v1.PaymentReview.identity:type_name -> dental.v1.PersonIdentity
-	58, // 45: dental.v1.PaymentReview.account:type_name -> dental.v1.PaymentAccount
-	54, // 46: dental.v1.ApprovePaymentResponse.payment:type_name -> dental.v1.Payment
-	53, // 47: dental.v1.ApprovePaymentResponse.subscription:type_name -> dental.v1.Subscription
-	54, // 48: dental.v1.RejectPaymentResponse.payment:type_name -> dental.v1.Payment
-	58, // 49: dental.v1.ListPaymentAccountsResponse.accounts:type_name -> dental.v1.PaymentAccount
-	58, // 50: dental.v1.CreatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
-	58, // 51: dental.v1.UpdatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
-	45, // 52: dental.v1.ListPatientsResponse.patients:type_name -> dental.v1.PatientListItem
-	51, // 53: dental.v1.PatientListItem.identity:type_name -> dental.v1.PersonIdentity
-	59, // 54: dental.v1.PatientListItem.gender:type_name -> dental.v1.Gender
-	49, // 55: dental.v1.PatientListItem.created_at:type_name -> google.protobuf.Timestamp
-	49, // 56: dental.v1.PatientListItem.updated_at:type_name -> google.protobuf.Timestamp
-	48, // 57: dental.v1.ListUsersResponse.users:type_name -> dental.v1.UserListItem
-	52, // 58: dental.v1.UserListItem.user:type_name -> dental.v1.User
-	51, // 59: dental.v1.UserListItem.identity:type_name -> dental.v1.PersonIdentity
-	49, // 60: dental.v1.UserListItem.created_at:type_name -> google.protobuf.Timestamp
-	49, // 61: dental.v1.UserListItem.paid_until:type_name -> google.protobuf.Timestamp
-	49, // 62: dental.v1.UserListItem.last_login_at:type_name -> google.protobuf.Timestamp
-	3,  // 63: dental.v1.AdminService.Login:input_type -> dental.v1.AdminServiceLoginRequest
-	5,  // 64: dental.v1.AdminService.Logout:input_type -> dental.v1.AdminServiceLogoutRequest
-	7,  // 65: dental.v1.AdminService.CreateAdmin:input_type -> dental.v1.CreateAdminRequest
-	9,  // 66: dental.v1.AdminService.ListPlans:input_type -> dental.v1.ListPlansRequest
-	11, // 67: dental.v1.AdminService.CreatePlan:input_type -> dental.v1.CreatePlanRequest
-	13, // 68: dental.v1.AdminService.UpdatePlan:input_type -> dental.v1.UpdatePlanRequest
-	15, // 69: dental.v1.AdminService.GetUser:input_type -> dental.v1.GetUserRequest
-	17, // 70: dental.v1.AdminService.SellSubscription:input_type -> dental.v1.SellSubscriptionRequest
-	19, // 71: dental.v1.AdminService.CancelSubscription:input_type -> dental.v1.CancelSubscriptionRequest
-	21, // 72: dental.v1.AdminService.ListSubscriptions:input_type -> dental.v1.ListSubscriptionsRequest
-	24, // 73: dental.v1.AdminService.GetSubscription:input_type -> dental.v1.GetSubscriptionRequest
-	26, // 74: dental.v1.AdminService.GetClinic:input_type -> dental.v1.GetClinicRequest
-	30, // 75: dental.v1.AdminService.ListPayments:input_type -> dental.v1.ListPaymentsRequest
-	33, // 76: dental.v1.AdminService.ApprovePayment:input_type -> dental.v1.ApprovePaymentRequest
-	35, // 77: dental.v1.AdminService.RejectPayment:input_type -> dental.v1.RejectPaymentRequest
-	37, // 78: dental.v1.AdminService.ListPaymentAccounts:input_type -> dental.v1.ListPaymentAccountsRequest
-	39, // 79: dental.v1.AdminService.CreatePaymentAccount:input_type -> dental.v1.CreatePaymentAccountRequest
-	41, // 80: dental.v1.AdminService.UpdatePaymentAccount:input_type -> dental.v1.UpdatePaymentAccountRequest
-	43, // 81: dental.v1.AdminService.ListPatients:input_type -> dental.v1.ListPatientsRequest
-	46, // 82: dental.v1.AdminService.ListUsers:input_type -> dental.v1.ListUsersRequest
-	4,  // 83: dental.v1.AdminService.Login:output_type -> dental.v1.AdminServiceLoginResponse
-	6,  // 84: dental.v1.AdminService.Logout:output_type -> dental.v1.AdminServiceLogoutResponse
-	8,  // 85: dental.v1.AdminService.CreateAdmin:output_type -> dental.v1.CreateAdminResponse
-	10, // 86: dental.v1.AdminService.ListPlans:output_type -> dental.v1.ListPlansResponse
-	12, // 87: dental.v1.AdminService.CreatePlan:output_type -> dental.v1.CreatePlanResponse
-	14, // 88: dental.v1.AdminService.UpdatePlan:output_type -> dental.v1.UpdatePlanResponse
-	16, // 89: dental.v1.AdminService.GetUser:output_type -> dental.v1.GetUserResponse
-	18, // 90: dental.v1.AdminService.SellSubscription:output_type -> dental.v1.SellSubscriptionResponse
-	20, // 91: dental.v1.AdminService.CancelSubscription:output_type -> dental.v1.CancelSubscriptionResponse
-	22, // 92: dental.v1.AdminService.ListSubscriptions:output_type -> dental.v1.ListSubscriptionsResponse
-	25, // 93: dental.v1.AdminService.GetSubscription:output_type -> dental.v1.GetSubscriptionResponse
-	27, // 94: dental.v1.AdminService.GetClinic:output_type -> dental.v1.GetClinicResponse
-	31, // 95: dental.v1.AdminService.ListPayments:output_type -> dental.v1.ListPaymentsResponse
-	34, // 96: dental.v1.AdminService.ApprovePayment:output_type -> dental.v1.ApprovePaymentResponse
-	36, // 97: dental.v1.AdminService.RejectPayment:output_type -> dental.v1.RejectPaymentResponse
-	38, // 98: dental.v1.AdminService.ListPaymentAccounts:output_type -> dental.v1.ListPaymentAccountsResponse
-	40, // 99: dental.v1.AdminService.CreatePaymentAccount:output_type -> dental.v1.CreatePaymentAccountResponse
-	42, // 100: dental.v1.AdminService.UpdatePaymentAccount:output_type -> dental.v1.UpdatePaymentAccountResponse
-	44, // 101: dental.v1.AdminService.ListPatients:output_type -> dental.v1.ListPatientsResponse
-	47, // 102: dental.v1.AdminService.ListUsers:output_type -> dental.v1.ListUsersResponse
-	83, // [83:103] is the sub-list for method output_type
-	63, // [63:83] is the sub-list for method input_type
-	63, // [63:63] is the sub-list for extension type_name
-	63, // [63:63] is the sub-list for extension extendee
-	0,  // [0:63] is the sub-list for field type_name
+	1,  // 3: dental.v1.AdminServiceUpdateProfileResponse.admin:type_name -> dental.v1.Admin
+	1,  // 4: dental.v1.CreateAdminResponse.admin:type_name -> dental.v1.Admin
+	58, // 5: dental.v1.ListPlansResponse.plans:type_name -> dental.v1.Plan
+	58, // 6: dental.v1.CreatePlanResponse.plan:type_name -> dental.v1.Plan
+	58, // 7: dental.v1.UpdatePlanResponse.plan:type_name -> dental.v1.Plan
+	59, // 8: dental.v1.GetUserRequest.identity:type_name -> dental.v1.PersonIdentity
+	60, // 9: dental.v1.GetUserResponse.user:type_name -> dental.v1.User
+	59, // 10: dental.v1.GetUserResponse.identity:type_name -> dental.v1.PersonIdentity
+	57, // 11: dental.v1.GetUserResponse.created_at:type_name -> google.protobuf.Timestamp
+	2,  // 12: dental.v1.GetUserResponse.owned_clinics:type_name -> dental.v1.ClinicSummary
+	61, // 13: dental.v1.GetUserResponse.subscriptions:type_name -> dental.v1.Subscription
+	62, // 14: dental.v1.GetUserResponse.payments:type_name -> dental.v1.Payment
+	61, // 15: dental.v1.SellSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
+	61, // 16: dental.v1.CancelSubscriptionResponse.subscription:type_name -> dental.v1.Subscription
+	0,  // 17: dental.v1.ListSubscriptionsRequest.status:type_name -> dental.v1.SubscriptionStatus
+	29, // 18: dental.v1.ListSubscriptionsResponse.items:type_name -> dental.v1.SubscriptionListItem
+	61, // 19: dental.v1.SubscriptionListItem.subscription:type_name -> dental.v1.Subscription
+	0,  // 20: dental.v1.SubscriptionListItem.status:type_name -> dental.v1.SubscriptionStatus
+	60, // 21: dental.v1.SubscriptionListItem.user:type_name -> dental.v1.User
+	59, // 22: dental.v1.SubscriptionListItem.identity:type_name -> dental.v1.PersonIdentity
+	62, // 23: dental.v1.SubscriptionListItem.purchase:type_name -> dental.v1.Payment
+	2,  // 24: dental.v1.SubscriptionListItem.owned_clinics:type_name -> dental.v1.ClinicSummary
+	29, // 25: dental.v1.GetSubscriptionResponse.item:type_name -> dental.v1.SubscriptionListItem
+	34, // 26: dental.v1.GetSubscriptionResponse.clinics:type_name -> dental.v1.ClinicDetail
+	34, // 27: dental.v1.GetClinicResponse.clinic:type_name -> dental.v1.ClinicDetail
+	60, // 28: dental.v1.GetClinicResponse.owner:type_name -> dental.v1.User
+	59, // 29: dental.v1.GetClinicResponse.owner_identity:type_name -> dental.v1.PersonIdentity
+	57, // 30: dental.v1.GetClinicResponse.paid_until:type_name -> google.protobuf.Timestamp
+	63, // 31: dental.v1.ClinicDetail.location:type_name -> dental.v1.GeoLocation
+	57, // 32: dental.v1.ClinicDetail.created_at:type_name -> google.protobuf.Timestamp
+	57, // 33: dental.v1.ClinicDetail.updated_at:type_name -> google.protobuf.Timestamp
+	35, // 34: dental.v1.ClinicDetail.installations:type_name -> dental.v1.InstallationDetail
+	64, // 35: dental.v1.InstallationDetail.offline_access:type_name -> google.protobuf.Duration
+	57, // 36: dental.v1.InstallationDetail.created_at:type_name -> google.protobuf.Timestamp
+	57, // 37: dental.v1.InstallationDetail.last_seen_at:type_name -> google.protobuf.Timestamp
+	57, // 38: dental.v1.InstallationDetail.revoked_at:type_name -> google.protobuf.Timestamp
+	57, // 39: dental.v1.InstallationDetail.last_login_at:type_name -> google.protobuf.Timestamp
+	60, // 40: dental.v1.InstallationDetail.last_login_user:type_name -> dental.v1.User
+	65, // 41: dental.v1.ListPaymentsRequest.status:type_name -> dental.v1.PaymentStatus
+	38, // 42: dental.v1.ListPaymentsResponse.payments:type_name -> dental.v1.PaymentReview
+	62, // 43: dental.v1.PaymentReview.payment:type_name -> dental.v1.Payment
+	60, // 44: dental.v1.PaymentReview.user:type_name -> dental.v1.User
+	59, // 45: dental.v1.PaymentReview.identity:type_name -> dental.v1.PersonIdentity
+	66, // 46: dental.v1.PaymentReview.account:type_name -> dental.v1.PaymentAccount
+	62, // 47: dental.v1.ApprovePaymentResponse.payment:type_name -> dental.v1.Payment
+	61, // 48: dental.v1.ApprovePaymentResponse.subscription:type_name -> dental.v1.Subscription
+	62, // 49: dental.v1.RejectPaymentResponse.payment:type_name -> dental.v1.Payment
+	66, // 50: dental.v1.ListPaymentAccountsResponse.accounts:type_name -> dental.v1.PaymentAccount
+	66, // 51: dental.v1.CreatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
+	66, // 52: dental.v1.UpdatePaymentAccountResponse.account:type_name -> dental.v1.PaymentAccount
+	51, // 53: dental.v1.ListPatientsResponse.patients:type_name -> dental.v1.PatientListItem
+	59, // 54: dental.v1.PatientListItem.identity:type_name -> dental.v1.PersonIdentity
+	67, // 55: dental.v1.PatientListItem.gender:type_name -> dental.v1.Gender
+	57, // 56: dental.v1.PatientListItem.created_at:type_name -> google.protobuf.Timestamp
+	57, // 57: dental.v1.PatientListItem.updated_at:type_name -> google.protobuf.Timestamp
+	54, // 58: dental.v1.ListUsersResponse.users:type_name -> dental.v1.UserListItem
+	60, // 59: dental.v1.UserListItem.user:type_name -> dental.v1.User
+	59, // 60: dental.v1.UserListItem.identity:type_name -> dental.v1.PersonIdentity
+	57, // 61: dental.v1.UserListItem.created_at:type_name -> google.protobuf.Timestamp
+	57, // 62: dental.v1.UserListItem.paid_until:type_name -> google.protobuf.Timestamp
+	57, // 63: dental.v1.UserListItem.last_login_at:type_name -> google.protobuf.Timestamp
+	3,  // 64: dental.v1.AdminService.Login:input_type -> dental.v1.AdminServiceLoginRequest
+	5,  // 65: dental.v1.AdminService.Logout:input_type -> dental.v1.AdminServiceLogoutRequest
+	7,  // 66: dental.v1.AdminService.UpdateProfile:input_type -> dental.v1.AdminServiceUpdateProfileRequest
+	9,  // 67: dental.v1.AdminService.ChangePassword:input_type -> dental.v1.AdminServiceChangePasswordRequest
+	11, // 68: dental.v1.AdminService.CreateAdmin:input_type -> dental.v1.CreateAdminRequest
+	13, // 69: dental.v1.AdminService.ListPlans:input_type -> dental.v1.ListPlansRequest
+	15, // 70: dental.v1.AdminService.CreatePlan:input_type -> dental.v1.CreatePlanRequest
+	17, // 71: dental.v1.AdminService.UpdatePlan:input_type -> dental.v1.UpdatePlanRequest
+	19, // 72: dental.v1.AdminService.GetUser:input_type -> dental.v1.GetUserRequest
+	21, // 73: dental.v1.AdminService.SellSubscription:input_type -> dental.v1.SellSubscriptionRequest
+	23, // 74: dental.v1.AdminService.CancelSubscription:input_type -> dental.v1.CancelSubscriptionRequest
+	25, // 75: dental.v1.AdminService.DeleteSubscription:input_type -> dental.v1.DeleteSubscriptionRequest
+	27, // 76: dental.v1.AdminService.ListSubscriptions:input_type -> dental.v1.ListSubscriptionsRequest
+	30, // 77: dental.v1.AdminService.GetSubscription:input_type -> dental.v1.GetSubscriptionRequest
+	32, // 78: dental.v1.AdminService.GetClinic:input_type -> dental.v1.GetClinicRequest
+	36, // 79: dental.v1.AdminService.ListPayments:input_type -> dental.v1.ListPaymentsRequest
+	39, // 80: dental.v1.AdminService.ApprovePayment:input_type -> dental.v1.ApprovePaymentRequest
+	41, // 81: dental.v1.AdminService.RejectPayment:input_type -> dental.v1.RejectPaymentRequest
+	43, // 82: dental.v1.AdminService.ListPaymentAccounts:input_type -> dental.v1.ListPaymentAccountsRequest
+	45, // 83: dental.v1.AdminService.CreatePaymentAccount:input_type -> dental.v1.CreatePaymentAccountRequest
+	47, // 84: dental.v1.AdminService.UpdatePaymentAccount:input_type -> dental.v1.UpdatePaymentAccountRequest
+	49, // 85: dental.v1.AdminService.ListPatients:input_type -> dental.v1.ListPatientsRequest
+	52, // 86: dental.v1.AdminService.ListUsers:input_type -> dental.v1.ListUsersRequest
+	55, // 87: dental.v1.AdminService.DeleteUser:input_type -> dental.v1.DeleteUserRequest
+	4,  // 88: dental.v1.AdminService.Login:output_type -> dental.v1.AdminServiceLoginResponse
+	6,  // 89: dental.v1.AdminService.Logout:output_type -> dental.v1.AdminServiceLogoutResponse
+	8,  // 90: dental.v1.AdminService.UpdateProfile:output_type -> dental.v1.AdminServiceUpdateProfileResponse
+	10, // 91: dental.v1.AdminService.ChangePassword:output_type -> dental.v1.AdminServiceChangePasswordResponse
+	12, // 92: dental.v1.AdminService.CreateAdmin:output_type -> dental.v1.CreateAdminResponse
+	14, // 93: dental.v1.AdminService.ListPlans:output_type -> dental.v1.ListPlansResponse
+	16, // 94: dental.v1.AdminService.CreatePlan:output_type -> dental.v1.CreatePlanResponse
+	18, // 95: dental.v1.AdminService.UpdatePlan:output_type -> dental.v1.UpdatePlanResponse
+	20, // 96: dental.v1.AdminService.GetUser:output_type -> dental.v1.GetUserResponse
+	22, // 97: dental.v1.AdminService.SellSubscription:output_type -> dental.v1.SellSubscriptionResponse
+	24, // 98: dental.v1.AdminService.CancelSubscription:output_type -> dental.v1.CancelSubscriptionResponse
+	26, // 99: dental.v1.AdminService.DeleteSubscription:output_type -> dental.v1.DeleteSubscriptionResponse
+	28, // 100: dental.v1.AdminService.ListSubscriptions:output_type -> dental.v1.ListSubscriptionsResponse
+	31, // 101: dental.v1.AdminService.GetSubscription:output_type -> dental.v1.GetSubscriptionResponse
+	33, // 102: dental.v1.AdminService.GetClinic:output_type -> dental.v1.GetClinicResponse
+	37, // 103: dental.v1.AdminService.ListPayments:output_type -> dental.v1.ListPaymentsResponse
+	40, // 104: dental.v1.AdminService.ApprovePayment:output_type -> dental.v1.ApprovePaymentResponse
+	42, // 105: dental.v1.AdminService.RejectPayment:output_type -> dental.v1.RejectPaymentResponse
+	44, // 106: dental.v1.AdminService.ListPaymentAccounts:output_type -> dental.v1.ListPaymentAccountsResponse
+	46, // 107: dental.v1.AdminService.CreatePaymentAccount:output_type -> dental.v1.CreatePaymentAccountResponse
+	48, // 108: dental.v1.AdminService.UpdatePaymentAccount:output_type -> dental.v1.UpdatePaymentAccountResponse
+	50, // 109: dental.v1.AdminService.ListPatients:output_type -> dental.v1.ListPatientsResponse
+	53, // 110: dental.v1.AdminService.ListUsers:output_type -> dental.v1.ListUsersResponse
+	56, // 111: dental.v1.AdminService.DeleteUser:output_type -> dental.v1.DeleteUserResponse
+	88, // [88:112] is the sub-list for method output_type
+	64, // [64:88] is the sub-list for method input_type
+	64, // [64:64] is the sub-list for extension type_name
+	64, // [64:64] is the sub-list for extension extendee
+	0,  // [0:64] is the sub-list for field type_name
 }
 
 func init() { file_dental_v1_admin_proto_init() }
@@ -3874,7 +4261,7 @@ func file_dental_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dental_v1_admin_proto_rawDesc), len(file_dental_v1_admin_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   48,
+			NumMessages:   56,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -4,7 +4,7 @@
     "name": "English",
     "abbr": "EN",
     "dir": "ltr",
-    "version": 34,
+    "version": 38,
     "currency": {
       "default": "USD",
       "minorUnit": true
@@ -17,7 +17,8 @@
     "label": "Main menu",
     "home": "Home",
     "patients": "Patients",
-    "workHours": "Working hours",
+    "workHours": "Record hours",
+    "workHoursReport": "Hours report",
     "database": "Database",
     "subscription": "Subscription"
   },
@@ -494,13 +495,77 @@
       "notFound": "This treatment was not found."
     }
   },
-  "workHours": {
-    "title": "Working hours",
-    "description": "Entries, exits and totals of working hours. Stored on this computer only, never sent to the server.",
-    "tabs": {
-      "person": "Timesheet",
-      "team": "All staff"
+  "payments": {
+    "title": "Payments and refunds",
+    "localOnly": "Financial data is stored on this computer only and never sent to the server.",
+    "add": "Record payment",
+    "addRefund": "Refund",
+    "empty": "No payments or refunds recorded for this patient yet.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "now": "Now",
+    "recordedBy": "Recorded by {{name}}",
+    "kinds": {
+      "payment": "Received from patient",
+      "refund": "Refunded to patient"
     },
+    "methods": {
+      "cash": "Cash",
+      "pos": "Card reader",
+      "cardToCard": "Card to card",
+      "accountTransfer": "Account transfer",
+      "bankTransfer": "Bank transfer",
+      "online": "Online payment",
+      "cheque": "Cheque",
+      "other": "Other"
+    },
+    "totals": {
+      "received": "Total received",
+      "refunded": "Total refunded",
+      "balance": "Net received"
+    },
+    "fields": {
+      "amount": "Amount received",
+      "refundAmount": "Amount refunded",
+      "paidOn": "Date received",
+      "refundedOn": "Refund date",
+      "time": "Time",
+      "method": "Payment method",
+      "reference": "Tracking code",
+      "notes": "Notes"
+    },
+    "hints": {
+      "reference": "Optional. Tracking code, transaction reference or cheque number.",
+      "refund": "This amount is subtracted from the patient's total received."
+    },
+    "dialog": {
+      "addTitle": "Record payment",
+      "editTitle": "Edit payment",
+      "refundTitle": "Record refund",
+      "editRefundTitle": "Edit refund"
+    },
+    "deleteDialog": {
+      "title": "Delete payment",
+      "refundTitle": "Delete refund",
+      "description": "{{amount}} from {{date}} will be deleted for good and no longer counted in the patient's account.",
+      "confirm": "Delete",
+      "working": "Deleting..."
+    },
+    "errors": {
+      "invalidKind": "The transaction type is not valid.",
+      "invalidAmount": "Enter an amount greater than zero.",
+      "invalidMethod": "The payment method is not valid.",
+      "invalidDate": "The date is not valid.",
+      "invalidTime": "The time is not valid.",
+      "invalidReference": "The tracking code may only contain English letters, digits, dashes, / and dots, up to 64 characters.",
+      "notFound": "This entry was not found.",
+      "notAllowed": "Only whoever recorded this entry, or the clinic manager, can change or delete it."
+    }
+  },
+  "workHours": {
+    "title": "Record working hours",
+    "description": "Record entries and exits, by hand or with one click. Stored on this computer only, never sent to the server.",
+    "openReport": "Working hours report",
     "user": "User",
     "me": "(you)",
     "previousMonth": "Previous month",
@@ -517,6 +582,11 @@
     "viewOnly": "View only: only the clinic manager can change other people's working hours.",
     "loading": "Loading...",
     "empty": "No working hours recorded this month.",
+    "recent": {
+      "title": "Last seven days",
+      "total": "Total: {{total}}",
+      "hint": "For earlier days, change the date in \"Enter or edit manually\" or use the working hours report."
+    },
     "monthTotal": "Month total",
     "days": "Days worked",
     "average": "Daily average",
@@ -549,6 +619,27 @@
       "hint": "To remove the notes, empty the text and save.",
       "add": "Add notes for the day",
       "edit": "Edit notes for the day"
+    },
+    "report": {
+      "title": "Working hours report",
+      "description": "Working hours month by month, for one person or all staff. Select a day to see its entries, exits and notes.",
+      "back": "Record working hours",
+      "tabs": {
+        "days": "Day by day",
+        "staff": "By staff member"
+      },
+      "allUsers": "All staff",
+      "people": "Staff who worked",
+      "noEntries": "No entries or exits",
+      "openDetails": "Details of {{day}}, {{name}}"
+    },
+    "details": {
+      "entries": "Entries and exits",
+      "duration": "Duration",
+      "total": "Day total",
+      "noNotes": "No notes for this day.",
+      "editEntries": "Edit entries and exits",
+      "close": "Close"
     },
     "validation": {
       "dayRequired": "Enter the full date.",
@@ -612,6 +703,13 @@
     "trial": {
       "title": "Your free trial is active",
       "description": "The {{plan}} plan is active for free until {{date}}. After that, you can buy or upgrade a subscription on the Subscription page."
+    }
+  },
+  "clock": {
+    "fromNetwork": "Exact time from the internet ({{source}})",
+    "wrong": {
+      "title": "The system clock is not set correctly",
+      "description": "This computer shows {{system}}, but the correct time is {{actual}}. Please set the date, time and time zone in Windows; otherwise the times you record will be saved incorrectly."
     }
   },
   "account": {
@@ -787,7 +885,14 @@
     "day": "Day",
     "month": "Month",
     "year": "Year",
-    "clear": "Clear date"
+    "clear": "Clear date",
+    "openCalendar": "Pick from calendar",
+    "today": "Today",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "chooseMonth": "Choose month"
   },
   "currency": {
     "label": "Currency",

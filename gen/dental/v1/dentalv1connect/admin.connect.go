@@ -37,6 +37,12 @@ const (
 	AdminServiceLoginProcedure = "/dental.v1.AdminService/Login"
 	// AdminServiceLogoutProcedure is the fully-qualified name of the AdminService's Logout RPC.
 	AdminServiceLogoutProcedure = "/dental.v1.AdminService/Logout"
+	// AdminServiceUpdateProfileProcedure is the fully-qualified name of the AdminService's
+	// UpdateProfile RPC.
+	AdminServiceUpdateProfileProcedure = "/dental.v1.AdminService/UpdateProfile"
+	// AdminServiceChangePasswordProcedure is the fully-qualified name of the AdminService's
+	// ChangePassword RPC.
+	AdminServiceChangePasswordProcedure = "/dental.v1.AdminService/ChangePassword"
 	// AdminServiceCreateAdminProcedure is the fully-qualified name of the AdminService's CreateAdmin
 	// RPC.
 	AdminServiceCreateAdminProcedure = "/dental.v1.AdminService/CreateAdmin"
@@ -54,6 +60,9 @@ const (
 	// AdminServiceCancelSubscriptionProcedure is the fully-qualified name of the AdminService's
 	// CancelSubscription RPC.
 	AdminServiceCancelSubscriptionProcedure = "/dental.v1.AdminService/CancelSubscription"
+	// AdminServiceDeleteSubscriptionProcedure is the fully-qualified name of the AdminService's
+	// DeleteSubscription RPC.
+	AdminServiceDeleteSubscriptionProcedure = "/dental.v1.AdminService/DeleteSubscription"
 	// AdminServiceListSubscriptionsProcedure is the fully-qualified name of the AdminService's
 	// ListSubscriptions RPC.
 	AdminServiceListSubscriptionsProcedure = "/dental.v1.AdminService/ListSubscriptions"
@@ -85,6 +94,8 @@ const (
 	AdminServiceListPatientsProcedure = "/dental.v1.AdminService/ListPatients"
 	// AdminServiceListUsersProcedure is the fully-qualified name of the AdminService's ListUsers RPC.
 	AdminServiceListUsersProcedure = "/dental.v1.AdminService/ListUsers"
+	// AdminServiceDeleteUserProcedure is the fully-qualified name of the AdminService's DeleteUser RPC.
+	AdminServiceDeleteUserProcedure = "/dental.v1.AdminService/DeleteUser"
 )
 
 // AdminServiceClient is a client for the dental.v1.AdminService service.
@@ -93,6 +104,16 @@ type AdminServiceClient interface {
 	Login(context.Context, *v1.AdminServiceLoginRequest) (*v1.AdminServiceLoginResponse, error)
 	// Ends the session at once and removes its cookie.
 	Logout(context.Context, *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error)
+	// Changes the logged-in administrator's own username and full name. Sessions
+	// keep working. Fails with "invalid_argument" or ALREADY_EXISTS "username_taken".
+	UpdateProfile(context.Context, *v1.AdminServiceUpdateProfileRequest) (*v1.AdminServiceUpdateProfileResponse, error)
+	// Changes the logged-in administrator's own password, proven with the current one.
+	// Ends every other session of the administrator; this one keeps working.
+	//
+	// Fails with "weak_password", PERMISSION_DENIED "invalid_credentials" (the current
+	// password is wrong; not UNAUTHENTICATED, as the session itself is fine) or
+	// INVALID_ARGUMENT "password_unchanged" (the new password equals the current one).
+	ChangePassword(context.Context, *v1.AdminServiceChangePasswordRequest) (*v1.AdminServiceChangePasswordResponse, error)
 	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateAdmin(context.Context, *v1.CreateAdminRequest) (*v1.CreateAdminResponse, error)
 	// All plans, the ones still on sale first.
@@ -114,6 +135,11 @@ type AdminServiceClient interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
+	// Deletes a subscription for good, with the approved payment that bought it, if
+	// any. Its clinics lose access if no other subscription is in force. Unlike
+	// CancelSubscription nothing is kept, and a subscription that an upgrade ended
+	// early stays ended. Fails with NOT_FOUND "subscription_not_found".
+	DeleteSubscription(context.Context, *v1.DeleteSubscriptionRequest) (*v1.DeleteSubscriptionResponse, error)
 	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
 	// both descending), with their owner and the payment that bought them.
 	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
@@ -154,6 +180,12 @@ type AdminServiceClient interface {
 	// a page at a time: newest first (created_at, then id, both descending). GetUser
 	// gives one account in full.
 	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
+	// Deletes an account for good, with everything it owns: its subscriptions and
+	// payments, and its clinics with their installations, memberships and treatments.
+	// Patients left in no clinic are deleted too; patients still in another clinic
+	// stay. Members of its clinics keep their accounts, without those clinics. It
+	// cannot be undone. Fails with NOT_FOUND "user_not_found".
+	DeleteUser(context.Context, *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error)
 }
 
 // NewAdminServiceClient constructs a client for the dental.v1.AdminService service. By default, it
@@ -177,6 +209,18 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+AdminServiceLogoutProcedure,
 			connect.WithSchema(adminServiceMethods.ByName("Logout")),
+			connect.WithClientOptions(opts...),
+		),
+		updateProfile: connect.NewClient[v1.AdminServiceUpdateProfileRequest, v1.AdminServiceUpdateProfileResponse](
+			httpClient,
+			baseURL+AdminServiceUpdateProfileProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("UpdateProfile")),
+			connect.WithClientOptions(opts...),
+		),
+		changePassword: connect.NewClient[v1.AdminServiceChangePasswordRequest, v1.AdminServiceChangePasswordResponse](
+			httpClient,
+			baseURL+AdminServiceChangePasswordProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("ChangePassword")),
 			connect.WithClientOptions(opts...),
 		),
 		createAdmin: connect.NewClient[v1.CreateAdminRequest, v1.CreateAdminResponse](
@@ -219,6 +263,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+AdminServiceCancelSubscriptionProcedure,
 			connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteSubscription: connect.NewClient[v1.DeleteSubscriptionRequest, v1.DeleteSubscriptionResponse](
+			httpClient,
+			baseURL+AdminServiceDeleteSubscriptionProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("DeleteSubscription")),
 			connect.WithClientOptions(opts...),
 		),
 		listSubscriptions: connect.NewClient[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse](
@@ -287,6 +337,12 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(adminServiceMethods.ByName("ListUsers")),
 			connect.WithClientOptions(opts...),
 		),
+		deleteUser: connect.NewClient[v1.DeleteUserRequest, v1.DeleteUserResponse](
+			httpClient,
+			baseURL+AdminServiceDeleteUserProcedure,
+			connect.WithSchema(adminServiceMethods.ByName("DeleteUser")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -294,6 +350,8 @@ func NewAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 type adminServiceClient struct {
 	login                *connect.Client[v1.AdminServiceLoginRequest, v1.AdminServiceLoginResponse]
 	logout               *connect.Client[v1.AdminServiceLogoutRequest, v1.AdminServiceLogoutResponse]
+	updateProfile        *connect.Client[v1.AdminServiceUpdateProfileRequest, v1.AdminServiceUpdateProfileResponse]
+	changePassword       *connect.Client[v1.AdminServiceChangePasswordRequest, v1.AdminServiceChangePasswordResponse]
 	createAdmin          *connect.Client[v1.CreateAdminRequest, v1.CreateAdminResponse]
 	listPlans            *connect.Client[v1.ListPlansRequest, v1.ListPlansResponse]
 	createPlan           *connect.Client[v1.CreatePlanRequest, v1.CreatePlanResponse]
@@ -301,6 +359,7 @@ type adminServiceClient struct {
 	getUser              *connect.Client[v1.GetUserRequest, v1.GetUserResponse]
 	sellSubscription     *connect.Client[v1.SellSubscriptionRequest, v1.SellSubscriptionResponse]
 	cancelSubscription   *connect.Client[v1.CancelSubscriptionRequest, v1.CancelSubscriptionResponse]
+	deleteSubscription   *connect.Client[v1.DeleteSubscriptionRequest, v1.DeleteSubscriptionResponse]
 	listSubscriptions    *connect.Client[v1.ListSubscriptionsRequest, v1.ListSubscriptionsResponse]
 	getSubscription      *connect.Client[v1.GetSubscriptionRequest, v1.GetSubscriptionResponse]
 	getClinic            *connect.Client[v1.GetClinicRequest, v1.GetClinicResponse]
@@ -312,6 +371,7 @@ type adminServiceClient struct {
 	updatePaymentAccount *connect.Client[v1.UpdatePaymentAccountRequest, v1.UpdatePaymentAccountResponse]
 	listPatients         *connect.Client[v1.ListPatientsRequest, v1.ListPatientsResponse]
 	listUsers            *connect.Client[v1.ListUsersRequest, v1.ListUsersResponse]
+	deleteUser           *connect.Client[v1.DeleteUserRequest, v1.DeleteUserResponse]
 }
 
 // Login calls dental.v1.AdminService.Login.
@@ -326,6 +386,24 @@ func (c *adminServiceClient) Login(ctx context.Context, req *v1.AdminServiceLogi
 // Logout calls dental.v1.AdminService.Logout.
 func (c *adminServiceClient) Logout(ctx context.Context, req *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error) {
 	response, err := c.logout.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// UpdateProfile calls dental.v1.AdminService.UpdateProfile.
+func (c *adminServiceClient) UpdateProfile(ctx context.Context, req *v1.AdminServiceUpdateProfileRequest) (*v1.AdminServiceUpdateProfileResponse, error) {
+	response, err := c.updateProfile.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// ChangePassword calls dental.v1.AdminService.ChangePassword.
+func (c *adminServiceClient) ChangePassword(ctx context.Context, req *v1.AdminServiceChangePasswordRequest) (*v1.AdminServiceChangePasswordResponse, error) {
+	response, err := c.changePassword.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -389,6 +467,15 @@ func (c *adminServiceClient) SellSubscription(ctx context.Context, req *v1.SellS
 // CancelSubscription calls dental.v1.AdminService.CancelSubscription.
 func (c *adminServiceClient) CancelSubscription(ctx context.Context, req *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error) {
 	response, err := c.cancelSubscription.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
+// DeleteSubscription calls dental.v1.AdminService.DeleteSubscription.
+func (c *adminServiceClient) DeleteSubscription(ctx context.Context, req *v1.DeleteSubscriptionRequest) (*v1.DeleteSubscriptionResponse, error) {
+	response, err := c.deleteSubscription.CallUnary(ctx, connect.NewRequest(req))
 	if response != nil {
 		return response.Msg, err
 	}
@@ -494,12 +581,31 @@ func (c *adminServiceClient) ListUsers(ctx context.Context, req *v1.ListUsersReq
 	return nil, err
 }
 
+// DeleteUser calls dental.v1.AdminService.DeleteUser.
+func (c *adminServiceClient) DeleteUser(ctx context.Context, req *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error) {
+	response, err := c.deleteUser.CallUnary(ctx, connect.NewRequest(req))
+	if response != nil {
+		return response.Msg, err
+	}
+	return nil, err
+}
+
 // AdminServiceHandler is an implementation of the dental.v1.AdminService service.
 type AdminServiceHandler interface {
 	// Fails with UNAUTHENTICATED "invalid_credentials" or PERMISSION_DENIED "user_disabled".
 	Login(context.Context, *v1.AdminServiceLoginRequest) (*v1.AdminServiceLoginResponse, error)
 	// Ends the session at once and removes its cookie.
 	Logout(context.Context, *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error)
+	// Changes the logged-in administrator's own username and full name. Sessions
+	// keep working. Fails with "invalid_argument" or ALREADY_EXISTS "username_taken".
+	UpdateProfile(context.Context, *v1.AdminServiceUpdateProfileRequest) (*v1.AdminServiceUpdateProfileResponse, error)
+	// Changes the logged-in administrator's own password, proven with the current one.
+	// Ends every other session of the administrator; this one keeps working.
+	//
+	// Fails with "weak_password", PERMISSION_DENIED "invalid_credentials" (the current
+	// password is wrong; not UNAUTHENTICATED, as the session itself is fine) or
+	// INVALID_ARGUMENT "password_unchanged" (the new password equals the current one).
+	ChangePassword(context.Context, *v1.AdminServiceChangePasswordRequest) (*v1.AdminServiceChangePasswordResponse, error)
 	// Fails with "invalid_argument" / "weak_password" or ALREADY_EXISTS "username_taken".
 	CreateAdmin(context.Context, *v1.CreateAdminRequest) (*v1.CreateAdminResponse, error)
 	// All plans, the ones still on sale first.
@@ -521,6 +627,11 @@ type AdminServiceHandler interface {
 	// subscription is in force. Canceling twice changes nothing.
 	// Fails with NOT_FOUND "subscription_not_found".
 	CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error)
+	// Deletes a subscription for good, with the approved payment that bought it, if
+	// any. Its clinics lose access if no other subscription is in force. Unlike
+	// CancelSubscription nothing is kept, and a subscription that an upgrade ended
+	// early stays ended. Fails with NOT_FOUND "subscription_not_found".
+	DeleteSubscription(context.Context, *v1.DeleteSubscriptionRequest) (*v1.DeleteSubscriptionResponse, error)
 	// Subscriptions of every user, a page at a time: newest first (starts_at, then id,
 	// both descending), with their owner and the payment that bought them.
 	ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error)
@@ -561,6 +672,12 @@ type AdminServiceHandler interface {
 	// a page at a time: newest first (created_at, then id, both descending). GetUser
 	// gives one account in full.
 	ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error)
+	// Deletes an account for good, with everything it owns: its subscriptions and
+	// payments, and its clinics with their installations, memberships and treatments.
+	// Patients left in no clinic are deleted too; patients still in another clinic
+	// stay. Members of its clinics keep their accounts, without those clinics. It
+	// cannot be undone. Fails with NOT_FOUND "user_not_found".
+	DeleteUser(context.Context, *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error)
 }
 
 // NewAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -580,6 +697,18 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		AdminServiceLogoutProcedure,
 		svc.Logout,
 		connect.WithSchema(adminServiceMethods.ByName("Logout")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceUpdateProfileHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceUpdateProfileProcedure,
+		svc.UpdateProfile,
+		connect.WithSchema(adminServiceMethods.ByName("UpdateProfile")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceChangePasswordHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceChangePasswordProcedure,
+		svc.ChangePassword,
+		connect.WithSchema(adminServiceMethods.ByName("ChangePassword")),
 		connect.WithHandlerOptions(opts...),
 	)
 	adminServiceCreateAdminHandler := connect.NewUnaryHandlerSimple(
@@ -622,6 +751,12 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		AdminServiceCancelSubscriptionProcedure,
 		svc.CancelSubscription,
 		connect.WithSchema(adminServiceMethods.ByName("CancelSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	adminServiceDeleteSubscriptionHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceDeleteSubscriptionProcedure,
+		svc.DeleteSubscription,
+		connect.WithSchema(adminServiceMethods.ByName("DeleteSubscription")),
 		connect.WithHandlerOptions(opts...),
 	)
 	adminServiceListSubscriptionsHandler := connect.NewUnaryHandlerSimple(
@@ -690,12 +825,22 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(adminServiceMethods.ByName("ListUsers")),
 		connect.WithHandlerOptions(opts...),
 	)
+	adminServiceDeleteUserHandler := connect.NewUnaryHandlerSimple(
+		AdminServiceDeleteUserProcedure,
+		svc.DeleteUser,
+		connect.WithSchema(adminServiceMethods.ByName("DeleteUser")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/dental.v1.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AdminServiceLoginProcedure:
 			adminServiceLoginHandler.ServeHTTP(w, r)
 		case AdminServiceLogoutProcedure:
 			adminServiceLogoutHandler.ServeHTTP(w, r)
+		case AdminServiceUpdateProfileProcedure:
+			adminServiceUpdateProfileHandler.ServeHTTP(w, r)
+		case AdminServiceChangePasswordProcedure:
+			adminServiceChangePasswordHandler.ServeHTTP(w, r)
 		case AdminServiceCreateAdminProcedure:
 			adminServiceCreateAdminHandler.ServeHTTP(w, r)
 		case AdminServiceListPlansProcedure:
@@ -710,6 +855,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceSellSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceCancelSubscriptionProcedure:
 			adminServiceCancelSubscriptionHandler.ServeHTTP(w, r)
+		case AdminServiceDeleteSubscriptionProcedure:
+			adminServiceDeleteSubscriptionHandler.ServeHTTP(w, r)
 		case AdminServiceListSubscriptionsProcedure:
 			adminServiceListSubscriptionsHandler.ServeHTTP(w, r)
 		case AdminServiceGetSubscriptionProcedure:
@@ -732,6 +879,8 @@ func NewAdminServiceHandler(svc AdminServiceHandler, opts ...connect.HandlerOpti
 			adminServiceListPatientsHandler.ServeHTTP(w, r)
 		case AdminServiceListUsersProcedure:
 			adminServiceListUsersHandler.ServeHTTP(w, r)
+		case AdminServiceDeleteUserProcedure:
+			adminServiceDeleteUserHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -747,6 +896,14 @@ func (UnimplementedAdminServiceHandler) Login(context.Context, *v1.AdminServiceL
 
 func (UnimplementedAdminServiceHandler) Logout(context.Context, *v1.AdminServiceLogoutRequest) (*v1.AdminServiceLogoutResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.Logout is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) UpdateProfile(context.Context, *v1.AdminServiceUpdateProfileRequest) (*v1.AdminServiceUpdateProfileResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.UpdateProfile is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) ChangePassword(context.Context, *v1.AdminServiceChangePasswordRequest) (*v1.AdminServiceChangePasswordResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ChangePassword is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) CreateAdmin(context.Context, *v1.CreateAdminRequest) (*v1.CreateAdminResponse, error) {
@@ -775,6 +932,10 @@ func (UnimplementedAdminServiceHandler) SellSubscription(context.Context, *v1.Se
 
 func (UnimplementedAdminServiceHandler) CancelSubscription(context.Context, *v1.CancelSubscriptionRequest) (*v1.CancelSubscriptionResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.CancelSubscription is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) DeleteSubscription(context.Context, *v1.DeleteSubscriptionRequest) (*v1.DeleteSubscriptionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.DeleteSubscription is not implemented"))
 }
 
 func (UnimplementedAdminServiceHandler) ListSubscriptions(context.Context, *v1.ListSubscriptionsRequest) (*v1.ListSubscriptionsResponse, error) {
@@ -819,4 +980,8 @@ func (UnimplementedAdminServiceHandler) ListPatients(context.Context, *v1.ListPa
 
 func (UnimplementedAdminServiceHandler) ListUsers(context.Context, *v1.ListUsersRequest) (*v1.ListUsersResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.ListUsers is not implemented"))
+}
+
+func (UnimplementedAdminServiceHandler) DeleteUser(context.Context, *v1.DeleteUserRequest) (*v1.DeleteUserResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("dental.v1.AdminService.DeleteUser is not implemented"))
 }

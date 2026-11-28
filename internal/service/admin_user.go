@@ -2,15 +2,80 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	dentalv1 "dental-server/gen/dental/v1"
 )
 
-// Listing the accounts of the desktop app. GetUser (admin.go) gives one in full.
+// Listing and deleting the accounts of the desktop app. GetUser (admin.go) gives one in full.
+
+func (s *AdminService) DeleteUser(ctx context.Context, req *dentalv1.DeleteUserRequest) (*dentalv1.DeleteUserResponse, error) {
+	id, ok := toUUID(req.GetId())
+	if !ok {
+		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
+	tx, err := s.d.DB.Begin(ctx)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Held like a synced write, so no push links a patient to a clinic while the
+	// patients left in no clinic are deleted below.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1)`, int64(syncWriteLock)); err != nil {
+		return nil, internal(err)
+	}
+	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE id = $1 FOR UPDATE`, id).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, fail(connect.CodeNotFound, reasonUserNotFound)
+	}
+	if err != nil {
+		return nil, internal(err)
+	}
+
+	// The patients of its clinics, to delete those that no other clinic has once the clinics are gone.
+	rows, err := tx.Query(ctx, `
+		SELECT DISTINCT cp.patient_id FROM clinic_patients cp JOIN clinics c ON c.id = cp.clinic_id
+		WHERE c.owner_id = $1`, id)
+	if err != nil {
+		return nil, internal(err)
+	}
+	patientIDs, err := pgx.CollectRows(rows, pgx.RowTo[pgtype.UUID])
+	if err != nil {
+		return nil, internal(err)
+	}
+
+	// In order, as the foreign keys require: payments name subscriptions, installations
+	// name clinics, and clinics and subscriptions name the user. The rest (sessions,
+	// memberships, clinic patients, treatments, history views) goes with them by cascade.
+	for _, sql := range []string{
+		`DELETE FROM payments WHERE user_id = $1`,
+		`DELETE FROM subscriptions WHERE user_id = $1`,
+		`DELETE FROM installations WHERE clinic_id IN (SELECT id FROM clinics WHERE owner_id = $1)`,
+		`DELETE FROM clinics WHERE owner_id = $1`,
+		`DELETE FROM users WHERE id = $1`,
+	} {
+		if _, err := tx.Exec(ctx, sql, id); err != nil {
+			return nil, internal(err)
+		}
+	}
+	if _, err := tx.Exec(ctx, `
+		DELETE FROM patients p
+		WHERE p.id = ANY($1) AND NOT EXISTS (SELECT 1 FROM clinic_patients cp WHERE cp.patient_id = p.id)`,
+		patientIDs); err != nil {
+		return nil, internal(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.DeleteUserResponse{}, nil
+}
 
 func (s *AdminService) ListUsers(ctx context.Context, req *dentalv1.ListUsersRequest) (*dentalv1.ListUsersResponse, error) {
 	now := s.d.Now()

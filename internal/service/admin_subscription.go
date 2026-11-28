@@ -16,6 +16,34 @@ import (
 
 // One subscription, or one clinic, in full. ListSubscriptions (admin.go) lists subscriptions.
 
+func (s *AdminService) DeleteSubscription(ctx context.Context, req *dentalv1.DeleteSubscriptionRequest) (*dentalv1.DeleteSubscriptionResponse, error) {
+	id, ok := toUUID(req.GetId())
+	if !ok {
+		return nil, fail(connect.CodeInvalidArgument, reasonInvalidArgument)
+	}
+	tx, err := s.d.DB.Begin(ctx)
+	if err != nil {
+		return nil, internal(err)
+	}
+	defer tx.Rollback(ctx)
+
+	// The payment that bought it first: an approved payment must name its subscription.
+	if _, err := tx.Exec(ctx, `DELETE FROM payments WHERE subscription_id = $1`, id); err != nil {
+		return nil, internal(err)
+	}
+	tag, err := tx.Exec(ctx, `DELETE FROM subscriptions WHERE id = $1`, id)
+	if err != nil {
+		return nil, internal(err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, fail(connect.CodeNotFound, reasonSubscriptionNotFound)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, internal(err)
+	}
+	return &dentalv1.DeleteSubscriptionResponse{}, nil
+}
+
 func (s *AdminService) GetSubscription(ctx context.Context, req *dentalv1.GetSubscriptionRequest) (*dentalv1.GetSubscriptionResponse, error) {
 	id, ok := toUUID(req.GetId())
 	if !ok {
